@@ -3,72 +3,367 @@ package com.example.powerofhabit.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.powerofhabit.data.local.HabitEntity
+import com.example.powerofhabit.data.local.HabitRecordEntity
 import com.example.powerofhabit.ui.components.widgets.*
 import com.example.powerofhabit.ui.theme.BlackBackground
+import com.example.powerofhabit.ui.theme.DarkGrayBackground
 import com.example.powerofhabit.ui.theme.HabitOrange
-import com.example.powerofhabit.ui.theme.PowerOfHabitTheme
+import com.example.powerofhabit.ui.theme.LightGrayText
+import java.time.LocalDate
 import java.time.YearMonth
 
 @Composable
-fun HabitDetailScreen() {
+fun HabitDetailScreen(
+    habitId: Int,
+    onBack: () -> Unit,
+    onNavigateToEdit: (Int) -> Unit,
+    viewModel: HabitDetailViewModel = hiltViewModel()
+) {
+    LaunchedEffect(habitId) {
+        viewModel.setHabitId(habitId)
+    }
+    
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BlackBackground)
+    ) {
+        when (state) {
+            HabitDetailUiState.Loading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = HabitOrange)
+                }
+            }
+            is HabitDetailUiState.Success -> {
+                val successState = state as HabitDetailUiState.Success
+                HabitDetailContent(
+                    habit = successState.habit,
+                    records = successState.records,
+                    onBack = onBack,
+                    onNavigateToEdit = onNavigateToEdit
+                )
+            }
+            is HabitDetailUiState.Error -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Error: ${(state as HabitDetailUiState.Error).throwable.localizedMessage}",
+                            color = Color.Red
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = onBack, colors = ButtonDefaults.buttonColors(containerColor = DarkGrayBackground)) {
+                            Text("Back", color = Color.White)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HabitDetailContent(
+    habit: HabitEntity,
+    records: List<HabitRecordEntity>,
+    onBack: () -> Unit,
+    onNavigateToEdit: (Int) -> Unit
+) {
     val scrollState = rememberScrollState()
+    val themeColor = remember(habit.themeColor) {
+        try {
+            Color(android.graphics.Color.parseColor(habit.themeColor))
+        } catch (e: Exception) {
+            HabitOrange
+        }
+    }
+    
+    // 1) EMA score list calculation
+    val emaScores = remember(records) {
+        val scores = mutableListOf<Float>()
+        var currentEma = 0f
+        var first = true
+        records.sortedBy { it.date }.forEach { record ->
+            if (record.status == "SKIPPED") {
+                if (!first) scores.add(currentEma)
+                return@forEach
+            }
+            val value = if (record.status == "COMPLETED") 100f else 0f
+            if (first) {
+                currentEma = value
+                first = false
+            } else {
+                currentEma = 0.2f * value + 0.8f * currentEma
+            }
+            scores.add(currentEma)
+        }
+        if (scores.isEmpty()) listOf(0f) else scores
+    }
+    
+    // 2) Streak calculation
+    val streaks = remember(records) {
+        if (records.isEmpty()) return@remember 0 to 0
+        
+        val recordsMap = records.associateBy { it.date }
+        val sortedDates = records.mapNotNull { 
+            try { LocalDate.parse(it.date) } catch (e: Exception) { null }
+        }.sorted()
+        
+        if (sortedDates.isEmpty()) return@remember 0 to 0
+        
+        val startDate = sortedDates.first()
+        val today = LocalDate.now()
+        
+        var maxStreak = 0
+        var tempStreak = 0
+        var currentDate = startDate
+        
+        // Calculate max streak by iterating from startDate to today
+        while (!currentDate.isAfter(today)) {
+            val dateStr = currentDate.toString()
+            val record = recordsMap[dateStr]
+            
+            if (record != null) {
+                when (record.status) {
+                    "COMPLETED" -> {
+                        tempStreak++
+                        if (tempStreak > maxStreak) {
+                            maxStreak = tempStreak
+                        }
+                    }
+                    "FAILED" -> {
+                        tempStreak = 0
+                    }
+                    "SKIPPED" -> {
+                        // Skipped days do not break or increment the streak
+                    }
+                }
+            } else {
+                // Missing record for a past day breaks the streak
+                if (currentDate != today) {
+                    tempStreak = 0
+                }
+            }
+            currentDate = currentDate.plusDays(1)
+        }
+        
+        // Calculate current streak going backwards from today
+        var currentStreak = 0
+        var checkDate = today
+        while (true) {
+            val dateStr = checkDate.toString()
+            val record = recordsMap[dateStr]
+            if (record != null) {
+                when (record.status) {
+                    "COMPLETED" -> {
+                        currentStreak++
+                    }
+                    "FAILED" -> {
+                        break
+                    }
+                    "SKIPPED" -> {
+                        // Skipped days are ignored, continue backwards
+                    }
+                }
+            } else {
+                if (checkDate != today) {
+                    break
+                }
+            }
+            checkDate = checkDate.minusDays(1)
+            if (checkDate.isBefore(startDate)) {
+                break
+            }
+        }
+        
+        currentStreak to maxStreak
+    }
+    val (currentStreak, maxStreak) = streaks
+    
+    // 3) Progress calculation (Monthly goal completion)
+    val progress = remember(records) {
+        val today = LocalDate.now()
+        val currentMonthPrefix = today.toString().substring(0, 7) // "YYYY-MM"
+        val currentMonthRecords = records.filter { it.date.startsWith(currentMonthPrefix) }
+        val completedCount = currentMonthRecords.count { it.status == "COMPLETED" }
+        val totalCount = currentMonthRecords.count { it.status != "SKIPPED" }
+        if (totalCount > 0) completedCount.toFloat() / totalCount else 0f
+    }
+    
+    // 4) Calendar records map
+    val calendarRecords = remember(records) {
+        records.associate {
+            try {
+                LocalDate.parse(it.date) to it.status
+            } catch (e: Exception) {
+                LocalDate.now() to "NONE"
+            }
+        }
+    }
+    
+    // 5) Heatmap calculation
+    val heatmapFrequencies = remember(records) {
+        val today = LocalDate.now()
+        val oneYearAgo = today.minusWeeks(51).with(java.time.DayOfWeek.SUNDAY)
+        val matrix = List(7) { MutableList(52) { 0 } }
+        records.forEach { record ->
+            try {
+                val date = LocalDate.parse(record.date)
+                if (!date.isBefore(oneYearAgo) && !date.isAfter(today)) {
+                    val daysBetween = java.time.temporal.ChronoUnit.DAYS.between(oneYearAgo, date).toInt()
+                    if (daysBetween >= 0) {
+                        val week = daysBetween / 7
+                        val dayOfWeek = date.dayOfWeek.value % 7
+                        if (week in 0..51 && dayOfWeek in 0..6) {
+                            if (record.status == "COMPLETED") {
+                                matrix[dayOfWeek][week] = 10
+                            } else if (record.status == "SKIPPED") {
+                                matrix[dayOfWeek][week] = 3
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // Ignore parsing errors
+            }
+        }
+        matrix
+    }
     
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BlackBackground)
-            .padding(24.dp)
-            .verticalScroll(scrollState),
-        verticalArrangement = Arrangement.spacedBy(32.dp)
+            .verticalScroll(scrollState)
     ) {
-        Text("Habit Detail", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+        // Navigation header
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = onBack) {
+                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+            }
+            IconButton(onClick = { onNavigateToEdit(habit.habitId) }) {
+                Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit", tint = Color.White)
+            }
+        }
         
-        HabitScoreWidget(
-            scores = listOf(10f, 30f, 25f, 60f, 55f, 80f, 90f),
-            themeColor = HabitOrange,
-        )
+        // Habit Header Info
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp)
+        ) {
+            Text(
+                text = habit.title,
+                color = Color.White,
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = habit.question,
+                color = LightGrayText,
+                fontSize = 16.sp
+            )
+        }
         
-        StreakWidget(
-            currentStreak = 5,
-            maxStreak = 12,
-            themeColor = HabitOrange,
-        )
-        
-        TargetGoalWidget(
-            title = "Monthly Goal",
-            progress = 0.75f,
-            themeColor = HabitOrange,
-        )
-        
-        HistoryCalendarWidget(
-            yearMonth = YearMonth.now(),
-            records = emptyMap(), // Dummy
-            themeColor = HabitOrange,
-        )
-        
-        // Dummy 7x12 heatmap for a year
-        val dummyHeatmap = remember { List(7) { List(12) { (0..10).random() } } }
-        HeatmapWidget(
-            frequencies = dummyHeatmap,
-            themeColor = HabitOrange,
-        )
+        // Analytics Widgets
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(32.dp)
+        ) {
+            // Habit Score Trend
+            CardSection(title = "Habit Score (EMA Trend)") {
+                HabitScoreWidget(
+                    scores = emaScores,
+                    themeColor = themeColor
+                )
+            }
+            
+            // Streak
+            CardSection(title = "Streak Tracker") {
+                StreakWidget(
+                    currentStreak = currentStreak,
+                    maxStreak = maxStreak,
+                    themeColor = themeColor
+                )
+            }
+            
+            // Target Goal Progress
+            CardSection(title = "Monthly Progress") {
+                TargetGoalWidget(
+                    title = "Target Completion",
+                    progress = progress,
+                    themeColor = themeColor
+                )
+            }
+            
+            // History Calendar
+            CardSection(title = "Completion History") {
+                HistoryCalendarWidget(
+                    yearMonth = YearMonth.now(),
+                    records = calendarRecords,
+                    themeColor = themeColor
+                )
+            }
+            
+            // Heatmap Frequencies
+            CardSection(title = "Yearly Frequency Matrix") {
+                HeatmapWidget(
+                    frequencies = heatmapFrequencies,
+                    themeColor = themeColor
+                )
+            }
+        }
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
-fun HabitDetailScreenPreview() {
-    PowerOfHabitTheme {
-        HabitDetailScreen()
+private fun CardSection(
+    title: String,
+    content: @Composable () -> Unit
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = title,
+            color = Color.White,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(DarkGrayBackground)
+                .padding(16.dp)
+        ) {
+            content()
+        }
     }
 }

@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,6 +27,23 @@ class AddEditHabitViewModel @Inject constructor(
 
     private val _uiEvent = MutableSharedFlow<AddEditHabitUiEvent>()
     val uiEvent: SharedFlow<AddEditHabitUiEvent> = _uiEvent.asSharedFlow()
+
+    private val _habitState = MutableStateFlow<HabitEntity?>(null)
+    val habitState: StateFlow<HabitEntity?> = _habitState.asStateFlow()
+    private var loadJob: kotlinx.coroutines.Job? = null
+
+    fun loadHabit(habitId: Int) {
+        if (habitId == 0) {
+            _habitState.value = null
+            return
+        }
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
+            repository.getHabitById(habitId).collect { habit ->
+                _habitState.value = habit
+            }
+        }
+    }
 
     fun saveHabit(
         habitId: Int = 0,

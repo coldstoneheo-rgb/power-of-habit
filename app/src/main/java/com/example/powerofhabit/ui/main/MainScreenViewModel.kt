@@ -4,30 +4,76 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.powerofhabit.data.DataRepository
 import com.example.powerofhabit.data.local.HabitEntity
-import com.example.powerofhabit.ui.main.MainScreenUiState.Success
+import com.example.powerofhabit.data.local.HabitRecordEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import java.time.LocalDate
 import javax.inject.Inject
-
-@HiltViewModel
-class MainScreenViewModel @Inject constructor(
-    dataRepository: DataRepository
-) : ViewModel() {
-  val uiState: StateFlow<MainScreenUiState> =
-    dataRepository.getAllHabits()
-      .map<List<HabitEntity>, MainScreenUiState>(::Success)
-      .catch { emit(MainScreenUiState.Error(it)) }
-      .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainScreenUiState.Loading)
-}
 
 sealed interface MainScreenUiState {
   object Loading : MainScreenUiState
-
   data class Error(val throwable: Throwable) : MainScreenUiState
+  data class Success(
+    val habits: List<HabitEntity>,
+    val records: Map<Int, Map<String, HabitRecordEntity>> // habitId -> (dateString -> record)
+  ) : MainScreenUiState
+}
 
-  data class Success(val habits: List<HabitEntity>) : MainScreenUiState
+@HiltViewModel
+class MainScreenViewModel @Inject constructor(
+    private val dataRepository: DataRepository
+) : ViewModel() {
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  val uiState: StateFlow<MainScreenUiState> = flow {
+    val today = LocalDate.now()
+    val startDate = today.minusDays(3).toString()
+    val endDate = today.toString()
+    emit(startDate to endDate)
+  }.flatMapLatest { (start, end) ->
+    val habitsFlow = dataRepository.getAllHabits()
+    val recordsFlow = dataRepository.getRecordsBetween(start, end)
+    
+    combine(habitsFlow, recordsFlow) { habits, records ->
+      val recordsMap = records.groupBy { it.habitId }
+        .mapValues { entry ->
+          entry.value.associateBy { it.date }
+        }
+      MainScreenUiState.Success(habits, recordsMap) as MainScreenUiState
+    }
+  }
+  .catch { emit(MainScreenUiState.Error(it)) }
+  .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainScreenUiState.Loading)
+
+  fun updateRecordStatus(recordId: Int, status: String) {
+    viewModelScope.launch {
+      try {
+        dataRepository.updateRecordStatus(recordId, status)
+      } catch (e: Exception) {
+        android.util.Log.e("MainScreenViewModel", "Failed to update record status", e)
+      }
+    }
+  }
+
+  fun insertRecord(record: HabitRecordEntity) {
+    viewModelScope.launch {
+      try {
+        dataRepository.insertRecord(record)
+      } catch (e: Exception) {
+        android.util.Log.e("MainScreenViewModel", "Failed to insert record", e)
+      }
+    }
+  }
+
+  fun deleteRecord(record: HabitRecordEntity) {
+    viewModelScope.launch {
+      try {
+        dataRepository.deleteRecord(record)
+      } catch (e: Exception) {
+        android.util.Log.e("MainScreenViewModel", "Failed to delete record", e)
+      }
+    }
+  }
 }

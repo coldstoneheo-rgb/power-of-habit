@@ -10,6 +10,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import com.example.powerofhabit.ui.main.MainScreen
 import com.example.powerofhabit.ui.screens.HabitDetailScreen
+import com.example.powerofhabit.ui.screens.AddEditHabitScreen
 
 @Composable
 fun MainNavigation() {
@@ -21,10 +22,30 @@ fun MainNavigation() {
     entryProvider =
       entryProvider {
         entry<Main> {
-          MainScreen(modifier = Modifier.safeDrawingPadding().padding(16.dp))
+          MainScreen(
+            onNavigateToDetail = { habitId ->
+              backStack.add(HabitDetail(habitId = habitId))
+            },
+            onNavigateToAddHabit = {
+              backStack.add(AddEditHabit(habitId = 0))
+            },
+            modifier = Modifier.safeDrawingPadding().padding(16.dp)
+          )
         }
-        entry<HabitDetail> {
-          HabitDetailScreen()
+        entry<HabitDetail> { key ->
+          HabitDetailScreen(
+            habitId = key.habitId,
+            onBack = { backStack.removeLastOrNull() },
+            onNavigateToEdit = { habitId ->
+              backStack.add(AddEditHabit(habitId = habitId))
+            }
+          )
+        }
+        entry<AddEditHabit> { key ->
+          AddEditHabitScreen(
+            habitId = key.habitId,
+            onBack = { backStack.removeLastOrNull() }
+          )
         }
       },
   )
