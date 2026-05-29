@@ -4,7 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.powerofhabit.data.DataRepository
 import com.example.powerofhabit.data.local.HabitEntity
+import android.content.Context
+import com.example.powerofhabit.reminder.HabitReminderManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -22,7 +25,8 @@ sealed interface AddEditHabitUiEvent {
 
 @HiltViewModel
 class AddEditHabitViewModel @Inject constructor(
-    private val repository: DataRepository
+    private val repository: DataRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _uiEvent = MutableSharedFlow<AddEditHabitUiEvent>()
@@ -52,6 +56,7 @@ class AddEditHabitViewModel @Inject constructor(
         frequencyType: String,
         frequencyValue: String,
         reminderTime: String?,
+        isReminderEnabled: Boolean,
         themeColor: String,
         habitType: String,
         unit: String?
@@ -63,6 +68,7 @@ class AddEditHabitViewModel @Inject constructor(
             }
 
             try {
+                val reminderManager = HabitReminderManager(context)
                 if (habitId == 0) {
                     val habit = HabitEntity(
                         habitId = habitId,
@@ -71,11 +77,15 @@ class AddEditHabitViewModel @Inject constructor(
                         frequencyType = frequencyType,
                         frequencyValue = frequencyValue,
                         reminderTime = reminderTime,
+                        isReminderEnabled = isReminderEnabled,
                         themeColor = themeColor,
                         habitType = habitType,
                         unit = unit
                     )
-                    repository.insertHabit(habit)
+                    val newHabitId = repository.insertHabit(habit).toInt()
+                    // Re-schedule with actual auto-generated ID
+                    val savedHabit = habit.copy(habitId = newHabitId)
+                    reminderManager.scheduleReminder(savedHabit)
                 } else {
                     val existingHabit = repository.getHabitById(habitId).first()
                     if (existingHabit != null) {
@@ -85,11 +95,13 @@ class AddEditHabitViewModel @Inject constructor(
                             frequencyType = frequencyType,
                             frequencyValue = frequencyValue,
                             reminderTime = reminderTime,
+                            isReminderEnabled = isReminderEnabled,
                             themeColor = themeColor,
                             habitType = habitType,
                             unit = unit
                         )
                         repository.updateHabit(updatedHabit)
+                        reminderManager.scheduleReminder(updatedHabit)
                     } else {
                         _uiEvent.emit(AddEditHabitUiEvent.Error("Habit not found"))
                         return@launch
@@ -106,6 +118,7 @@ class AddEditHabitViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 repository.deleteHabit(habit)
+                HabitReminderManager(context).cancelReminder(habit.habitId)
                 _uiEvent.emit(AddEditHabitUiEvent.SaveSuccess)
             } catch (e: Exception) {
                 _uiEvent.emit(AddEditHabitUiEvent.Error(e.message ?: "Failed to delete habit"))

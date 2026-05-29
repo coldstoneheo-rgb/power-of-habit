@@ -1,5 +1,6 @@
 package com.example.powerofhabit.data
 
+import com.example.powerofhabit.data.local.BadgeEntity
 import com.example.powerofhabit.data.local.HabitDao
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
@@ -22,6 +23,10 @@ interface DataRepository {
     suspend fun insertRecord(record: HabitRecordEntity): Long
     suspend fun updateRecordStatus(recordId: Int, status: String)
     suspend fun deleteRecord(record: HabitRecordEntity)
+
+    // Badges
+    fun getAllBadges(): Flow<List<BadgeEntity>>
+    suspend fun insertBadge(badge: BadgeEntity): Long
 }
 
 @Singleton
@@ -50,4 +55,8 @@ class DefaultDataRepository @Inject constructor(
     override suspend fun updateRecordStatus(recordId: Int, status: String) = habitDao.updateRecordStatus(recordId, status)
 
     override suspend fun deleteRecord(record: HabitRecordEntity) = habitDao.deleteRecord(record)
+
+    override fun getAllBadges(): Flow<List<BadgeEntity>> = habitDao.getAllBadges()
+
+    override suspend fun insertBadge(badge: BadgeEntity): Long = habitDao.insertBadge(badge)
 }

@@ -47,7 +47,8 @@ fun AddEditHabitScreen(
     var frequencyType by remember { mutableStateOf("DAILY") }
     var frequencyValue by remember { mutableStateOf("") }
     var reminderTime by remember { mutableStateOf<String?>(null) }
-    var selectedThemeHex by remember { mutableStateOf("#FF9800") }
+    var isReminderEnabled by remember { mutableStateOf(false) }
+    var selectedThemeHex by remember { mutableStateOf("#E57373") } // Default premium matte red
     var habitType by remember { mutableStateOf("CHECK") }
     var unit by remember { mutableStateOf("") }
     
@@ -59,6 +60,7 @@ fun AddEditHabitScreen(
             frequencyType = habit.frequencyType
             frequencyValue = habit.frequencyValue
             reminderTime = habit.reminderTime
+            isReminderEnabled = habit.isReminderEnabled
             selectedThemeHex = habit.themeColor
             habitType = habit.habitType
             unit = habit.unit ?: ""
@@ -81,14 +83,26 @@ fun AddEditHabitScreen(
     }
     
     val scrollState = rememberScrollState()
-    val availableColors = listOf(
-        "#FF9800" to HabitOrange,
-        "#03A9F4" to HabitSkyBlue,
-        "#9C27B0" to HabitPurple,
-        "#4CAF50" to HabitGreen,
-        "#F44336" to HabitRed,
-        "#FFFFEB" to HabitYellow
-    )
+    
+    // Android native TimePickerDialog
+    val parsedTime = remember(reminderTime) {
+        try {
+            java.time.LocalTime.parse(reminderTime ?: "09:00")
+        } catch (e: Exception) {
+            java.time.LocalTime.of(9, 0)
+        }
+    }
+    val timePickerDialog = remember(context, parsedTime) {
+        android.app.TimePickerDialog(
+            context,
+            { _, hour, minute ->
+                reminderTime = String.format("%02d:%02d", hour, minute)
+            },
+            parsedTime.hour,
+            parsedTime.minute,
+            false
+        )
+    }
     
     Scaffold(
         topBar = {
@@ -192,26 +206,91 @@ fun AddEditHabitScreen(
             }
             
             // Theme color picker
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Theme Color", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Theme Color (32 Premium Matte Tones)", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                
+                // Render 32 colors in a 4x8 Grid
+                val chunkedColors = remember { PremiumMatteColors.chunked(8) }
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    chunkedColors.forEach { rowColors ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            rowColors.forEach { (hex, color) ->
+                                val isSelected = selectedThemeHex.uppercase() == hex.uppercase()
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(color)
+                                        .border(
+                                            width = if (isSelected) 3.dp else 1.dp,
+                                            color = if (isSelected) Color.White else Color.White.copy(alpha = 0.15f),
+                                            shape = CircleShape
+                                        )
+                                        .clickable { selectedThemeHex = hex }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Notification / Reminder Settings
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(DarkGrayBackground)
+                    .border(1.dp, MetalBorderBrush, RoundedCornerShape(16.dp))
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    availableColors.forEach { (hex, color) ->
-                        val isSelected = selectedThemeHex.uppercase() == hex.uppercase()
+                    Column {
+                        Text("Habit Notification", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text("Get reminded to build your habit", color = LightGrayText, fontSize = 12.sp)
+                    }
+                    Switch(
+                        checked = isReminderEnabled,
+                        onCheckedChange = { isReminderEnabled = it },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = Color(android.graphics.Color.parseColor(selectedThemeHex)),
+                            uncheckedThumbColor = LightGrayText,
+                            uncheckedTrackColor = BlackBackground
+                        )
+                    )
+                }
+                
+                if (isReminderEnabled) {
+                    Divider(color = Color.White.copy(alpha = 0.1f))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Reminder Time", color = Color.White, fontSize = 14.sp)
                         Box(
                             modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(color)
-                                .border(
-                                    width = if (isSelected) 3.dp else 0.dp,
-                                    color = if (isSelected) Color.White else Color.Transparent,
-                                    shape = CircleShape
-                                )
-                                .clickable { selectedThemeHex = hex }
-                        )
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(BlackBackground)
+                                .border(1.dp, MetalBorderBrush, RoundedCornerShape(8.dp))
+                                .clickable { timePickerDialog.show() }
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Text(
+                                text = reminderTime ?: "09:00",
+                                color = Color(android.graphics.Color.parseColor(selectedThemeHex)),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
+                            )
+                        }
                     }
                 }
             }
@@ -227,7 +306,8 @@ fun AddEditHabitScreen(
                         question = question,
                         frequencyType = frequencyType,
                         frequencyValue = frequencyValue,
-                        reminderTime = reminderTime,
+                        reminderTime = reminderTime ?: "09:00",
+                        isReminderEnabled = isReminderEnabled,
                         themeColor = selectedThemeHex,
                         habitType = habitType,
                         unit = if (habitType == "VALUE") unit else null
@@ -235,8 +315,9 @@ fun AddEditHabitScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = HabitOrange),
+                    .height(56.dp)
+                    .border(1.dp, MetalBorderBrush, RoundedCornerShape(16.dp)),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(android.graphics.Color.parseColor(selectedThemeHex))),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Text("Save Habit", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)

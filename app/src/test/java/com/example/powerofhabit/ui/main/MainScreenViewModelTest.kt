@@ -26,7 +26,8 @@ class MainScreenViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         fakeRepository = FakeMyModelRepository()
-        viewModel = MainScreenViewModel(fakeRepository)
+        val mockContext = org.mockito.Mockito.mock(android.content.Context::class.java)
+        viewModel = MainScreenViewModel(fakeRepository, mockContext)
     }
 
     @After
@@ -74,5 +75,8 @@ class MainScreenViewModelTest {
         override suspend fun insertRecord(record: HabitRecordEntity): Long = 0L
         override suspend fun updateRecordStatus(recordId: Int, status: String) {}
         override suspend fun deleteRecord(record: HabitRecordEntity) {}
+
+        override fun getAllBadges(): Flow<List<com.example.powerofhabit.data.local.BadgeEntity>> = flow { emit(emptyList()) }
+        override suspend fun insertBadge(badge: com.example.powerofhabit.data.local.BadgeEntity): Long = 0L
     }
 }

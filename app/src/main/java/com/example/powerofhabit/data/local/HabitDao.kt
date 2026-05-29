@@ -39,4 +39,11 @@ interface HabitDao {
 
     @Delete
     suspend fun deleteRecord(record: HabitRecordEntity)
+
+    // Badges
+    @Query("SELECT * FROM Badges ORDER BY earnedAt DESC")
+    fun getAllBadges(): Flow<List<BadgeEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertBadge(badge: BadgeEntity): Long
 }

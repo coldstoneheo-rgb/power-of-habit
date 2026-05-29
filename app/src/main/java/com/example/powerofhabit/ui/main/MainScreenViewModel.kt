@@ -12,6 +12,9 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+
 sealed interface MainScreenUiState {
   object Loading : MainScreenUiState
   data class Error(val throwable: Throwable) : MainScreenUiState
@@ -23,7 +26,8 @@ sealed interface MainScreenUiState {
 
 @HiltViewModel
 class MainScreenViewModel @Inject constructor(
-    private val dataRepository: DataRepository
+    private val dataRepository: DataRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -47,10 +51,12 @@ class MainScreenViewModel @Inject constructor(
   .catch { emit(MainScreenUiState.Error(it)) }
   .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainScreenUiState.Loading)
 
-  fun updateRecordStatus(recordId: Int, status: String) {
+  fun updateRecordStatus(recordId: Int, status: String, habitId: Int) {
     viewModelScope.launch {
       try {
         dataRepository.updateRecordStatus(recordId, status)
+        val records = dataRepository.getRecordsForHabit(habitId).first()
+        com.example.powerofhabit.badges.BadgeManager(dataRepository, context).checkAndAwardBadges(records)
       } catch (e: Exception) {
         android.util.Log.e("MainScreenViewModel", "Failed to update record status", e)
       }
@@ -61,6 +67,8 @@ class MainScreenViewModel @Inject constructor(
     viewModelScope.launch {
       try {
         dataRepository.insertRecord(record)
+        val records = dataRepository.getRecordsForHabit(record.habitId).first()
+        com.example.powerofhabit.badges.BadgeManager(dataRepository, context).checkAndAwardBadges(records)
       } catch (e: Exception) {
         android.util.Log.e("MainScreenViewModel", "Failed to insert record", e)
       }
@@ -71,6 +79,8 @@ class MainScreenViewModel @Inject constructor(
     viewModelScope.launch {
       try {
         dataRepository.deleteRecord(record)
+        val records = dataRepository.getRecordsForHabit(record.habitId).first()
+        com.example.powerofhabit.badges.BadgeManager(dataRepository, context).checkAndAwardBadges(records)
       } catch (e: Exception) {
         android.util.Log.e("MainScreenViewModel", "Failed to delete record", e)
       }

@@ -153,5 +153,17 @@ class DefaultDataRepositoryTest {
             current.removeIf { it.recordId == record.recordId }
             recordsFlow.value = current
         }
+
+        private val badgesFlow = MutableStateFlow<List<com.example.powerofhabit.data.local.BadgeEntity>>(emptyList())
+
+        override fun getAllBadges(): Flow<List<com.example.powerofhabit.data.local.BadgeEntity>> = badgesFlow
+
+        override suspend fun insertBadge(badge: com.example.powerofhabit.data.local.BadgeEntity): Long {
+            val current = badgesFlow.value.toMutableList()
+            current.removeIf { it.badgeId == badge.badgeId }
+            current.add(badge)
+            badgesFlow.value = current
+            return 1L
+        }
     }
 }
