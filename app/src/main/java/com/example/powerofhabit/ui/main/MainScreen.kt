@@ -7,9 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.powerofhabit.data.DefaultDataRepository
+import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.ui.theme.PowerOfHabitTheme
 
 @Composable
@@ -23,7 +22,7 @@ fun MainScreen(
       // Blank
     }
     is MainScreenUiState.Success -> {
-      MainScreen(data = (state as MainScreenUiState.Success).data, modifier = modifier)
+      MainScreen(habits = (state as MainScreenUiState.Success).habits, modifier = modifier)
     }
     is MainScreenUiState.Error -> {
       Text("Error loading data: ${(state as MainScreenUiState.Error).throwable.message}")
@@ -32,8 +31,8 @@ fun MainScreen(
 }
 
 @Composable
-internal fun MainScreen(data: List<String>, modifier: Modifier = Modifier) {
-  Column(modifier) { data.forEach { Greeting(it) } }
+internal fun MainScreen(habits: List<HabitEntity>, modifier: Modifier = Modifier) {
+  Column(modifier) { habits.forEach { Greeting(it.title) } }
 }
 
 @Composable
@@ -44,11 +43,11 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun MainScreenPreview() {
-  PowerOfHabitTheme { MainScreen(listOf("Android")) }
+  PowerOfHabitTheme { MainScreen(emptyList()) }
 }
 
 @Preview(showBackground = true, widthDp = 340)
 @Composable
 fun MainScreenPortraitPreview() {
-  PowerOfHabitTheme { MainScreen(listOf("Android")) }
+  PowerOfHabitTheme { MainScreen(emptyList()) }
 }
