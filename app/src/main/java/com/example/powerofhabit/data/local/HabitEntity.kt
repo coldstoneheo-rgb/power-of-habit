@@ -15,5 +15,6 @@ data class HabitEntity(
     val themeColor: String, // e.g. "#FFCC00"
     val habitType: String, // "CHECK", "VALUE"
     val unit: String?,
+    val isReminderEnabled: Boolean = false,
     val createdAt: Long = System.currentTimeMillis()
 )

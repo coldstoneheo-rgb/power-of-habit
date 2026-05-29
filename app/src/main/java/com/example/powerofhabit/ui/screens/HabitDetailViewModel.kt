@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+
 sealed interface HabitDetailUiState {
     object Loading : HabitDetailUiState
     data class Error(val throwable: Throwable) : HabitDetailUiState
@@ -22,7 +25,8 @@ sealed interface HabitDetailUiState {
 
 @HiltViewModel
 class HabitDetailViewModel @Inject constructor(
-    private val repository: DataRepository
+    private val repository: DataRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
 
     private val _habitId = MutableStateFlow<Int?>(null)
@@ -65,6 +69,40 @@ class HabitDetailViewModel @Inject constructor(
                 repository.insertRecord(record)
             } catch (e: Exception) {
                 android.util.Log.e("HabitDetailViewModel", "Failed to insert record", e)
+            }
+        }
+    }
+
+    fun updateRecordForDate(date: String, status: String, inputValue: Float? = null) {
+        val habitId = _habitId.value ?: return
+        viewModelScope.launch {
+            try {
+                val currentRecords = repository.getRecordsForHabit(habitId).first()
+                val existingRecord = currentRecords.find { it.date == date }
+                
+                if (status == "NONE") {
+                    if (existingRecord != null) {
+                        repository.deleteRecord(existingRecord)
+                    }
+                } else {
+                    if (existingRecord != null) {
+                        repository.deleteRecord(existingRecord)
+                    }
+                    repository.insertRecord(
+                        HabitRecordEntity(
+                            habitId = habitId,
+                            date = date,
+                            status = status,
+                            inputValue = inputValue
+                        )
+                    )
+                }
+
+                val updatedRecords = repository.getRecordsForHabit(habitId).first()
+                com.example.powerofhabit.badges.BadgeManager(repository, context).checkAndAwardBadges(updatedRecords)
+                com.example.powerofhabit.backup.GoogleDriveBackupManager(context).scheduleAutoBackup()
+            } catch (e: Exception) {
+                android.util.Log.e("HabitDetailViewModel", "Failed to update record for date $date", e)
             }
         }
     }

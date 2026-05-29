@@ -40,6 +40,12 @@ android {
         excludes += "/META-INF/{AL2.0,LGPL2.1}"
       }
     }
+
+    testOptions {
+        unitTests {
+            isReturnDefaultValues = true
+        }
+    }
 }
 
 kotlin {
@@ -75,6 +81,7 @@ dependencies {
   // Local tests: jUnit, coroutines, Android runner
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
+  testImplementation("org.mockito:mockito-core:5.8.0")
 
   // Instrumented tests: jUnit rules and runners
   androidTestImplementation(libs.androidx.test.core)
@@ -96,4 +103,13 @@ dependencies {
   implementation(libs.hilt.android)
   ksp(libs.hilt.compiler)
   implementation(libs.hilt.navigation.compose)
+
+  // Google Play Services Auth & API client for Drive
+  implementation("com.google.android.gms:play-services-auth:20.7.0")
+  implementation("com.google.apis:google-api-services-drive:v3-rev20230822-2.0.0") {
+      exclude(group = "org.apache.httpcomponents")
+  }
+  implementation("com.google.api-client:google-api-client-android:2.2.0") {
+      exclude(group = "org.apache.httpcomponents")
+  }
 }

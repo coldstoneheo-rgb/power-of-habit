@@ -13,9 +13,25 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
+
+@dagger.hilt.EntryPoint
+@dagger.hilt.InstallIn(dagger.hilt.components.SingletonComponent::class)
+interface DatabaseEntryPoint {
+    fun appDatabase(): AppDatabase
+}
+
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
+
+    private val MIGRATION_1_2 = object : Migration(1, 2) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE Habits ADD COLUMN isReminderEnabled INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("CREATE TABLE IF NOT EXISTS Badges (badgeId TEXT NOT NULL PRIMARY KEY, badgeName TEXT NOT NULL, description TEXT NOT NULL, earnedAt INTEGER NOT NULL, badgeIconType TEXT NOT NULL)")
+        }
+    }
 
     @Provides
     @Singleton
@@ -24,7 +40,9 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             "power_of_habit.db"
-        ).build()
+        )
+        .addMigrations(MIGRATION_1_2)
+        .build()
     }
 
     @Provides
