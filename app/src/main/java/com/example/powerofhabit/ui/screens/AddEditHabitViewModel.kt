@@ -30,13 +30,15 @@ class AddEditHabitViewModel @Inject constructor(
 
     private val _habitState = MutableStateFlow<HabitEntity?>(null)
     val habitState: StateFlow<HabitEntity?> = _habitState.asStateFlow()
+    private var loadJob: kotlinx.coroutines.Job? = null
 
     fun loadHabit(habitId: Int) {
         if (habitId == 0) {
             _habitState.value = null
             return
         }
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             repository.getHabitById(habitId).collect { habit ->
                 _habitState.value = habit
             }

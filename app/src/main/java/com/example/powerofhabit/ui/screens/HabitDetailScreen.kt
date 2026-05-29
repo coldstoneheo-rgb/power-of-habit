@@ -120,27 +120,80 @@ private fun HabitDetailContent(
     
     // 2) Streak calculation
     val streaks = remember(records) {
+        if (records.isEmpty()) return@remember 0 to 0
+        
+        val recordsMap = records.associateBy { it.date }
+        val sortedDates = records.mapNotNull { 
+            try { LocalDate.parse(it.date) } catch (e: Exception) { null }
+        }.sorted()
+        
+        if (sortedDates.isEmpty()) return@remember 0 to 0
+        
+        val startDate = sortedDates.first()
+        val today = LocalDate.now()
+        
         var maxStreak = 0
         var tempStreak = 0
-        records.sortedBy { it.date }.forEach { record ->
-            if (record.status == "COMPLETED") {
-                tempStreak++
-                if (tempStreak > maxStreak) {
-                    maxStreak = tempStreak
+        var currentDate = startDate
+        
+        // Calculate max streak by iterating from startDate to today
+        while (!currentDate.isAfter(today)) {
+            val dateStr = currentDate.toString()
+            val record = recordsMap[dateStr]
+            
+            if (record != null) {
+                when (record.status) {
+                    "COMPLETED" -> {
+                        tempStreak++
+                        if (tempStreak > maxStreak) {
+                            maxStreak = tempStreak
+                        }
+                    }
+                    "FAILED" -> {
+                        tempStreak = 0
+                    }
+                    "SKIPPED" -> {
+                        // Skipped days do not break or increment the streak
+                    }
                 }
-            } else if (record.status == "FAILED") {
-                tempStreak = 0
+            } else {
+                // Missing record for a past day breaks the streak
+                if (currentDate != today) {
+                    tempStreak = 0
+                }
             }
+            currentDate = currentDate.plusDays(1)
         }
-        val sortedRecords = records.sortedByDescending { it.date }
+        
+        // Calculate current streak going backwards from today
         var currentStreak = 0
-        for (record in sortedRecords) {
-            if (record.status == "COMPLETED") {
-                currentStreak++
-            } else if (record.status == "FAILED") {
+        var checkDate = today
+        while (true) {
+            val dateStr = checkDate.toString()
+            val record = recordsMap[dateStr]
+            if (record != null) {
+                when (record.status) {
+                    "COMPLETED" -> {
+                        currentStreak++
+                    }
+                    "FAILED" -> {
+                        break
+                    }
+                    "SKIPPED" -> {
+                        // Skipped days are ignored, continue backwards
+                    }
+                }
+            } else {
+                if (checkDate != today) {
+                    break
+                }
+            }
+            checkDate = checkDate.minusDays(1)
+            if (checkDate.isBefore(startDate)) {
                 break
             }
         }
+        
         currentStreak to maxStreak
     }
     val (currentStreak, maxStreak) = streaks
@@ -148,14 +201,8 @@ private fun HabitDetailContent(
     // 3) Progress calculation (Monthly goal completion)
     val progress = remember(records) {
         val today = LocalDate.now()
-        val currentMonthRecords = records.filter {
-            try {
-                val date = LocalDate.parse(it.date)
-                date.monthValue == today.monthValue && date.year == today.year
-            } catch (e: Exception) {
-                false
-            }
-        }
+        val currentMonthPrefix = today.toString().substring(0, 7) // "YYYY-MM"
+        val currentMonthRecords = records.filter { it.date.startsWith(currentMonthPrefix) }
         val completedCount = currentMonthRecords.count { it.status == "COMPLETED" }
         val totalCount = currentMonthRecords.count { it.status != "SKIPPED" }
         if (totalCount > 0) completedCount.toFloat() / totalCount else 0f
