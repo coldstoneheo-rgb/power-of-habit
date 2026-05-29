@@ -45,7 +45,7 @@ private fun StreakBar(label: String, days: Int, maxDays: Int, color: Color) {
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(fraction.coerceAtLeast(0.05f))
+                    .fillMaxWidth(fraction.coerceIn(0.05f, 1f))
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(12.dp))
                     .background(color),

@@ -18,10 +18,11 @@ fun TargetGoalWidget(
     progress: Float, // 0f to 1f
     themeColor: Color
 ) {
+    val safeProgress = progress.coerceIn(0f, 1f)
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(title, color = Color.White, fontSize = 16.sp)
-            Text("${(progress * 100).toInt()}%", color = themeColor)
+            Text("${(safeProgress * 100).toInt()}%", color = themeColor)
         }
         Box(
             modifier = Modifier
@@ -32,7 +33,7 @@ fun TargetGoalWidget(
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(progress)
+                    .fillMaxWidth(safeProgress)
                     .fillMaxHeight()
                     .clip(RoundedCornerShape(4.dp))
                     .background(themeColor)

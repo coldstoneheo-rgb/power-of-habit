@@ -2,6 +2,7 @@ package com.example.powerofhabit.data.local
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
@@ -13,7 +14,8 @@ import androidx.room.PrimaryKey
             childColumns = ["habitId"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [Index(value = ["habitId"])]
 )
 data class HabitRecordEntity(
     @PrimaryKey(autoGenerate = true) val recordId: Int = 0,

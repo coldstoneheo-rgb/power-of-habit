@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -56,7 +57,7 @@ fun HabitDetailScreen() {
         )
         
         // Dummy 7x12 heatmap for a year
-        val dummyHeatmap = List(7) { List(12) { (0..10).random() } }
+        val dummyHeatmap = remember { List(7) { List(12) { (0..10).random() } } }
         HeatmapWidget(
             frequencies = dummyHeatmap,
             themeColor = HabitOrange,

@@ -13,7 +13,7 @@ import com.example.powerofhabit.ui.screens.HabitDetailScreen
 
 @Composable
 fun MainNavigation() {
-  val backStack = rememberNavBackStack(HabitDetail)
+  val backStack = rememberNavBackStack(Main)
 
   NavDisplay(
     backStack = backStack,

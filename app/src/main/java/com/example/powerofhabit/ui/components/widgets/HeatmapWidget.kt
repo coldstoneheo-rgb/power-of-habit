@@ -25,7 +25,7 @@ fun HeatmapWidget(
         
         for (r in 0 until rows) {
             for (c in 0 until cols) {
-                val freq = frequencies[r][c]
+                val freq = frequencies.getOrNull(r)?.getOrNull(c) ?: 0
                 val maxRadius = minOf(cellWidth, cellHeight) / 2.5f
                 val radius = maxRadius * (freq / 10f) // Assuming 10 is max frequency
                 val alpha = (freq / 10f).coerceIn(0.2f, 1.0f)
