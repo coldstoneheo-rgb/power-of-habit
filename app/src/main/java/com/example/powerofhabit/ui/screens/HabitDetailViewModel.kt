@@ -41,8 +41,8 @@ class HabitDetailViewModel @Inject constructor(
                     HabitDetailUiState.Success(habit, records)
                 }
             }
+            .catch { emit(HabitDetailUiState.Error(it)) }
         }
-        .catch { emit(HabitDetailUiState.Error(it)) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HabitDetailUiState.Loading)
 
     fun setHabitId(id: Int) {
@@ -51,13 +51,21 @@ class HabitDetailViewModel @Inject constructor(
 
     fun updateRecordStatus(recordId: Int, status: String) {
         viewModelScope.launch {
-            repository.updateRecordStatus(recordId, status)
+            try {
+                repository.updateRecordStatus(recordId, status)
+            } catch (e: Exception) {
+                android.util.Log.e("HabitDetailViewModel", "Failed to update record status", e)
+            }
         }
     }
 
     fun insertRecord(record: HabitRecordEntity) {
         viewModelScope.launch {
-            repository.insertRecord(record)
+            try {
+                repository.insertRecord(record)
+            } catch (e: Exception) {
+                android.util.Log.e("HabitDetailViewModel", "Failed to insert record", e)
+            }
         }
     }
 }

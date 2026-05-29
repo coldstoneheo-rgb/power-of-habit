@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -35,31 +36,44 @@ class AddEditHabitViewModel @Inject constructor(
         habitType: String,
         unit: String?
     ) {
-        if (title.isBlank()) {
-            viewModelScope.launch {
-                _uiEvent.emit(AddEditHabitUiEvent.Error("Title cannot be blank"))
-            }
-            return
-        }
-
-        val habit = HabitEntity(
-            habitId = habitId,
-            title = title,
-            question = question,
-            frequencyType = frequencyType,
-            frequencyValue = frequencyValue,
-            reminderTime = reminderTime,
-            themeColor = themeColor,
-            habitType = habitType,
-            unit = unit
-        )
-
         viewModelScope.launch {
+            if (title.isBlank()) {
+                _uiEvent.emit(AddEditHabitUiEvent.Error("Title cannot be blank"))
+                return@launch
+            }
+
             try {
                 if (habitId == 0) {
+                    val habit = HabitEntity(
+                        habitId = habitId,
+                        title = title,
+                        question = question,
+                        frequencyType = frequencyType,
+                        frequencyValue = frequencyValue,
+                        reminderTime = reminderTime,
+                        themeColor = themeColor,
+                        habitType = habitType,
+                        unit = unit
+                    )
                     repository.insertHabit(habit)
                 } else {
-                    repository.updateHabit(habit)
+                    val existingHabit = repository.getHabitById(habitId).first()
+                    if (existingHabit != null) {
+                        val updatedHabit = existingHabit.copy(
+                            title = title,
+                            question = question,
+                            frequencyType = frequencyType,
+                            frequencyValue = frequencyValue,
+                            reminderTime = reminderTime,
+                            themeColor = themeColor,
+                            habitType = habitType,
+                            unit = unit
+                        )
+                        repository.updateHabit(updatedHabit)
+                    } else {
+                        _uiEvent.emit(AddEditHabitUiEvent.Error("Habit not found"))
+                        return@launch
+                    }
                 }
                 _uiEvent.emit(AddEditHabitUiEvent.SaveSuccess)
             } catch (e: Exception) {
