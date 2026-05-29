@@ -1,0 +1,63 @@
+package com.example.powerofhabit.ui.screens
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.powerofhabit.data.DataRepository
+import com.example.powerofhabit.data.local.HabitEntity
+import com.example.powerofhabit.data.local.HabitRecordEntity
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+sealed interface HabitDetailUiState {
+    object Loading : HabitDetailUiState
+    data class Error(val throwable: Throwable) : HabitDetailUiState
+    data class Success(
+        val habit: HabitEntity,
+        val records: List<HabitRecordEntity>
+    ) : HabitDetailUiState
+}
+
+@HiltViewModel
+class HabitDetailViewModel @Inject constructor(
+    private val repository: DataRepository
+) : ViewModel() {
+
+    private val _habitId = MutableStateFlow<Int?>(null)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val uiState: StateFlow<HabitDetailUiState> = _habitId
+        .filterNotNull()
+        .flatMapLatest { id ->
+            val habitFlow = repository.getHabitById(id)
+            val recordsFlow = repository.getRecordsForHabit(id)
+            
+            combine(habitFlow, recordsFlow) { habit, records ->
+                if (habit == null) {
+                    HabitDetailUiState.Error(IllegalArgumentException("Habit not found with id $id"))
+                } else {
+                    HabitDetailUiState.Success(habit, records)
+                }
+            }
+        }
+        .catch { emit(HabitDetailUiState.Error(it)) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HabitDetailUiState.Loading)
+
+    fun setHabitId(id: Int) {
+        _habitId.value = id
+    }
+
+    fun updateRecordStatus(recordId: Int, status: String) {
+        viewModelScope.launch {
+            repository.updateRecordStatus(recordId, status)
+        }
+    }
+
+    fun insertRecord(record: HabitRecordEntity) {
+        viewModelScope.launch {
+            repository.insertRecord(record)
+        }
+    }
+}
