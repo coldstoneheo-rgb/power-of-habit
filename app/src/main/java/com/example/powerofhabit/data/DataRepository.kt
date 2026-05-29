@@ -1,12 +1,53 @@
 package com.example.powerofhabit.data
 
+import com.example.powerofhabit.data.local.HabitDao
+import com.example.powerofhabit.data.local.HabitEntity
+import com.example.powerofhabit.data.local.HabitRecordEntity
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import javax.inject.Inject
+import javax.inject.Singleton
 
 interface DataRepository {
-  val data: Flow<List<String>>
+    // Habits
+    fun getAllHabits(): Flow<List<HabitEntity>>
+    fun getHabitById(habitId: Int): Flow<HabitEntity?>
+    suspend fun insertHabit(habit: HabitEntity): Long
+    suspend fun updateHabit(habit: HabitEntity)
+    suspend fun deleteHabit(habit: HabitEntity)
+
+    // Habit Records
+    fun getRecordsForDate(date: String): Flow<List<HabitRecordEntity>>
+    fun getRecordsForHabit(habitId: Int): Flow<List<HabitRecordEntity>>
+    fun getRecordsBetween(startDate: String, endDate: String): Flow<List<HabitRecordEntity>>
+    suspend fun insertRecord(record: HabitRecordEntity): Long
+    suspend fun updateRecordStatus(recordId: Int, status: String)
+    suspend fun deleteRecord(record: HabitRecordEntity)
 }
 
-class DefaultDataRepository : DataRepository {
-  override val data: Flow<List<String>> = flow { emit(listOf("Android")) }
+@Singleton
+class DefaultDataRepository @Inject constructor(
+    private val habitDao: HabitDao
+) : DataRepository {
+
+    override fun getAllHabits(): Flow<List<HabitEntity>> = habitDao.getAllHabits()
+
+    override fun getHabitById(habitId: Int): Flow<HabitEntity?> = habitDao.getHabitById(habitId)
+
+    override suspend fun insertHabit(habit: HabitEntity): Long = habitDao.insertHabit(habit)
+
+    override suspend fun updateHabit(habit: HabitEntity) = habitDao.updateHabit(habit)
+
+    override suspend fun deleteHabit(habit: HabitEntity) = habitDao.deleteHabit(habit)
+
+    override fun getRecordsForDate(date: String): Flow<List<HabitRecordEntity>> = habitDao.getRecordsForDate(date)
+
+    override fun getRecordsForHabit(habitId: Int): Flow<List<HabitRecordEntity>> = habitDao.getRecordsForHabit(habitId)
+
+    override fun getRecordsBetween(startDate: String, endDate: String): Flow<List<HabitRecordEntity>> = habitDao.getRecordsBetween(startDate, endDate)
+
+    override suspend fun insertRecord(record: HabitRecordEntity): Long = habitDao.insertRecord(record)
+
+    override suspend fun updateRecordStatus(recordId: Int, status: String) = habitDao.updateRecordStatus(recordId, status)
+
+    override suspend fun deleteRecord(record: HabitRecordEntity) = habitDao.deleteRecord(record)
 }
