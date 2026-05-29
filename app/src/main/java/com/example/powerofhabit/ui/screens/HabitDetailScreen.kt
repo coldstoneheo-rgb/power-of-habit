@@ -372,13 +372,13 @@ private fun HabitDetailContent(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 StatCard(label = "EMA 점수", value = "${emaScores.last().toInt()}점", color = themeColor, modifier = Modifier.weight(1f))
-                                StatCard(label = "이번 달 완료", value = "${records.filter { it.date.startsWith(LocalDate.now().toString().substring(0, 7)) }.count { it.status == "COMPLETED" }}회", color = Color.White, modifier = Modifier.weight(1f))
+                                StatCard(label = "이번 달 완료", value = "${records.count { it.date.startsWith(LocalDate.now().toString().substring(0, 7)) && it.status == "COMPLETED" }}회", color = Color.White, modifier = Modifier.weight(1f))
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                StatCard(label = "올해 누적", value = "${records.filter { it.date.startsWith(LocalDate.now().toString().substring(0, 4)) }.count { it.status == "COMPLETED" }}회", color = Color.White, modifier = Modifier.weight(1f))
+                                StatCard(label = "올해 누적", value = "${records.count { it.date.startsWith(LocalDate.now().toString().substring(0, 4)) && it.status == "COMPLETED" }}회", color = Color.White, modifier = Modifier.weight(1f))
                                 StatCard(label = "전체 완료", value = "${records.count { it.status == "COMPLETED" }}회", color = Color.White, modifier = Modifier.weight(1f))
                             }
                         }

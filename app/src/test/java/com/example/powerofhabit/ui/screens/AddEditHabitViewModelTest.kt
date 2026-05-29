@@ -84,8 +84,11 @@ class AddEditHabitViewModelTest {
         
         advanceUntilIdle()
 
+        if (events.isEmpty() || events[0] !is AddEditHabitUiEvent.SaveSuccess) {
+            println("Test saveHabit_withValidData failed! Events: $events")
+        }
         assertEquals(1, events.size)
-        assertTrue(events[0] is AddEditHabitUiEvent.SaveSuccess)
+        assertTrue("Expected SaveSuccess but was ${events.getOrNull(0)}", events.getOrNull(0) is AddEditHabitUiEvent.SaveSuccess)
         assertEquals(1, fakeRepository.insertedHabits.size)
         assertEquals("Make bed", fakeRepository.insertedHabits[0].title)
 
@@ -128,8 +131,11 @@ class AddEditHabitViewModelTest {
 
         advanceUntilIdle()
 
+        if (events.isEmpty() || events[0] !is AddEditHabitUiEvent.SaveSuccess) {
+            println("Test saveHabit_existingHabit failed! Events: $events")
+        }
         assertEquals(1, events.size)
-        assertTrue(events[0] is AddEditHabitUiEvent.SaveSuccess)
+        assertTrue("Expected SaveSuccess but was ${events.getOrNull(0)}", events.getOrNull(0) is AddEditHabitUiEvent.SaveSuccess)
         
         val updated = fakeRepository.habits[42]
         assertEquals("New Title", updated?.title)

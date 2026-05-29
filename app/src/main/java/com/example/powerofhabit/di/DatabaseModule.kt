@@ -16,6 +16,12 @@ import javax.inject.Singleton
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
+@dagger.hilt.EntryPoint
+@dagger.hilt.InstallIn(dagger.hilt.components.SingletonComponent::class)
+interface DatabaseEntryPoint {
+    fun appDatabase(): AppDatabase
+}
+
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {

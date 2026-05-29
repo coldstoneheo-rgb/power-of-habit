@@ -100,6 +100,7 @@ class HabitDetailViewModel @Inject constructor(
 
                 val updatedRecords = repository.getRecordsForHabit(habitId).first()
                 com.example.powerofhabit.badges.BadgeManager(repository, context).checkAndAwardBadges(updatedRecords)
+                com.example.powerofhabit.backup.GoogleDriveBackupManager(context).scheduleAutoBackup()
             } catch (e: Exception) {
                 android.util.Log.e("HabitDetailViewModel", "Failed to update record for date $date", e)
             }

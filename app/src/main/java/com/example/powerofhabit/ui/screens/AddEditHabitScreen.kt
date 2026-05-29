@@ -25,6 +25,11 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.powerofhabit.ui.theme.*
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import android.content.pm.PackageManager
+import android.os.Build
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,6 +56,15 @@ fun AddEditHabitScreen(
     var selectedThemeHex by remember { mutableStateOf("#E57373") } // Default premium matte red
     var habitType by remember { mutableStateOf("CHECK") }
     var unit by remember { mutableStateOf("") }
+    
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        isReminderEnabled = isGranted
+        if (!isGranted) {
+            Toast.makeText(context, "알림을 받으려면 알림 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+        }
+    }
     
     // Populate form fields when habit details are loaded
     LaunchedEffect(habitState) {
@@ -258,10 +272,25 @@ fun AddEditHabitScreen(
                     }
                     Switch(
                         checked = isReminderEnabled,
-                        onCheckedChange = { isReminderEnabled = it },
+                        onCheckedChange = { checked ->
+                            if (checked && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                val hasPermission = ContextCompat.checkSelfPermission(
+                                    context,
+                                    android.Manifest.permission.POST_NOTIFICATIONS
+                                ) == PackageManager.PERMISSION_GRANTED
+                                
+                                if (!hasPermission) {
+                                    permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                                } else {
+                                    isReminderEnabled = true
+                                }
+                            } else {
+                                isReminderEnabled = checked
+                            }
+                        },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
-                            checkedTrackColor = Color(android.graphics.Color.parseColor(selectedThemeHex)),
+                            checkedTrackColor = try { Color(android.graphics.Color.parseColor(selectedThemeHex)) } catch (e: Exception) { Color.White },
                             uncheckedThumbColor = LightGrayText,
                             uncheckedTrackColor = BlackBackground
                         )

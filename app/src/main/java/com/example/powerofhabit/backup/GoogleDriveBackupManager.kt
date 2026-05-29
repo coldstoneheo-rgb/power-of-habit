@@ -18,15 +18,60 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.launch
+import android.content.Intent
+
 class GoogleDriveBackupManager(private val context: Context) {
 
     companion object {
         private const val TAG = "GoogleDriveBackup"
         private const val BACKUP_FILE_NAME = "power_of_habit_backup.zip"
+
+        // Global debounced backup scheduler
+        private val backupScope = CoroutineScope(
+            Dispatchers.IO + SupervisorJob()
+        )
+        private val backupTrigger = MutableSharedFlow<GoogleDriveBackupManager>(
+            replay = 0,
+            extraBufferCapacity = 1
+        )
+
+        init {
+            backupScope.launch {
+                @OptIn(kotlinx.coroutines.FlowPreview::class)
+                backupTrigger
+                    .debounce(5000) // 5 seconds debounce
+                    .collect { manager ->
+                        Log.d(TAG, "Triggering debounced backup...")
+                        manager.backupDatabase()
+                    }
+            }
+        }
     }
 
     fun isGoogleSignedIn(): Boolean {
-        return GoogleSignIn.getLastSignedInAccount(context) != null
+        return try {
+            GoogleSignIn.getLastSignedInAccount(context) != null
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    fun scheduleAutoBackup() {
+        try {
+            val account = GoogleSignIn.getLastSignedInAccount(context)
+            if (account == null) {
+                Log.d(TAG, "Not signed in, skipping auto backup schedule")
+                return
+            }
+            backupTrigger.tryEmit(this)
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to schedule auto backup: ${e.message}")
+        }
     }
 
     suspend fun backupDatabase(): Boolean = withContext(Dispatchers.IO) {
@@ -49,8 +94,8 @@ class GoogleDriveBackupManager(private val context: Context) {
 
             val account = GoogleSignIn.getLastSignedInAccount(context)
             if (account == null) {
-                Log.w(TAG, "Google accounts not signed in. Local simulation fallback.")
-                return@withContext true
+                Log.w(TAG, "Google accounts not signed in.")
+                return@withContext false
             }
 
             val credential = GoogleAccountCredential.usingOAuth2(
@@ -86,8 +131,8 @@ class GoogleDriveBackupManager(private val context: Context) {
             }
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Google Drive backup failed, simulating success fallback", e)
-            true
+            Log.e(TAG, "Google Drive backup failed", e)
+            false
         }
     }
 
@@ -132,6 +177,18 @@ class GoogleDriveBackupManager(private val context: Context) {
 
             val dbFile = context.getDatabasePath("power_of_habit.db")
             val dbDir = dbFile.parentFile ?: return@withContext false
+
+            // 1. Close database cleanly to prevent corruption
+            try {
+                val dbEntryPoint = dagger.hilt.EntryPoints.get(
+                    context.applicationContext,
+                    com.example.powerofhabit.di.DatabaseEntryPoint::class.java
+                )
+                dbEntryPoint.appDatabase().close()
+                Log.d(TAG, "Database connection closed cleanly before restore")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to close database before restore", e)
+            }
             
             File(dbFile.path + "-shm").delete()
             File(dbFile.path + "-wal").delete()
@@ -141,13 +198,23 @@ class GoogleDriveBackupManager(private val context: Context) {
                 var entry: ZipEntry? = zis.nextEntry
                 while (entry != null) {
                     val destFile = File(dbDir, entry.name)
+                    // Zip Slip protection
+                    if (!destFile.canonicalPath.startsWith(dbDir.canonicalPath + File.separator)) {
+                        throw SecurityException("Illegal zip entry path: ${entry.name}")
+                    }
                     FileOutputStream(destFile).use { fos ->
                         zis.copyTo(fos)
                     }
                     entry = zis.nextEntry
                 }
             }
-            Log.d(TAG, "Database restored successfully")
+            Log.d(TAG, "Database restored successfully. Restarting app.")
+
+            // Trigger app restart to cleanly reload Room database
+            val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+            intent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            context.startActivity(intent)
+            Runtime.getRuntime().exit(0)
             true
         } catch (e: Exception) {
             Log.e(TAG, "Google Drive restore failed", e)

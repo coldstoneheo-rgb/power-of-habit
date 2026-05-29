@@ -107,6 +107,7 @@ class AddEditHabitViewModel @Inject constructor(
                         return@launch
                     }
                 }
+                com.example.powerofhabit.backup.GoogleDriveBackupManager(context).scheduleAutoBackup()
                 _uiEvent.emit(AddEditHabitUiEvent.SaveSuccess)
             } catch (e: Exception) {
                 _uiEvent.emit(AddEditHabitUiEvent.Error(e.message ?: "Failed to save habit"))
@@ -119,6 +120,7 @@ class AddEditHabitViewModel @Inject constructor(
             try {
                 repository.deleteHabit(habit)
                 HabitReminderManager(context).cancelReminder(habit.habitId)
+                com.example.powerofhabit.backup.GoogleDriveBackupManager(context).scheduleAutoBackup()
                 _uiEvent.emit(AddEditHabitUiEvent.SaveSuccess)
             } catch (e: Exception) {
                 _uiEvent.emit(AddEditHabitUiEvent.Error(e.message ?: "Failed to delete habit"))

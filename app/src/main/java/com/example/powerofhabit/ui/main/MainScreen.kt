@@ -72,15 +72,12 @@ fun MainScreen(
                     onNavigateToBadges = onNavigateToBadges,
                     onUpdateRecordStatus = { recordId, status, habitId ->
                         viewModel.updateRecordStatus(recordId, status, habitId)
-                        scope.launch { backupManager.backupDatabase() }
                     },
                     onInsertRecord = { record ->
                         viewModel.insertRecord(record)
-                        scope.launch { backupManager.backupDatabase() }
                     },
                     onDeleteRecord = { record ->
                         viewModel.deleteRecord(record)
-                        scope.launch { backupManager.backupDatabase() }
                     },
                     modifier = modifier
                 )
