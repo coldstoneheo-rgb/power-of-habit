@@ -12,7 +12,7 @@ interface HabitDao {
     @Query("SELECT * FROM Habits WHERE habitId = :habitId LIMIT 1")
     fun getHabitById(habitId: Int): Flow<HabitEntity?>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertHabit(habit: HabitEntity): Long
 
     @Update
@@ -31,7 +31,7 @@ interface HabitDao {
     @Query("SELECT * FROM HabitRecords WHERE date >= :startDate AND date <= :endDate")
     fun getRecordsBetween(startDate: String, endDate: String): Flow<List<HabitRecordEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertRecord(record: HabitRecordEntity): Long
 
     @Query("UPDATE HabitRecords SET status = :status WHERE recordId = :recordId")

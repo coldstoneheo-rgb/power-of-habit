@@ -97,9 +97,10 @@ class DefaultDataRepositoryTest {
 
         override suspend fun insertHabit(habit: HabitEntity): Long {
             val current = habitsFlow.value.toMutableList()
-            current.add(habit)
+            val id = if (habit.habitId == 0) (current.maxOfOrNull { it.habitId } ?: 0) + 1 else habit.habitId
+            current.add(habit.copy(habitId = id))
             habitsFlow.value = current
-            return habit.habitId.toLong()
+            return id.toLong()
         }
 
         override suspend fun updateHabit(habit: HabitEntity) {
@@ -131,9 +132,10 @@ class DefaultDataRepositoryTest {
 
         override suspend fun insertRecord(record: HabitRecordEntity): Long {
             val current = recordsFlow.value.toMutableList()
-            current.add(record)
+            val id = if (record.recordId == 0) (current.maxOfOrNull { it.recordId } ?: 0) + 1 else record.recordId
+            current.add(record.copy(recordId = id))
             recordsFlow.value = current
-            return record.recordId.toLong()
+            return id.toLong()
         }
 
         override suspend fun updateRecordStatus(recordId: Int, status: String) {
