@@ -135,7 +135,7 @@ tasks.register("copyApkToGoogleDrive") {
         val destDir = if (!customPath.isNullOrBlank()) {
             File(customPath)
         } else {
-            File("G:/내 드라이브/AI/Android Studio/powerofhabit/apk")
+            File("G:/내 드라이브/AI-outputs/Android Studio/powerofhabit/apk")
         }
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmm").format(Date())
         try {
