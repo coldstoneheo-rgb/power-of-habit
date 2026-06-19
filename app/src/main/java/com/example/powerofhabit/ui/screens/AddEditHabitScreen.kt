@@ -64,6 +64,7 @@ fun AddEditHabitScreen(
     var selectedThemeHex by remember { mutableStateOf("#E57373") } // Default premium matte red
     var habitType by remember { mutableStateOf("CHECK") }
     var unit by remember { mutableStateOf("") }
+    var targetValueString by remember { mutableStateOf("") }
     
     var showColorPickerDialog by remember { mutableStateOf(false) }
     
@@ -103,6 +104,7 @@ fun AddEditHabitScreen(
             selectedThemeHex = habit.themeColor
             habitType = habit.habitType
             unit = habit.unit ?: ""
+            targetValueString = habit.targetValue?.toString() ?: ""
         }
     }
     
@@ -321,6 +323,22 @@ fun AddEditHabitScreen(
                         unfocusedBorderColor = Color.DarkGray
                     ),
                     singleLine = true
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = targetValueString,
+                    onValueChange = { targetValueString = it },
+                    label = { Text("수행 완료 기준수치") },
+                    placeholder = { Text("예: 3, 50, 1000") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        focusedBorderColor = HabitOrange,
+                        unfocusedBorderColor = Color.DarkGray
+                    ),
+                    singleLine = true,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
                 )
             }
             
@@ -594,6 +612,11 @@ fun AddEditHabitScreen(
                         return@Button
                     }
 
+                    if (habitType == "VALUE" && targetValueString.isNotBlank() && targetValueString.toFloatOrNull() == null) {
+                        Toast.makeText(context, "올바른 완료 기준 수치를 입력해주세요 (예: 3, 10.5).", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
                     val computedFrequencyValue = when (frequencyType) {
                         "DAILY" -> ""
                         "INTERVAL" -> intervalDays
@@ -613,7 +636,8 @@ fun AddEditHabitScreen(
                         themeColor = selectedThemeHex,
                         habitType = habitType,
                         unit = if (habitType == "VALUE") unit else null,
-                        memo = if (memo.isBlank()) null else memo
+                        memo = if (memo.isBlank()) null else memo,
+                        targetValue = if (habitType == "VALUE") targetValueString.toFloatOrNull() else null
                     )
                 },
                 modifier = Modifier

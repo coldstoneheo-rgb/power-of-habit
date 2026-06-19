@@ -333,11 +333,12 @@ internal fun MainScreenContent(
                             if (existingRecord != null) {
                                 onDeleteRecord(existingRecord)
                             }
+                            val status = if (habit.targetValue == null || value >= habit.targetValue) "COMPLETED" else "FAILED"
                             onInsertRecord(
                                 HabitRecordEntity(
                                     habitId = habit.habitId,
                                     date = date.toString(),
-                                    status = "COMPLETED",
+                                    status = status,
                                     inputValue = value
                                 )
                             )

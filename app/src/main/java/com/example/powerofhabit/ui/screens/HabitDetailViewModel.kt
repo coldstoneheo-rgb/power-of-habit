@@ -106,4 +106,17 @@ class HabitDetailViewModel @Inject constructor(
             }
         }
     }
+
+    fun deleteHabit(habit: HabitEntity, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                repository.deleteHabit(habit)
+                com.example.powerofhabit.reminder.HabitReminderManager(context).cancelReminder(habit.habitId)
+                com.example.powerofhabit.backup.GoogleDriveBackupManager(context).scheduleAutoBackup()
+                onSuccess()
+            } catch (e: Exception) {
+                android.util.Log.e("HabitDetailViewModel", "Failed to delete habit", e)
+            }
+        }
+    }
 }
