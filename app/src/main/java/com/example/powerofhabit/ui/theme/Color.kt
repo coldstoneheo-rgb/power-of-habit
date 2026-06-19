@@ -3,6 +3,7 @@ package com.example.powerofhabit.ui.theme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 
 val BlackBackground = Color(0xFF101012) // Slightly warm black for high-end feel
 val DarkGrayBackground = Color(0xFF1C1C1E) // Matte metallic charcoal background
@@ -85,6 +86,19 @@ val PremiumMatteColors = listOf(
     "#26A69A" to Color(0xFF26A69A), // Matte Persian Green
     "#FF7043" to Color(0xFFFF7043), // Matte Coral
     "#A7FFEB" to Color(0xFFA7FFEB)  // Matte Mint
+)
+
+val LightBackground = Color(0xFFF2F2F7) // System background light gray
+val LightSurface = Color(0xFFFFFFFF) // Surface white
+val DarkText = Color(0xFF1C1C1E) // Dark charcoal text
+
+val LightColorScheme = lightColorScheme(
+    primary = HabitOrange,
+    background = LightBackground,
+    surface = LightSurface,
+    onPrimary = Color.White,
+    onBackground = DarkText,
+    onSurface = DarkText
 )
 
 val DarkColorScheme = darkColorScheme(

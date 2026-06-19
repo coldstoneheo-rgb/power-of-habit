@@ -16,5 +16,6 @@ data class HabitEntity(
     val habitType: String, // "CHECK", "VALUE"
     val unit: String?,
     val isReminderEnabled: Boolean = false,
+    val memo: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 )

@@ -47,6 +47,8 @@ fun MainScreen(
     viewModel: MainScreenViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val isDarkMode by viewModel.isDarkMode.collectAsStateWithLifecycle()
+    val isDateDescending by viewModel.isDateDescending.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val backupManager = remember { com.example.powerofhabit.backup.GoogleDriveBackupManager(context) }
@@ -54,7 +56,7 @@ fun MainScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BlackBackground)
+            .background(MaterialTheme.colorScheme.background)
     ) {
         when (state) {
             MainScreenUiState.Loading -> {
@@ -79,6 +81,10 @@ fun MainScreen(
                     onDeleteRecord = { record ->
                         viewModel.deleteRecord(record)
                     },
+                    isDarkMode = isDarkMode,
+                    isDateDescending = isDateDescending,
+                    onToggleDarkMode = { viewModel.toggleDarkMode() },
+                    onToggleDateDescending = { viewModel.toggleDateDescending() },
                     modifier = modifier
                 )
             }
@@ -104,16 +110,21 @@ internal fun MainScreenContent(
     onUpdateRecordStatus: (Int, String, Int) -> Unit,
     onInsertRecord: (HabitRecordEntity) -> Unit,
     onDeleteRecord: (HabitRecordEntity) -> Unit,
+    isDarkMode: Boolean,
+    isDateDescending: Boolean,
+    onToggleDarkMode: () -> Unit,
+    onToggleDateDescending: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val today = remember { LocalDate.now() }
-    val dates = remember(today) {
-        listOf(
+    val dates = remember(today, isDateDescending) {
+        val base = listOf(
             today.minusDays(3),
             today.minusDays(2),
             today.minusDays(1),
             today
         )
+        if (isDateDescending) base.reversed() else base
     }
     
     var showValueDialogForHabit by remember { mutableStateOf<Pair<HabitEntity, LocalDate>?>(null) }
@@ -135,46 +146,48 @@ internal fun MainScreenContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "오늘의 습관",
-                color = Color.White,
+                text = "습관의 힘",
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = -0.6.sp
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Add Habit Button
+                IconButton(
+                    onClick = onNavigateToAddHabit,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Habit",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
                 // Trophy/Badge Button
                 IconButton(
                     onClick = onNavigateToBadges,
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
-                        .background(DarkGrayBackground)
+                        .background(MaterialTheme.colorScheme.surface)
                 ) {
                     Text("🏆", fontSize = 18.sp)
                 }
 
+                // Settings Button
                 IconButton(
                     onClick = { showBackupSettings = true },
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
-                        .background(DarkGrayBackground)
+                        .background(MaterialTheme.colorScheme.surface)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Settings,
-                        contentDescription = "Backup Settings",
-                        tint = Color.White
-                    )
-                }
-                
-                IconButton(
-                    onClick = onNavigateToAddHabit,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(DarkGrayBackground)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Habit",
-                        tint = Color.White
+                        contentDescription = "Settings",
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -219,7 +232,7 @@ internal fun MainScreenContent(
                             )
                             Text(
                                 text = date.dayOfMonth.toString(),
-                                color = if (date == today) HabitOrange else Color.White,
+                                color = if (date == today) HabitOrange else MaterialTheme.colorScheme.onBackground,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -352,8 +365,8 @@ internal fun MainScreenContent(
             },
             title = {
                 Text(
-                    text = "동기화 및 백업 설정",
-                    color = Color.White,
+                    text = "설정 및 동기화",
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     letterSpacing = -0.5.sp
@@ -361,6 +374,52 @@ internal fun MainScreenContent(
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    // 테마 설정
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "다크 모드 적용",
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Switch(
+                            checked = isDarkMode,
+                            onCheckedChange = { onToggleDarkMode() },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = HabitOrange,
+                                checkedTrackColor = HabitOrange.copy(alpha = 0.5f)
+                            )
+                        )
+                    }
+
+                    // 날짜 순서 설정
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "오늘 날짜를 가장 왼쪽에 표시",
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Switch(
+                            checked = isDateDescending,
+                            onCheckedChange = { onToggleDateDescending() },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = HabitOrange,
+                                checkedTrackColor = HabitOrange.copy(alpha = 0.5f)
+                            )
+                        )
+                    }
+
+                    Divider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp)
+
                     Text(
                         text = "구글 드라이브를 통해 안전하게 습관 데이터를 동기화하고 복구할 수 있습니다.",
                         color = LightGrayText,
@@ -379,7 +438,7 @@ internal fun MainScreenContent(
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
                                 text = if (isBackingUp) "데이터 백업 중..." else "데이터 복원 중...",
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 fontSize = 14.sp
                             )
                         }
@@ -426,10 +485,10 @@ internal fun MainScreenContent(
                             }
                         },
                         enabled = !isBackingUp && !isRestoring,
-                        colors = ButtonDefaults.buttonColors(containerColor = DarkGrayBackground),
-                        modifier = Modifier.weight(1f).border(1.dp, MetalBorderBrush, RoundedCornerShape(20.dp))
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
+                        modifier = Modifier.weight(1f).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp))
                     ) {
-                        Text("복원하기", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("복원하기", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                     }
                 }
             },
@@ -441,8 +500,8 @@ internal fun MainScreenContent(
                     Text("닫기", color = LightGrayText)
                 }
             },
-            containerColor = DarkGrayBackground,
-            titleContentColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -468,8 +527,8 @@ private fun HabitRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(DarkGrayBackground)
-            .border(1.dp, MetalBorderBrush, RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
             .clickable { onNavigateToDetail(habit.habitId) }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -487,18 +546,16 @@ private fun HabitRow(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = habit.title,
-                    color = Color.White,
-                    fontSize = 18.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    letterSpacing = -0.5.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    letterSpacing = -0.5.sp
                 )
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = habit.question,
-                color = LightGrayText,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 fontSize = 12.sp,
                 letterSpacing = -0.5.sp,
                 maxLines = 1,

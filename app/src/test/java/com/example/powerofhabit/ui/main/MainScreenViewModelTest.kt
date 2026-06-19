@@ -14,6 +14,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import com.example.powerofhabit.data.local.SettingsManager
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainScreenViewModelTest {
@@ -27,7 +28,10 @@ class MainScreenViewModelTest {
         Dispatchers.setMain(testDispatcher)
         fakeRepository = FakeMyModelRepository()
         val mockContext = org.mockito.Mockito.mock(android.content.Context::class.java)
-        viewModel = MainScreenViewModel(fakeRepository, mockContext)
+        val mockSettingsManager = org.mockito.Mockito.mock(SettingsManager::class.java)
+        org.mockito.Mockito.`when`(mockSettingsManager.isDarkMode).thenReturn(kotlinx.coroutines.flow.MutableStateFlow(true))
+        org.mockito.Mockito.`when`(mockSettingsManager.isDateDescending).thenReturn(kotlinx.coroutines.flow.MutableStateFlow(true))
+        viewModel = MainScreenViewModel(fakeRepository, mockSettingsManager, mockContext)
     }
 
     @After
