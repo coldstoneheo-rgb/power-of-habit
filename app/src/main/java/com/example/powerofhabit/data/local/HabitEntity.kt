@@ -17,5 +17,6 @@ data class HabitEntity(
     val unit: String?,
     val isReminderEnabled: Boolean = false,
     val memo: String? = null,
+    val targetValue: Float? = null,
     val createdAt: Long = System.currentTimeMillis()
 )
