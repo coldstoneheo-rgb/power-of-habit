@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
-
+import com.example.powerofhabit.data.local.SettingsManager
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 
@@ -27,8 +27,20 @@ sealed interface MainScreenUiState {
 @HiltViewModel
 class MainScreenViewModel @Inject constructor(
     private val dataRepository: DataRepository,
+    private val settingsManager: SettingsManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
+
+  val isDarkMode: StateFlow<Boolean> = settingsManager.isDarkMode
+  val isDateDescending: StateFlow<Boolean> = settingsManager.isDateDescending
+
+  fun toggleDarkMode() {
+    settingsManager.setDarkMode(!isDarkMode.value)
+  }
+
+  fun toggleDateDescending() {
+    settingsManager.setDateDescending(!isDateDescending.value)
+  }
 
   @OptIn(ExperimentalCoroutinesApi::class)
   val uiState: StateFlow<MainScreenUiState> = flow {

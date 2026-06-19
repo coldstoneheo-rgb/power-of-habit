@@ -59,7 +59,8 @@ class AddEditHabitViewModel @Inject constructor(
         isReminderEnabled: Boolean,
         themeColor: String,
         habitType: String,
-        unit: String?
+        unit: String?,
+        memo: String? = null
     ) {
         viewModelScope.launch {
             if (title.isBlank()) {
@@ -80,7 +81,8 @@ class AddEditHabitViewModel @Inject constructor(
                         isReminderEnabled = isReminderEnabled,
                         themeColor = themeColor,
                         habitType = habitType,
-                        unit = unit
+                        unit = unit,
+                        memo = memo
                     )
                     val newHabitId = repository.insertHabit(habit).toInt()
                     // Re-schedule with actual auto-generated ID
@@ -98,7 +100,8 @@ class AddEditHabitViewModel @Inject constructor(
                             isReminderEnabled = isReminderEnabled,
                             themeColor = themeColor,
                             habitType = habitType,
-                            unit = unit
+                            unit = unit,
+                            memo = memo
                         )
                         repository.updateHabit(updatedHabit)
                         reminderManager.scheduleReminder(updatedHabit)

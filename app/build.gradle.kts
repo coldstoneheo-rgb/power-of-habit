@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
@@ -112,4 +115,49 @@ dependencies {
   implementation("com.google.api-client:google-api-client-android:2.2.0") {
       exclude(group = "org.apache.httpcomponents")
   }
+}
+
+tasks.register("copyApkToGoogleDrive") {
+    val buildDir = layout.buildDirectory
+    val versionName = android.defaultConfig.versionName ?: "1.0"
+    val versionCode = android.defaultConfig.versionCode ?: 1
+    val localPropertiesFile = rootProject.file("local.properties")
+    doLast {
+        val localProperties = Properties()
+        if (localPropertiesFile.exists()) {
+            FileInputStream(localPropertiesFile).use { stream ->
+                localProperties.load(stream)
+            }
+        }
+        val customPath = localProperties.getProperty("google.drive.apk.dir") as? String
+        val destDir = if (!customPath.isNullOrBlank()) {
+            File(customPath)
+        } else {
+            File("G:/내 드라이브/AI/Android Studio/powerofhabit/apk")
+        }
+        try {
+            if (destDir.exists() || destDir.mkdirs()) {
+                val apkFile = buildDir.file("outputs/apk/debug/app-debug.apk").get().asFile
+                if (apkFile.exists()) {
+                    val targetName = "power-of-habit-v${versionName}_c${versionCode}-debug.apk"
+                    apkFile.copyTo(File(destDir, targetName), overwrite = true)
+                    println("APK copied to Google Drive: ${destDir.absolutePath}/$targetName")
+                }
+                val releaseApk = buildDir.file("outputs/apk/release/app-release-unsigned.apk").get().asFile
+                if (releaseApk.exists()) {
+                    val targetName = "power-of-habit-v${versionName}_c${versionCode}-release.apk"
+                    releaseApk.copyTo(File(destDir, targetName), overwrite = true)
+                    println("Release APK copied to Google Drive: ${destDir.absolutePath}/$targetName")
+                }
+            } else {
+                println("Google Drive directory not accessible: ${destDir.absolutePath}")
+            }
+        } catch (e: Exception) {
+            println("Failed to copy APK to Google Drive: ${e.message}")
+        }
+    }
+}
+
+tasks.matching { it.name == "assembleDebug" || it.name == "assembleRelease" }.all {
+    finalizedBy("copyApkToGoogleDrive")
 }

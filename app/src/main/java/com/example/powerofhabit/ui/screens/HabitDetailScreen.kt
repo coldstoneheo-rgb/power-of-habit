@@ -297,6 +297,14 @@ private fun HabitDetailContent(
                 color = LightGrayText,
                 fontSize = 16.sp
             )
+            if (!habit.memo.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = habit.memo,
+                    color = LightGrayText.copy(alpha = 0.7f),
+                    fontSize = 14.sp
+                )
+            }
         }
         
         // Analytics Widgets
