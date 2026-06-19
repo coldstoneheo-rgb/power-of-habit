@@ -121,6 +121,14 @@ fun AddEditHabitScreen(
         }
     }
     
+    val themeColor = remember(selectedThemeHex) {
+        try {
+            Color(android.graphics.Color.parseColor(selectedThemeHex))
+        } catch (e: Exception) {
+            Color(0xFFE57373)
+        }
+    }
+    
     val scrollState = rememberScrollState()
     
     // Android native TimePickerDialog
@@ -243,7 +251,7 @@ fun AddEditHabitScreen(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(Color(android.graphics.Color.parseColor(selectedThemeHex)))
+                        .background(themeColor)
                         .border(1.5.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f), CircleShape)
                         .clickable { showColorPickerDialog = true }
                 )
@@ -503,7 +511,7 @@ fun AddEditHabitScreen(
                         },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
-                            checkedTrackColor = try { Color(android.graphics.Color.parseColor(selectedThemeHex)) } catch (e: Exception) { Color.White },
+                            checkedTrackColor = themeColor,
                             uncheckedThumbColor = LightGrayText,
                             uncheckedTrackColor = MaterialTheme.colorScheme.background
                         )
@@ -528,7 +536,7 @@ fun AddEditHabitScreen(
                         ) {
                             Text(
                                 text = reminderTime ?: "09:00",
-                                color = Color(android.graphics.Color.parseColor(selectedThemeHex)),
+                                color = themeColor,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
                             )
@@ -542,6 +550,50 @@ fun AddEditHabitScreen(
             // Save Button
             Button(
                 onClick = {
+                    if (title.isBlank()) {
+                        Toast.makeText(context, "습관 이름을 입력해주세요.", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+                    
+                    val isFrequencyValid = when (frequencyType) {
+                        "DAILY" -> true
+                        "INTERVAL" -> {
+                            val days = intervalDays.toIntOrNull()
+                            days != null && days >= 1
+                        }
+                        "WEEKLY_COUNT" -> {
+                            val count = weeklyCount.toIntOrNull()
+                            count != null && count in 1..7
+                        }
+                        "MONTHLY_COUNT" -> {
+                            val count = monthlyCount.toIntOrNull()
+                            count != null && count in 1..31
+                        }
+                        "COUNT_IN_DAYS" -> {
+                            val count = countInDaysCount.toIntOrNull()
+                            val period = countInDaysPeriod.toIntOrNull()
+                            count != null && period != null && count >= 1 && period >= 1 && count <= period
+                        }
+                        else -> false
+                    }
+                    
+                    if (!isFrequencyValid) {
+                        val errMsg = when (frequencyType) {
+                            "INTERVAL" -> "올바른 간격(1일 이상)을 입력해주세요."
+                            "WEEKLY_COUNT" -> "일주일 수행 횟수는 1~7회 사이여야 합니다."
+                            "MONTHLY_COUNT" -> "한 달 수행 횟수는 1~31회 사이여야 합니다."
+                            "COUNT_IN_DAYS" -> "올바른 수행 기간 및 횟수(횟수 <= 기간)를 입력해주세요."
+                            else -> "올바른 빈도 값을 입력해주세요."
+                        }
+                        Toast.makeText(context, errMsg, Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
+                    if (habitType == "VALUE" && unit.isBlank()) {
+                        Toast.makeText(context, "수치 단위(예: kg, ml)를 입력해주세요.", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
                     val computedFrequencyValue = when (frequencyType) {
                         "DAILY" -> ""
                         "INTERVAL" -> intervalDays
@@ -568,7 +620,7 @@ fun AddEditHabitScreen(
                     .fillMaxWidth()
                     .height(56.dp)
                     .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp)),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(android.graphics.Color.parseColor(selectedThemeHex))),
+                colors = ButtonDefaults.buttonColors(containerColor = themeColor),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Text("Save Habit", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
