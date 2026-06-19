@@ -85,7 +85,11 @@ val PremiumMatteColors = listOf(
     "#00E676" to Color(0xFF00E676), // Matte Neon Green
     "#26A69A" to Color(0xFF26A69A), // Matte Persian Green
     "#FF7043" to Color(0xFFFF7043), // Matte Coral
-    "#A7FFEB" to Color(0xFFA7FFEB)  // Matte Mint
+    "#A7FFEB" to Color(0xFFA7FFEB), // Matte Mint
+    "#9E9D24" to Color(0xFF9E9D24), // Matte Mustard Yellow
+    "#00BCD4" to Color(0xFF00BCD4), // Matte Ocean Blue
+    "#009688" to Color(0xFF009688), // Matte Forest Teal
+    "#8D6E63" to Color(0xFF8D6E63)  // Matte Cocoa Brown
 )
 
 val LightBackground = Color(0xFFF2F2F7) // System background light gray
