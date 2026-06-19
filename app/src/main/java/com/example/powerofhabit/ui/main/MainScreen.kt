@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
@@ -507,6 +510,41 @@ internal fun MainScreenContent(
 }
 
 @Composable
+private fun DonutProgressChart(
+    progress: Float,
+    themeColor: Color,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier.size(24.dp)
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val strokeWidth = 3.dp.toPx()
+            
+            // Background ring
+            drawCircle(
+                color = themeColor.copy(alpha = 0.15f),
+                radius = size.minDimension / 2 - strokeWidth / 2,
+                style = Stroke(width = strokeWidth)
+            )
+            
+            // Progress arc
+            drawArc(
+                color = themeColor,
+                startAngle = -90f,
+                sweepAngle = progress * 360f,
+                useCenter = false,
+                style = Stroke(
+                    width = strokeWidth,
+                    cap = StrokeCap.Round
+                )
+            )
+        }
+    }
+}
+
+@Composable
 private fun HabitRow(
     habit: HabitEntity,
     dates: List<LocalDate>,
@@ -523,6 +561,15 @@ private fun HabitRow(
         }
     }
     
+    val completionRate = remember(recordsMap) {
+        val today = LocalDate.now()
+        val currentMonthPrefix = today.toString().substring(0, 7) // "YYYY-MM"
+        val thisMonthRecords = recordsMap.filter { it.key.startsWith(currentMonthPrefix) }
+        val completedCount = thisMonthRecords.values.count { it.status == "COMPLETED" }
+        val totalCount = thisMonthRecords.values.count { it.status != "SKIPPED" }
+        if (totalCount > 0) completedCount.toFloat() / totalCount else 0f
+    }
+    
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -530,36 +577,27 @@ private fun HabitRow(
             .background(MaterialTheme.colorScheme.surface)
             .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
             .clickable { onNavigateToDetail(habit.habitId) }
-            .padding(16.dp),
+            .padding(vertical = 12.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            modifier = Modifier.weight(1f)
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(themeColor)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = habit.title,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = -0.5.sp
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
+            DonutProgressChart(
+                progress = completionRate,
+                themeColor = themeColor
+            )
+            Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = habit.question,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                fontSize = 12.sp,
+                text = habit.title,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
                 letterSpacing = -0.5.sp,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
             )
         }
         
