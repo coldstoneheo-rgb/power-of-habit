@@ -612,6 +612,11 @@ fun AddEditHabitScreen(
                         return@Button
                     }
 
+                    if (habitType == "VALUE" && targetValueString.isNotBlank() && targetValueString.toFloatOrNull() == null) {
+                        Toast.makeText(context, "올바른 완료 기준 수치를 입력해주세요 (예: 3, 10.5).", Toast.LENGTH_SHORT).show()
+                        return@Button
+                    }
+
                     val computedFrequencyValue = when (frequencyType) {
                         "DAILY" -> ""
                         "INTERVAL" -> intervalDays

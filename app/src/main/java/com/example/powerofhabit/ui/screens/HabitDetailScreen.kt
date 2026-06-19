@@ -149,26 +149,26 @@ private fun HabitDetailContent(
         val grouped = when (selectedFilter) {
             "일" -> dateScoreMap.entries.sortedBy { it.key }.map { it.value }
             "주" -> {
+                val weekFields = java.time.temporal.WeekFields.of(java.util.Locale.getDefault())
                 dateScoreMap.entries.groupBy {
-                    val weekFields = java.time.temporal.WeekFields.of(java.util.Locale.getDefault())
                     "${it.key.year}-W${it.key.get(weekFields.weekOfWeekBasedYear())}"
-                }.entries.sortedBy { it.key }.map { it.value.maxBy { entry -> entry.key }.value }
+                }.entries.sortedBy { it.key }.map { it.value.maxByOrNull { entry -> entry.key }?.value ?: 0f }
             }
             "월" -> {
                 dateScoreMap.entries.groupBy {
                     "${it.key.year}-${it.key.monthValue}"
-                }.entries.sortedBy { it.key }.map { it.value.maxBy { entry -> entry.key }.value }
+                }.entries.sortedBy { it.key }.map { it.value.maxByOrNull { entry -> entry.key }?.value ?: 0f }
             }
             "분기" -> {
                 dateScoreMap.entries.groupBy {
                     val quarter = (it.key.monthValue - 1) / 3 + 1
                     "${it.key.year}-Q$quarter"
-                }.entries.sortedBy { it.key }.map { it.value.maxBy { entry -> entry.key }.value }
+                }.entries.sortedBy { it.key }.map { it.value.maxByOrNull { entry -> entry.key }?.value ?: 0f }
             }
             "년" -> {
                 dateScoreMap.entries.groupBy {
                     "${it.key.year}"
-                }.entries.sortedBy { it.key }.map { it.value.maxBy { entry -> entry.key }.value }
+                }.entries.sortedBy { it.key }.map { it.value.maxByOrNull { entry -> entry.key }?.value ?: 0f }
             }
             else -> dateScoreMap.entries.sortedBy { it.key }.map { it.value }
         }
@@ -711,8 +711,12 @@ private fun HabitDetailContent(
                     onClick = {
                         val value = inputValue.toFloatOrNull()
                         val computedStatus = if (habit.habitType == "VALUE" && status != "NONE" && status != "SKIPPED") {
-                            val targetVal = habit.targetValue ?: 0f
-                            if (value != null && value >= targetVal) "COMPLETED" else "FAILED"
+                            val targetVal = habit.targetValue
+                            if (targetVal != null) {
+                                if (value != null && value >= targetVal) "COMPLETED" else "FAILED"
+                            } else {
+                                status
+                            }
                         } else {
                             status
                         }
@@ -838,13 +842,16 @@ private fun CardSection(
 private fun exportHabitRecordsToCsv(context: Context, habit: HabitEntity, records: List<HabitRecordEntity>) {
     try {
         val csvContent = java.lang.StringBuilder().apply {
+            append('\uFEFF') // Excel 한글 깨짐 방지를 위한 UTF-8 BOM 추가
             append("Date,Status,Value (${habit.unit ?: ""})\n")
             records.sortedBy { it.date }.forEach { record ->
                 append("${record.date},${record.status},${record.inputValue ?: ""}\n")
             }
         }.toString()
         
-        val fileName = "habit_${habit.title.replace(" ", "_")}_records.csv"
+        // 파일명에 안전한 문자(영어, 숫자, 한글)만 허용하고 나머지는 언더스코어(_)로 치환
+        val sanitizedTitle = habit.title.replace(Regex("[^a-zA-Z0-9가-힣]"), "_")
+        val fileName = "habit_${sanitizedTitle}_records.csv"
         val file = File(context.cacheDir, fileName)
         file.writeText(csvContent)
         
