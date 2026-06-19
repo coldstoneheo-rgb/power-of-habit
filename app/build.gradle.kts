@@ -113,3 +113,36 @@ dependencies {
       exclude(group = "org.apache.httpcomponents")
   }
 }
+
+tasks.register("copyApkToGoogleDrive") {
+    val buildDir = layout.buildDirectory
+    val versionName = android.defaultConfig.versionName ?: "1.0"
+    val versionCode = android.defaultConfig.versionCode ?: 1
+    doLast {
+        val destDir = File("G:/내 드라이브/AI/Android Studio/powerofhabit/apk")
+        try {
+            if (destDir.exists() || destDir.mkdirs()) {
+                val apkFile = buildDir.file("outputs/apk/debug/app-debug.apk").get().asFile
+                if (apkFile.exists()) {
+                    val targetName = "power-of-habit-v${versionName}_c${versionCode}-debug.apk"
+                    apkFile.copyTo(File(destDir, targetName), overwrite = true)
+                    println("APK copied to Google Drive: ${destDir.absolutePath}/$targetName")
+                }
+                val releaseApk = buildDir.file("outputs/apk/release/app-release-unsigned.apk").get().asFile
+                if (releaseApk.exists()) {
+                    val targetName = "power-of-habit-v${versionName}_c${versionCode}-release.apk"
+                    releaseApk.copyTo(File(destDir, targetName), overwrite = true)
+                    println("Release APK copied to Google Drive: ${destDir.absolutePath}/$targetName")
+                }
+            } else {
+                println("Google Drive directory not accessible: ${destDir.absolutePath}")
+            }
+        } catch (e: Exception) {
+            println("Failed to copy APK to Google Drive: ${e.message}")
+        }
+    }
+}
+
+tasks.matching { it.name == "assembleDebug" || it.name == "assembleRelease" }.all {
+    finalizedBy("copyApkToGoogleDrive")
+}
