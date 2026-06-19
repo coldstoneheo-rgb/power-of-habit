@@ -1,5 +1,7 @@
 import java.util.Properties
 import java.io.FileInputStream
+import java.text.SimpleDateFormat
+import java.util.Date
 
 plugins {
   alias(libs.plugins.android.application)
@@ -135,17 +137,18 @@ tasks.register("copyApkToGoogleDrive") {
         } else {
             File("G:/내 드라이브/AI/Android Studio/powerofhabit/apk")
         }
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmm").format(Date())
         try {
             if (destDir.exists() || destDir.mkdirs()) {
                 val apkFile = buildDir.file("outputs/apk/debug/app-debug.apk").get().asFile
                 if (apkFile.exists()) {
-                    val targetName = "power-of-habit-v${versionName}_c${versionCode}-debug.apk"
+                    val targetName = "power-of-habit-v${versionName}_c${versionCode}_${timestamp}-debug.apk"
                     apkFile.copyTo(File(destDir, targetName), overwrite = true)
                     println("APK copied to Google Drive: ${destDir.absolutePath}/$targetName")
                 }
                 val releaseApk = buildDir.file("outputs/apk/release/app-release-unsigned.apk").get().asFile
                 if (releaseApk.exists()) {
-                    val targetName = "power-of-habit-v${versionName}_c${versionCode}-release.apk"
+                    val targetName = "power-of-habit-v${versionName}_c${versionCode}_${timestamp}-release.apk"
                     releaseApk.copyTo(File(destDir, targetName), overwrite = true)
                     println("Release APK copied to Google Drive: ${destDir.absolutePath}/$targetName")
                 }
