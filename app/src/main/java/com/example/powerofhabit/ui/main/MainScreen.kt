@@ -530,16 +530,18 @@ private fun DonutProgressChart(
             )
             
             // Progress arc
-            drawArc(
-                color = themeColor,
-                startAngle = -90f,
-                sweepAngle = progress * 360f,
-                useCenter = false,
-                style = Stroke(
-                    width = strokeWidth,
-                    cap = StrokeCap.Round
+            if (progress > 0f) {
+                drawArc(
+                    color = themeColor,
+                    startAngle = -90f,
+                    sweepAngle = progress * 360f,
+                    useCenter = false,
+                    style = Stroke(
+                        width = strokeWidth,
+                        cap = StrokeCap.Round
+                    )
                 )
-            )
+            }
         }
     }
 }
