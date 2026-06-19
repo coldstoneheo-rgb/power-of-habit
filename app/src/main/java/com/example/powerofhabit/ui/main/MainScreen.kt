@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -247,11 +248,12 @@ internal fun MainScreenContent(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                items(habits) { habit ->
+                itemsIndexed(habits) { index, habit ->
                     HabitRow(
                         habit = habit,
                         dates = dates,
                         recordsMap = records[habit.habitId] ?: emptyMap(),
+                        showDivider = index < habits.lastIndex,
                         onNavigateToDetail = onNavigateToDetail,
                         onCheckClick = { date, record ->
                             if (habit.habitType == "VALUE") {
@@ -550,6 +552,7 @@ private fun HabitRow(
     habit: HabitEntity,
     dates: List<LocalDate>,
     recordsMap: Map<String, HabitRecordEntity>,
+    showDivider: Boolean,
     onNavigateToDetail: (Int) -> Unit,
     onCheckClick: (LocalDate, HabitRecordEntity?) -> Unit,
     onCheckLongClick: (LocalDate, HabitRecordEntity?) -> Unit
@@ -617,9 +620,11 @@ private fun HabitRow(
                 }
             }
         }
-        HorizontalDivider(
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
-            thickness = 0.5.dp
-        )
+        if (showDivider) {
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                thickness = 0.5.dp
+            )
+        }
     }
 }

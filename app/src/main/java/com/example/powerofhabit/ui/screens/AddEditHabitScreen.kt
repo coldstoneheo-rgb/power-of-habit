@@ -178,8 +178,7 @@ fun AddEditHabitScreen(
                                 val isSelected = selectedThemeHex.uppercase() == hex.uppercase()
                                 Box(
                                     modifier = Modifier
-                                        .size(32.dp)
-                                        .aspectRatio(1f)
+                                        .requiredSize(32.dp)
                                         .clip(CircleShape)
                                         .background(color)
                                         .border(
