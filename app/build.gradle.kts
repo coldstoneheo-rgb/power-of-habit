@@ -2,6 +2,8 @@ import java.util.Properties
 import java.io.FileInputStream
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 plugins {
   alias(libs.plugins.android.application)
@@ -135,9 +137,20 @@ tasks.register("copyApkToGoogleDrive") {
         val destDir = if (!customPath.isNullOrBlank()) {
             File(customPath)
         } else {
-            File("G:/내 드라이브/AI-outputs/Android Studio/powerofhabit/apk")
+            val fallback = File("G:/내 드라이브/AI-outputs/Android Studio/powerofhabit/apk")
+            if (fallback.exists()) {
+                fallback
+            } else {
+                null
+            }
         }
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmm").format(Date())
+        if (destDir == null) {
+            println("Google Drive APK directory is not configured in local.properties and fallback path does not exist. Skipping copy.")
+            return@doLast
+        }
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("Asia/Seoul")
+        }.format(Date())
         try {
             if (destDir.exists() || destDir.mkdirs()) {
                 val apkFile = buildDir.file("outputs/apk/debug/app-debug.apk").get().asFile

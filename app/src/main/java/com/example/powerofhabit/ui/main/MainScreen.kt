@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -144,7 +145,7 @@ internal fun MainScreenContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 24.dp),
+                .padding(bottom = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -210,21 +211,20 @@ internal fun MainScreenContent(
                 )
             }
         } else {
-            // Header Row for dates
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 12.dp),
+                    .padding(bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Spacer(modifier = Modifier.weight(1f))
                 Row(
-                    modifier = Modifier.width(224.dp),
+                    modifier = Modifier.width(152.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     dates.forEach { date ->
                         Column(
-                            modifier = Modifier.width(48.dp),
+                            modifier = Modifier.width(32.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
@@ -246,13 +246,14 @@ internal fun MainScreenContent(
             
             LazyColumn(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(0.dp)
             ) {
-                items(habits) { habit ->
+                itemsIndexed(habits) { index, habit ->
                     HabitRow(
                         habit = habit,
                         dates = dates,
                         recordsMap = records[habit.habitId] ?: emptyMap(),
+                        showDivider = index < habits.lastIndex,
                         onNavigateToDetail = onNavigateToDetail,
                         onCheckClick = { date, record ->
                             if (habit.habitType == "VALUE") {
@@ -517,10 +518,10 @@ private fun DonutProgressChart(
 ) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = modifier.size(24.dp)
+        modifier = modifier.size(18.dp)
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val strokeWidth = 3.dp.toPx()
+            val strokeWidth = 2.5f.dp.toPx()
             
             // Background ring
             drawCircle(
@@ -551,6 +552,7 @@ private fun HabitRow(
     habit: HabitEntity,
     dates: List<LocalDate>,
     recordsMap: Map<String, HabitRecordEntity>,
+    showDivider: Boolean,
     onNavigateToDetail: (Int) -> Unit,
     onCheckClick: (LocalDate, HabitRecordEntity?) -> Unit,
     onCheckLongClick: (LocalDate, HabitRecordEntity?) -> Unit
@@ -572,52 +574,57 @@ private fun HabitRow(
         if (totalCount > 0) completedCount.toFloat() / totalCount else 0f
     }
     
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
-            .clickable { onNavigateToDetail(habit.habitId) }
-            .padding(vertical = 12.dp, horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onNavigateToDetail(habit.habitId) }
+                .padding(vertical = 8.dp, horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            DonutProgressChart(
-                progress = completionRate,
-                themeColor = themeColor
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = habit.title,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = -0.5.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        
-        Spacer(modifier = Modifier.width(16.dp))
-        
-        Row(
-            modifier = Modifier.width(224.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            dates.forEach { date ->
-                val record = recordsMap[date.toString()]
-                CheckWidget(
-                    status = record?.status ?: "NONE",
-                    themeColor = themeColor,
-                    onClick = { onCheckClick(date, record) },
-                    onLongClick = { onCheckLongClick(date, record) }
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                DonutProgressChart(
+                    progress = completionRate,
+                    themeColor = themeColor
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = habit.title,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = -0.5.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
                 )
             }
+            
+            Spacer(modifier = Modifier.width(8.dp))
+            
+            Row(
+                modifier = Modifier.width(152.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                dates.forEach { date ->
+                    val record = recordsMap[date.toString()]
+                    CheckWidget(
+                        status = record?.status ?: "NONE",
+                        themeColor = themeColor,
+                        onClick = { onCheckClick(date, record) },
+                        onLongClick = { onCheckLongClick(date, record) }
+                    )
+                }
+            }
+        }
+        if (showDivider) {
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                thickness = 0.5.dp
+            )
         }
     }
 }
