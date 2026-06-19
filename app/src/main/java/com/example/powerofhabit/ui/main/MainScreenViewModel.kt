@@ -45,9 +45,10 @@ class MainScreenViewModel @Inject constructor(
   @OptIn(ExperimentalCoroutinesApi::class)
   val uiState: StateFlow<MainScreenUiState> = flow {
     val today = LocalDate.now()
-    val startDate = today.minusDays(3).toString()
-    val endDate = today.toString()
-    emit(startDate to endDate)
+    val limitDate = today.minusDays(3)
+    val monthStartDate = today.withDayOfMonth(1)
+    val startDate = if (limitDate.isBefore(monthStartDate)) limitDate else monthStartDate
+    emit(startDate.toString() to today.toString())
   }.flatMapLatest { (start, end) ->
     val habitsFlow = dataRepository.getAllHabits()
     val recordsFlow = dataRepository.getRecordsBetween(start, end)
