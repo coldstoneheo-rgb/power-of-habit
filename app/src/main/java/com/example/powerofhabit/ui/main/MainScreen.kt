@@ -579,12 +579,13 @@ private fun HabitRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onNavigateToDetail(habit.habitId) }
                 .padding(vertical = 3.dp, horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onNavigateToDetail(habit.habitId) },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 DonutProgressChart(

@@ -27,7 +27,7 @@ fun CheckWidget(
     
     Box(
         modifier = Modifier
-            .size(28.dp)
+            .size(width = 32.dp, height = 28.dp)
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
