@@ -27,7 +27,7 @@ fun CheckWidget(
     
     Box(
         modifier = Modifier
-            .size(32.dp)
+            .size(width = 32.dp, height = 28.dp)
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick
@@ -38,21 +38,21 @@ fun CheckWidget(
             Text(
                 text = "v",
                 color = themeColor,
-                fontSize = 13.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Bold
             )
         } else if (isSkipped) {
             Text(
                 text = "–",
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                fontSize = 13.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Bold
             )
         } else {
             Text(
                 text = "x",
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
-                fontSize = 13.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Normal
             )
         }

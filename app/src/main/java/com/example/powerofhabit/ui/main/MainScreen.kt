@@ -140,12 +140,12 @@ internal fun MainScreenContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(vertical = 16.dp)
+            .padding(vertical = 10.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 12.dp),
+                .padding(bottom = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -214,7 +214,7 @@ internal fun MainScreenContent(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 6.dp),
+                    .padding(bottom = 3.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Spacer(modifier = Modifier.weight(1f))
@@ -519,10 +519,10 @@ private fun DonutProgressChart(
 ) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = modifier.size(18.dp)
+        modifier = modifier.size(14.dp)
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val strokeWidth = 2.5f.dp.toPx()
+            val strokeWidth = 2f.dp.toPx()
             
             // Background ring
             drawCircle(
@@ -579,23 +579,24 @@ private fun HabitRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { onNavigateToDetail(habit.habitId) }
-                .padding(vertical = 8.dp, horizontal = 4.dp),
+                .padding(vertical = 3.dp, horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onNavigateToDetail(habit.habitId) },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 DonutProgressChart(
                     progress = completionRate,
                     themeColor = themeColor
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = habit.title,
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 13.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = -0.5.sp,
                     maxLines = 1,
@@ -604,7 +605,7 @@ private fun HabitRow(
                 )
             }
             
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(6.dp))
             
             Row(
                 modifier = Modifier.width(152.dp),
