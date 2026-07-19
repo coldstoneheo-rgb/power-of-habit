@@ -50,8 +50,13 @@ val AllBadgeDefinitions = listOf(
     BadgeDefinition("START_FIRST", "습관 여행의 시작", "첫 번째 습관 실천을 완료했습니다!", "BRONZE"),
     BadgeDefinition("STREAK_3", "작심삼일 탈출", "습관 3일 연속 달성에 성공했습니다!", "BRONZE"),
     BadgeDefinition("STREAK_5", "꾸준한 실행가", "습관 5일 연속 달성에 성공했습니다!", "SILVER"),
+    BadgeDefinition("STREAK_7", "빛나는 일주일", "일주일 7일 연속 완벽 달성에 성공했습니다!", "SILVER"),
+    BadgeDefinition("STREAK_21", "21일의 습관화", "습관 형성 21일의 벽을 돌파했습니다!", "SILVER"),
     BadgeDefinition("STREAK_30", "습관 마스터", "지속 가능한 성장! 습관 30일 연속 달성 완료!", "GOLD"),
-    BadgeDefinition("HABIT_COMPLETE_100", "백일의 기적", "습관 완료 횟수 100회를 돌파했습니다!", "GOLD")
+    BadgeDefinition("STREAK_66", "체화된 습관", "평균 습관 형성 주기 66일을 완전히 정복했습니다!", "GOLD"),
+    BadgeDefinition("HABIT_COMPLETE_10", "첫 10회의 발걸음", "습관 완수 횟수 10회를 달성했습니다!", "BRONZE"),
+    BadgeDefinition("HABIT_COMPLETE_50", "반백의 열정", "습관 완수 횟수 50회를 달성했습니다!", "SILVER"),
+    BadgeDefinition("HABIT_COMPLETE_100", "백일의 기적", "습관 완수 횟수 100회를 돌파했습니다!", "GOLD")
 )
 
 @HiltViewModel
