@@ -32,12 +32,28 @@ class BadgeManager(
                 )
             }
 
-            // 2. "HABIT_COMPLETE_100" Badge (Accumulate 100 completed checks)
+            // 2. Cumulative Completion Badges
+            if (totalCompleted >= 10 && !earnedBadges.contains("HABIT_COMPLETE_10")) {
+                awardBadge(
+                    id = "HABIT_COMPLETE_10",
+                    name = "첫 10회의 발걸음",
+                    desc = "습관 완수 횟수 10회를 달성했습니다!",
+                    type = "BRONZE"
+                )
+            }
+            if (totalCompleted >= 50 && !earnedBadges.contains("HABIT_COMPLETE_50")) {
+                awardBadge(
+                    id = "HABIT_COMPLETE_50",
+                    name = "반백의 열정",
+                    desc = "습관 완수 횟수 50회를 달성했습니다!",
+                    type = "SILVER"
+                )
+            }
             if (totalCompleted >= 100 && !earnedBadges.contains("HABIT_COMPLETE_100")) {
                 awardBadge(
                     id = "HABIT_COMPLETE_100",
                     name = "백일의 기적",
-                    desc = "습관 완료 횟수 100회를 돌파했습니다!",
+                    desc = "습관 완수 횟수 100회를 돌파했습니다!",
                     type = "GOLD"
                 )
             }
@@ -86,11 +102,35 @@ class BadgeManager(
                         type = "SILVER"
                     )
                 }
+                if (maxStreak >= 7 && !earnedBadges.contains("STREAK_7")) {
+                    awardBadge(
+                        id = "STREAK_7",
+                        name = "빛나는 일주일",
+                        desc = "일주일 7일 연속 완벽 달성에 성공했습니다!",
+                        type = "SILVER"
+                    )
+                }
+                if (maxStreak >= 21 && !earnedBadges.contains("STREAK_21")) {
+                    awardBadge(
+                        id = "STREAK_21",
+                        name = "21일의 습관화",
+                        desc = "습관 형성 21일의 벽을 돌파했습니다!",
+                        type = "SILVER"
+                    )
+                }
                 if (maxStreak >= 30 && !earnedBadges.contains("STREAK_30")) {
                     awardBadge(
                         id = "STREAK_30",
                         name = "습관 마스터",
                         desc = "지속 가능한 성장! 습관 30일 연속 달성 완료!",
+                        type = "GOLD"
+                    )
+                }
+                if (maxStreak >= 66 && !earnedBadges.contains("STREAK_66")) {
+                    awardBadge(
+                        id = "STREAK_66",
+                        name = "체화된 습관",
+                        desc = "평균 습관 형성 주기 66일을 완전히 정복했습니다!",
                         type = "GOLD"
                     )
                 }
