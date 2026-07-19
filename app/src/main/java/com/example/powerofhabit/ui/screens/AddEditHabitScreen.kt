@@ -168,19 +168,24 @@ fun AddEditHabitScreen(
             text = {
                 val chunkedColors = remember { PremiumMatteColors.chunked(6) }
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     chunkedColors.forEach { rowColors ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             rowColors.forEach { (hex, color) ->
                                 val isSelected = selectedThemeHex.uppercase() == hex.uppercase()
                                 Box(
                                     modifier = Modifier
-                                        .requiredSize(32.dp)
+                                        .size(32.dp)
+                                        .aspectRatio(1f)
                                         .clip(CircleShape)
                                         .background(color)
                                         .border(
