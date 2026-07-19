@@ -208,16 +208,21 @@ class GoogleDriveBackupManager(private val context: Context) {
                     entry = zis.nextEntry
                 }
             }
-            Log.d(TAG, "Database restored successfully. Restarting app.")
+            Log.d(TAG, "Database restored successfully. Triggering app restart.")
 
             // Trigger app restart to cleanly reload Room database
             val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-            intent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-            context.startActivity(intent)
-            Runtime.getRuntime().exit(0)
-            true
+            if (intent != null) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                context.startActivity(intent)
+                Runtime.getRuntime().exit(0)
+                true
+            } else {
+                Log.w(TAG, "Launch intent was null during restore restart")
+                true
+            }
         } catch (e: Exception) {
-            Log.e(TAG, "Google Drive restore failed", e)
+            Log.e(TAG, "Google Drive restore failed: ${e.localizedMessage}", e)
             false
         }
     }
