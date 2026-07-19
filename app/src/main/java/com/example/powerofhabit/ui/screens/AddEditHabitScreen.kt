@@ -185,7 +185,6 @@ fun AddEditHabitScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(32.dp)
-                                        .aspectRatio(1f)
                                         .clip(CircleShape)
                                         .background(color)
                                         .border(
