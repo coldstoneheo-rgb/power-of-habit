@@ -218,8 +218,8 @@ class GoogleDriveBackupManager(private val context: Context) {
                 Runtime.getRuntime().exit(0)
                 true
             } else {
-                Log.w(TAG, "Launch intent was null during restore restart")
-                true
+                Log.e(TAG, "Launch intent was null during restore restart")
+                false
             }
         } catch (e: Exception) {
             Log.e(TAG, "Google Drive restore failed: ${e.localizedMessage}", e)
