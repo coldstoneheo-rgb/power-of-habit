@@ -566,13 +566,20 @@ private fun HabitRow(
         }
     }
     
-    val completionRate = remember(recordsMap) {
-        val today = LocalDate.now()
-        val currentMonthPrefix = today.toString().substring(0, 7) // "YYYY-MM"
-        val thisMonthRecords = recordsMap.filter { it.key.startsWith(currentMonthPrefix) }
-        val completedCount = thisMonthRecords.values.count { it.status == "COMPLETED" }
-        val totalCount = thisMonthRecords.values.count { it.status != "SKIPPED" }
-        if (totalCount > 0) completedCount.toFloat() / totalCount else 0f
+    val emaScore = remember(recordsMap) {
+        if (recordsMap.isEmpty()) return@remember 0f
+        val sortedRecords = recordsMap.values.sortedBy { it.date }
+        var currentEma = 0f
+        val alpha = 0.1f
+        for (record in sortedRecords) {
+            val target = when (record.status) {
+                "COMPLETED" -> 100f
+                "FAILED" -> 0f
+                else -> continue
+            }
+            currentEma = if (currentEma == 0f) target else currentEma * (1 - alpha) + target * alpha
+        }
+        (currentEma / 100f).coerceIn(0f, 1f)
     }
     
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -589,7 +596,7 @@ private fun HabitRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 DonutProgressChart(
-                    progress = completionRate,
+                    progress = emaScore,
                     themeColor = themeColor
                 )
                 Spacer(modifier = Modifier.width(6.dp))

@@ -26,8 +26,15 @@ class MainActivity : ComponentActivity() {
 
     enableEdgeToEdge()
     setContent {
-      val isDarkMode by settingsManager.isDarkMode.collectAsStateWithLifecycle()
-      PowerOfHabitTheme(darkTheme = isDarkMode) {
+      val themeMode by settingsManager.themeMode.collectAsStateWithLifecycle()
+      val systemInDark = androidx.compose.foundation.isSystemInDarkTheme()
+      val useDarkTheme = when (themeMode) {
+        "LIGHT" -> false
+        "DARK" -> true
+        else -> systemInDark
+      }
+
+      PowerOfHabitTheme(darkTheme = useDarkTheme) {
         Surface(
           modifier = Modifier.fillMaxSize(),
           color = MaterialTheme.colorScheme.background
