@@ -256,14 +256,13 @@ private fun HabitDetailContent(
     }
     val (currentStreak, maxStreak) = streaks
     
-    // 3) Progress calculation (Monthly goal completion)
+    // 3) Progress calculation (Monthly goal completion rate)
     val progress = remember(records) {
         val today = LocalDate.now()
         val currentMonthPrefix = today.toString().substring(0, 7) // "YYYY-MM"
-        val currentMonthRecords = records.filter { it.date.startsWith(currentMonthPrefix) }
-        val completedCount = currentMonthRecords.count { it.status == "COMPLETED" }
-        val totalCount = currentMonthRecords.count { it.status != "SKIPPED" }
-        if (totalCount > 0) completedCount.toFloat() / totalCount else 0f
+        val completedCount = records.count { it.date.startsWith(currentMonthPrefix) && it.status == "COMPLETED" }
+        val elapsedDaysInMonth = today.dayOfMonth
+        if (elapsedDaysInMonth > 0) (completedCount.toFloat() / elapsedDaysInMonth).coerceIn(0f, 1f) else 0f
     }
     
     // 4) Calendar records map
@@ -449,62 +448,62 @@ private fun HabitDetailContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(32.dp)
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // 1. Quick Summary (Donut Chart & 2x2 Stats Dashboard)
-            CardSection(title = "한눈에 보기 (Quick Summary)") {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            CardSection(title = "한눈에 보기") {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White.copy(alpha = 0.03f))
-                            .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(8.dp))
-                            .padding(12.dp)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f), RoundedCornerShape(8.dp))
+                            .padding(10.dp)
                     ) {
                         Text(
                             text = "💡 EMA 점수는 최근 완료 여부에 더 가중치를 둔 습관 형성 정도(0~100점)를 나타냅니다.",
-                            color = LightGrayText,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 11.sp,
-                            lineHeight = 16.sp,
+                            lineHeight = 15.sp,
                             letterSpacing = -0.5.sp
                         )
                     }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Donut Chart - Shows EMA Score
                         val currentEmaScore = filteredScores.last()
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Box(
-                                modifier = Modifier.size(80.dp),
+                                modifier = Modifier.size(68.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 CircularProgressIndicator(
                                     progress = { currentEmaScore / 100f },
                                     color = themeColor,
-                                    strokeWidth = 8.dp,
+                                    strokeWidth = 6.dp,
                                     modifier = Modifier.fillMaxSize(),
-                                    trackColor = Color.White.copy(alpha = 0.1f)
+                                    trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                                 )
                                 Text(
                                     text = "${currentEmaScore.toInt()}점",
-                                    color = Color.White,
-                                    fontSize = 16.sp,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
                             Text(
                                 text = "EMA 점수",
-                                color = LightGrayText,
-                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 10.sp,
                                 letterSpacing = -0.5.sp
                             )
                         }
@@ -512,21 +511,21 @@ private fun HabitDetailContent(
                         // 2x2 Grid - Switch EMA with Monthly Progress %
                         Column(
                             modifier = Modifier.weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 StatCard(label = "이번 달 달성률", value = "${(progress * 100).toInt()}%", color = themeColor, modifier = Modifier.weight(1f))
-                                StatCard(label = "이번 달 완료", value = "${records.count { it.date.startsWith(LocalDate.now().toString().substring(0, 7)) && it.status == "COMPLETED" }}회", color = Color.White, modifier = Modifier.weight(1f))
+                                StatCard(label = "이번 달 완료", value = "${records.count { it.date.startsWith(LocalDate.now().toString().substring(0, 7)) && it.status == "COMPLETED" }}회", color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                StatCard(label = "올해 누적", value = "${records.count { it.date.startsWith(LocalDate.now().toString().substring(0, 4)) && it.status == "COMPLETED" }}회", color = Color.White, modifier = Modifier.weight(1f))
-                                StatCard(label = "전체 완료", value = "${records.count { it.status == "COMPLETED" }}회", color = Color.White, modifier = Modifier.weight(1f))
+                                StatCard(label = "올해 누적", value = "${records.count { it.date.startsWith(LocalDate.now().toString().substring(0, 4)) && it.status == "COMPLETED" }}회", color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+                                StatCard(label = "전체 완료", value = "${records.count { it.status == "COMPLETED" }}회", color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
                             }
                         }
                     }
@@ -534,7 +533,7 @@ private fun HabitDetailContent(
             }
 
             // 2. Habit Score Trend
-            CardSection(title = "점수 추이 (Habit Score Trend)") {
+            CardSection(title = "점수 추이") {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -640,7 +639,7 @@ private fun HabitDetailContent(
             }
             
             // 6. Heatmap Frequencies
-            CardSection(title = "연간 빈도 매트릭스 (Yearly Heatmap)") {
+            CardSection(title = "연간 빈도 매트릭스") {
                 HeatmapWidget(
                     frequencies = heatmapFrequencies,
                     themeColor = themeColor
@@ -812,23 +811,23 @@ private fun StatCard(
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(BlackBackground)
-            .border(1.dp, MetalBorderBrush, RoundedCornerShape(12.dp))
-            .padding(10.dp),
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
+            .padding(vertical = 6.dp, horizontal = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         Text(
             text = label,
-            color = LightGrayText,
-            fontSize = 11.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 10.sp,
             letterSpacing = -0.5.sp
         )
         Text(
             text = value,
             color = color,
-            fontSize = 16.sp,
+            fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = -0.5.sp
         )

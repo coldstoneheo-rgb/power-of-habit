@@ -30,11 +30,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
 import android.os.Build
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditHabitScreen(
     habitId: Int,
+    defaultHabitType: String = "CHECK",
     onBack: () -> Unit,
     viewModel: AddEditHabitViewModel = hiltViewModel()
 ) {
@@ -61,10 +63,11 @@ fun AddEditHabitScreen(
     var memo by remember { mutableStateOf("") }
     var reminderTime by remember { mutableStateOf<String?>(null) }
     var isReminderEnabled by remember { mutableStateOf(false) }
-    var selectedThemeHex by remember { mutableStateOf("#E57373") } // Default premium matte red
-    var habitType by remember { mutableStateOf("CHECK") }
+    var selectedThemeHex by remember { mutableStateOf("#42A5F5") } // Default light blue matte
+    var habitType by remember { mutableStateOf(defaultHabitType) }
     var unit by remember { mutableStateOf("") }
     var targetValueString by remember { mutableStateOf("") }
+    var targetType by remember { mutableStateOf("AT_LEAST") } // "AT_LEAST" (적어도) vs "AT_MOST" (최대)
     
     var showColorPickerDialog by remember { mutableStateOf(false) }
     
@@ -113,7 +116,7 @@ fun AddEditHabitScreen(
         viewModel.uiEvent.collect { event ->
             when (event) {
                 is AddEditHabitUiEvent.SaveSuccess -> {
-                    Toast.makeText(context, "Saved successfully", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "저장되었습니다.", Toast.LENGTH_SHORT).show()
                     onBack()
                 }
                 is AddEditHabitUiEvent.Error -> {
@@ -127,7 +130,7 @@ fun AddEditHabitScreen(
         try {
             Color(android.graphics.Color.parseColor(selectedThemeHex))
         } catch (e: Exception) {
-            Color(0xFFE57373)
+            Color(0xFF42A5F5)
         }
     }
     
@@ -145,12 +148,63 @@ fun AddEditHabitScreen(
         android.app.TimePickerDialog(
             context,
             { _, hour, minute ->
-                reminderTime = String.format("%02d:%02d", hour, minute)
+                reminderTime = String.format(Locale.getDefault(), "%02d:%02d", hour, minute)
             },
             parsedTime.hour,
             parsedTime.minute,
             false
         )
+    }
+
+    // Save Action Lambda
+    val performSave = {
+        if (title.isBlank()) {
+            Toast.makeText(context, "습관 이름을 입력해주세요.", Toast.LENGTH_SHORT).show()
+        } else {
+            val isFrequencyValid = when (frequencyType) {
+                "DAILY" -> true
+                "INTERVAL" -> intervalDays.toIntOrNull()?.let { it >= 1 } ?: false
+                "WEEKLY_COUNT" -> weeklyCount.toIntOrNull()?.let { it in 1..7 } ?: false
+                "MONTHLY_COUNT" -> monthlyCount.toIntOrNull()?.let { it in 1..31 } ?: false
+                "COUNT_IN_DAYS" -> {
+                    val count = countInDaysCount.toIntOrNull()
+                    val period = countInDaysPeriod.toIntOrNull()
+                    count != null && period != null && count in 1..period
+                }
+                else -> false
+            }
+
+            if (!isFrequencyValid) {
+                Toast.makeText(context, "올바른 빈도 값을 입력해주세요.", Toast.LENGTH_SHORT).show()
+            } else if (habitType == "VALUE" && unit.isBlank()) {
+                Toast.makeText(context, "단위(예: km, 쪽)를 입력해주세요.", Toast.LENGTH_SHORT).show()
+            } else if (habitType == "VALUE" && targetValueString.isNotBlank() && targetValueString.toFloatOrNull() == null) {
+                Toast.makeText(context, "올바른 목표 수치를 입력해주세요 (예: 15).", Toast.LENGTH_SHORT).show()
+            } else {
+                val computedFrequencyValue = when (frequencyType) {
+                    "DAILY" -> ""
+                    "INTERVAL" -> intervalDays
+                    "WEEKLY_COUNT" -> weeklyCount
+                    "MONTHLY_COUNT" -> monthlyCount
+                    "COUNT_IN_DAYS" -> "$countInDaysCount/$countInDaysPeriod"
+                    else -> ""
+                }
+                viewModel.saveHabit(
+                    habitId = habitId,
+                    title = title,
+                    question = question,
+                    frequencyType = frequencyType,
+                    frequencyValue = computedFrequencyValue,
+                    reminderTime = reminderTime ?: "09:00",
+                    isReminderEnabled = isReminderEnabled,
+                    themeColor = selectedThemeHex,
+                    habitType = habitType,
+                    unit = if (habitType == "VALUE") unit else null,
+                    memo = if (memo.isBlank()) null else memo,
+                    targetValue = if (habitType == "VALUE") targetValueString.toFloatOrNull() else null
+                )
+            }
+        }
     }
     
     // 색상 팝업 다이얼로그
@@ -216,7 +270,7 @@ fun AddEditHabitScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (habitId == 0) "New Habit" else "Edit Habit", color = MaterialTheme.colorScheme.onBackground) },
+                title = { Text(if (habitId == 0) "습관 만들기" else "습관 수정하기", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground)
@@ -232,6 +286,9 @@ fun AddEditHabitScreen(
                             Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red)
                         }
                     }
+                    TextButton(onClick = { performSave() }) {
+                        Text("저장", color = themeColor, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
@@ -244,111 +301,137 @@ fun AddEditHabitScreen(
                 .padding(paddingValues)
                 .background(MaterialTheme.colorScheme.background)
                 .verticalScroll(scrollState)
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // 현재 설정된 색상을 보여주는 원형 버튼
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(themeColor)
-                        .border(1.5.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f), CircleShape)
-                        .clickable { showColorPickerDialog = true }
-                )
-
                 // Title input
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("Habit Title") },
-                    placeholder = { Text("e.g. Read books, Gym") },
+                    label = { Text("제목") },
+                    placeholder = { Text("예) 책 10쪽 읽기, 달리기") },
                     modifier = Modifier.weight(1f),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = MaterialTheme.colorScheme.onBackground,
                         unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        focusedBorderColor = HabitOrange,
-                        unfocusedBorderColor = Color.DarkGray
+                        focusedBorderColor = themeColor,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                     ),
                     singleLine = true
                 )
+
+                // 현재 설정된 색상을 보여주는 원형/사각형 버튼
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("색", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(themeColor)
+                            .border(1.5.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                            .clickable { showColorPickerDialog = true }
+                    )
+                }
             }
             
             // Question input
             OutlinedTextField(
                 value = question,
                 onValueChange = { question = it },
-                label = { Text("Daily Question") },
-                placeholder = { Text("e.g. Did you read 10 pages?") },
+                label = { Text("질문") },
+                placeholder = { Text("예) 오늘 몇 km를 달렸나요? 운동 하셨나요?") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = MaterialTheme.colorScheme.onBackground,
                     unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                    focusedBorderColor = HabitOrange,
-                    unfocusedBorderColor = Color.DarkGray
+                    focusedBorderColor = themeColor,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                 ),
                 singleLine = true
             )
-            
+
             // Habit Type selection
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Habit Type", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("유형", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     FilterChip(
                         selected = habitType == "CHECK",
                         onClick = { habitType = "CHECK" },
-                        label = { Text("Check (Yes/No)") }
+                        label = { Text("체크 (Yes/No)") }
                     )
                     FilterChip(
                         selected = habitType == "VALUE",
                         onClick = { habitType = "VALUE" },
-                        label = { Text("Value (Numeric)") }
+                        label = { Text("측정 (수치)") }
                     )
                 }
             }
             
-            // Unit input (only visible if VALUE type)
+            // Unit & Target input (only visible if VALUE type)
             if (habitType == "VALUE") {
                 OutlinedTextField(
                     value = unit,
                     onValueChange = { unit = it },
-                    label = { Text("Unit") },
-                    placeholder = { Text("e.g. pages, kg, mins") },
+                    label = { Text("단위") },
+                    placeholder = { Text("예) km, 쪽, 장, 분") },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = MaterialTheme.colorScheme.onBackground,
                         unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        focusedBorderColor = HabitOrange,
-                        unfocusedBorderColor = Color.DarkGray
+                        focusedBorderColor = themeColor,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                     ),
                     singleLine = true
                 )
-                Spacer(modifier = Modifier.height(12.dp))
-                OutlinedTextField(
-                    value = targetValueString,
-                    onValueChange = { targetValueString = it },
-                    label = { Text("수행 완료 기준수치") },
-                    placeholder = { Text("예: 3, 50, 1000") },
+                
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        focusedBorderColor = HabitOrange,
-                        unfocusedBorderColor = Color.DarkGray
-                    ),
-                    singleLine = true,
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
-                )
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedTextField(
+                        value = targetValueString,
+                        onValueChange = { targetValueString = it },
+                        label = { Text("목표") },
+                        placeholder = { Text("예) 15") },
+                        modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            focusedBorderColor = themeColor,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        ),
+                        singleLine = true,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                    )
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("목표 유형", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            FilterChip(
+                                selected = targetType == "AT_LEAST",
+                                onClick = { targetType = "AT_LEAST" },
+                                label = { Text("적어도", fontSize = 12.sp) }
+                            )
+                            FilterChip(
+                                selected = targetType == "AT_MOST",
+                                onClick = { targetType = "AT_MOST" },
+                                label = { Text("최대", fontSize = 12.sp) }
+                            )
+                        }
+                    }
+                }
             }
             
-            // 빈도 설정 (Frequency)
+            // 빈도 설정
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("빈도 설정 (Frequency)", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("빈도 설정", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 
                 val frequencies = listOf(
                     "DAILY" to "매일",
@@ -360,36 +443,23 @@ fun AddEditHabitScreen(
                 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    frequencies.take(3).forEach { (type, label) ->
+                    frequencies.forEach { (type, label) ->
                         FilterChip(
                             selected = frequencyType == type,
                             onClick = { frequencyType = type },
-                            label = { Text(label, fontSize = 12.sp) }
-                        )
-                    }
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    frequencies.drop(3).forEach { (type, label) ->
-                        FilterChip(
-                            selected = frequencyType == type,
-                            onClick = { frequencyType = type },
-                            label = { Text(label, fontSize = 12.sp) }
+                            label = { Text(label, fontSize = 11.sp) }
                         )
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
                 
                 when (frequencyType) {
                     "DAILY" -> {
-                        Text("매일 습관을 수행합니다.", color = LightGrayText, fontSize = 13.sp)
+                        Text("매일 습관을 수행합니다.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
                     }
                     "INTERVAL" -> {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -400,8 +470,8 @@ fun AddEditHabitScreen(
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedTextColor = MaterialTheme.colorScheme.onBackground,
                                     unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    focusedBorderColor = HabitOrange,
-                                    unfocusedBorderColor = Color.DarkGray
+                                    focusedBorderColor = themeColor,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                                 ),
                                 singleLine = true
                             )
@@ -418,8 +488,8 @@ fun AddEditHabitScreen(
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedTextColor = MaterialTheme.colorScheme.onBackground,
                                     unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    focusedBorderColor = HabitOrange,
-                                    unfocusedBorderColor = Color.DarkGray
+                                    focusedBorderColor = themeColor,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                                 ),
                                 singleLine = true
                             )
@@ -436,8 +506,8 @@ fun AddEditHabitScreen(
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedTextColor = MaterialTheme.colorScheme.onBackground,
                                     unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    focusedBorderColor = HabitOrange,
-                                    unfocusedBorderColor = Color.DarkGray
+                                    focusedBorderColor = themeColor,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                                 ),
                                 singleLine = true
                             )
@@ -453,8 +523,8 @@ fun AddEditHabitScreen(
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedTextColor = MaterialTheme.colorScheme.onBackground,
                                     unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    focusedBorderColor = HabitOrange,
-                                    unfocusedBorderColor = Color.DarkGray
+                                    focusedBorderColor = themeColor,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                                 ),
                                 singleLine = true
                             )
@@ -466,8 +536,8 @@ fun AddEditHabitScreen(
                                 colors = OutlinedTextFieldDefaults.colors(
                                     focusedTextColor = MaterialTheme.colorScheme.onBackground,
                                     unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    focusedBorderColor = HabitOrange,
-                                    unfocusedBorderColor = Color.DarkGray
+                                    focusedBorderColor = themeColor,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                                 ),
                                 singleLine = true
                             )
@@ -481,38 +551,35 @@ fun AddEditHabitScreen(
             OutlinedTextField(
                 value = memo,
                 onValueChange = { memo = it },
-                label = { Text("메모 (선택사항)") },
-                placeholder = { Text("습관에 대한 추가 설명이나 메모를 입력해 보세요.") },
+                label = { Text("메모") },
+                placeholder = { Text("(선택사항)") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = MaterialTheme.colorScheme.onBackground,
                     unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                    focusedBorderColor = HabitOrange,
-                    unfocusedBorderColor = Color.DarkGray
+                    focusedBorderColor = themeColor,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                 ),
                 maxLines = 4,
                 minLines = 2
             )
             
-            // Notification / Reminder Settings (유지)
+            // Notification / Reminder Settings (Cleaned)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.surface)
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
+                    .padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
-                        Text("Habit Notification", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                        Text("Get reminded to build your habit", color = LightGrayText, fontSize = 12.sp)
-                    }
+                    Text("알림", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     Switch(
                         checked = isReminderEnabled,
                         onCheckedChange = { checked ->
@@ -534,20 +601,20 @@ fun AddEditHabitScreen(
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = Color.White,
                             checkedTrackColor = themeColor,
-                            uncheckedThumbColor = LightGrayText,
+                            uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             uncheckedTrackColor = MaterialTheme.colorScheme.background
                         )
                     )
                 }
                 
                 if (isReminderEnabled) {
-                    Divider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Reminder Time", color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp)
+                        Text("알림 시간", color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp)
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
@@ -567,87 +634,14 @@ fun AddEditHabitScreen(
                 }
             }
             
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(16.dp))
             
             // Save Button
             Button(
-                onClick = {
-                    if (title.isBlank()) {
-                        Toast.makeText(context, "습관 이름을 입력해주세요.", Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-                    
-                    val isFrequencyValid = when (frequencyType) {
-                        "DAILY" -> true
-                        "INTERVAL" -> {
-                            val days = intervalDays.toIntOrNull()
-                            days != null && days >= 1
-                        }
-                        "WEEKLY_COUNT" -> {
-                            val count = weeklyCount.toIntOrNull()
-                            count != null && count in 1..7
-                        }
-                        "MONTHLY_COUNT" -> {
-                            val count = monthlyCount.toIntOrNull()
-                            count != null && count in 1..31
-                        }
-                        "COUNT_IN_DAYS" -> {
-                            val count = countInDaysCount.toIntOrNull()
-                            val period = countInDaysPeriod.toIntOrNull()
-                            count != null && period != null && count >= 1 && period >= 1 && count <= period
-                        }
-                        else -> false
-                    }
-                    
-                    if (!isFrequencyValid) {
-                        val errMsg = when (frequencyType) {
-                            "INTERVAL" -> "올바른 간격(1일 이상)을 입력해주세요."
-                            "WEEKLY_COUNT" -> "일주일 수행 횟수는 1~7회 사이여야 합니다."
-                            "MONTHLY_COUNT" -> "한 달 수행 횟수는 1~31회 사이여야 합니다."
-                            "COUNT_IN_DAYS" -> "올바른 수행 기간 및 횟수(횟수 <= 기간)를 입력해주세요."
-                            else -> "올바른 빈도 값을 입력해주세요."
-                        }
-                        Toast.makeText(context, errMsg, Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-
-                    if (habitType == "VALUE" && unit.isBlank()) {
-                        Toast.makeText(context, "수치 단위(예: kg, ml)를 입력해주세요.", Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-
-                    if (habitType == "VALUE" && targetValueString.isNotBlank() && targetValueString.toFloatOrNull() == null) {
-                        Toast.makeText(context, "올바른 완료 기준 수치를 입력해주세요 (예: 3, 10.5).", Toast.LENGTH_SHORT).show()
-                        return@Button
-                    }
-
-                    val computedFrequencyValue = when (frequencyType) {
-                        "DAILY" -> ""
-                        "INTERVAL" -> intervalDays
-                        "WEEKLY_COUNT" -> weeklyCount
-                        "MONTHLY_COUNT" -> monthlyCount
-                        "COUNT_IN_DAYS" -> "$countInDaysCount/$countInDaysPeriod"
-                        else -> ""
-                    }
-                    viewModel.saveHabit(
-                        habitId = habitId,
-                        title = title,
-                        question = question,
-                        frequencyType = frequencyType,
-                        frequencyValue = computedFrequencyValue,
-                        reminderTime = reminderTime ?: "09:00",
-                        isReminderEnabled = isReminderEnabled,
-                        themeColor = selectedThemeHex,
-                        habitType = habitType,
-                        unit = if (habitType == "VALUE") unit else null,
-                        memo = if (memo.isBlank()) null else memo,
-                        targetValue = if (habitType == "VALUE") targetValueString.toFloatOrNull() else null
-                    )
-                },
+                onClick = { performSave() },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp)),
+                    .height(52.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = themeColor),
                 shape = RoundedCornerShape(16.dp)
             ) {
