@@ -311,59 +311,64 @@ private fun HabitDetailContent(
             .fillMaxSize()
             .verticalScroll(scrollState)
     ) {
-        // Navigation header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+        // Navigation header (Colorized with themeColor)
+        Surface(
+            color = themeColor,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            IconButton(onClick = onBack) {
-                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-            }
-            Text(
-                text = habit.title,
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            IconButton(onClick = { onNavigateToEdit(habit.habitId) }) {
-                Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit", tint = Color.White)
-            }
-            
-            var showMenu by remember { mutableStateOf(false) }
-            Box {
-                IconButton(onClick = { showMenu = true }) {
-                    Icon(imageVector = Icons.Default.MoreVert, contentDescription = "More", tint = Color.White)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
                 }
-                DropdownMenu(
-                    expanded = showMenu,
-                    onDismissRequest = { showMenu = false },
-                    modifier = Modifier.background(DarkGrayBackground)
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("CSV 내보내기", color = Color.White) },
-                        onClick = {
-                            showMenu = false
-                            exportHabitRecordsToCsv(context, habit, records)
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("삭제", color = Color.Red) },
-                        onClick = {
-                            showMenu = false
-                            showDeleteDialog = true
-                        }
-                    )
+                Text(
+                    text = habit.title,
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                IconButton(onClick = { onNavigateToEdit(habit.habitId) }) {
+                    Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit", tint = Color.White)
+                }
+                
+                var showMenu by remember { mutableStateOf(false) }
+                Box {
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(imageVector = Icons.Default.MoreVert, contentDescription = "More", tint = Color.White)
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false },
+                        modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("CSV 내보내기", color = MaterialTheme.colorScheme.onSurface) },
+                            onClick = {
+                                showMenu = false
+                                exportHabitRecordsToCsv(context, habit, records)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("삭제", color = Color.Red) },
+                            onClick = {
+                                showMenu = false
+                                showDeleteDialog = true
+                            }
+                        )
+                    }
                 }
             }
         }
         
-        // Habit Header Info (Simplified)
+        // Habit Header Info (Sub Header Chips)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -371,20 +376,20 @@ private fun HabitDetailContent(
         ) {
             Text(
                 text = habit.question,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium
             )
             
-            val subInfo = remember(habit) {
-                val cond = if (habit.habitType == "VALUE") {
-                    habit.targetValue?.let {
-                        val formattedVal = if (it % 1f == 0f) "${it.toInt()}" else "$it"
-                        "$formattedVal${habit.unit ?: ""}"
-                    }
+            val targetText = remember(habit) {
+                if (habit.habitType == "VALUE" && habit.targetValue != null) {
+                    val valStr = if (habit.targetValue % 1f == 0f) "${habit.targetValue.toInt()}" else "${habit.targetValue}"
+                    "$valStr ${habit.unit ?: ""}".trim()
                 } else null
-                
-                val freq = when (habit.frequencyType) {
+            }
+
+            val freqText = remember(habit) {
+                when (habit.frequencyType) {
                     "DAILY" -> "매일"
                     "INTERVAL" -> "${habit.frequencyValue}일마다"
                     "WEEKLY_COUNT" -> "주 ${habit.frequencyValue}회"
@@ -395,21 +400,40 @@ private fun HabitDetailContent(
                     }
                     else -> "매일"
                 }
-                
-                val rem = if (habit.isReminderEnabled) {
+            }
+
+            val reminderText = remember(habit) {
+                if (habit.isReminderEnabled) {
                     habit.reminderTime ?: "09:00"
                 } else "OFF"
-                
-                if (cond != null) "$cond / $freq / $rem" else "$freq / $rem"
             }
             
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = subInfo,
-                color = themeColor,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
-            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (targetText != null) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("↑ ", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Text(targetText, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+                        }
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("📅 ", fontSize = 13.sp)
+                        Text(freqText, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(if (reminderText == "OFF") "🔕 " else "🔔 ", fontSize = 13.sp)
+                        Text(reminderText, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+                    }
+                }
+            }
             
             if (!habit.memo.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(8.dp))
