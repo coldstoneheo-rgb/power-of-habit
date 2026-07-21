@@ -304,17 +304,17 @@ fun AddEditHabitScreen(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
+            // Title input
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Title input
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
                     label = { Text("제목") },
-                    placeholder = { Text("예) 책 10쪽 읽기, 달리기") },
+                    placeholder = { Text(if (habitType == "VALUE") "예) 운동" else "예) 달리기") },
                     modifier = Modifier.weight(1f),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = MaterialTheme.colorScheme.onBackground,
@@ -325,7 +325,7 @@ fun AddEditHabitScreen(
                     singleLine = true
                 )
 
-                // 현재 설정된 색상을 보여주는 원형/사각형 버튼
+                // 색상 선택 버튼
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("색", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(modifier = Modifier.height(2.dp))
@@ -345,7 +345,7 @@ fun AddEditHabitScreen(
                 value = question,
                 onValueChange = { question = it },
                 label = { Text("질문") },
-                placeholder = { Text("예) 오늘 몇 km를 달렸나요? 운동 하셨나요?") },
+                placeholder = { Text(if (habitType == "VALUE") "예 : 오늘 몇 km를 달렸나요?" else "예 : 오늘 운동을 했습니까?") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = MaterialTheme.colorScheme.onBackground,
@@ -379,7 +379,7 @@ fun AddEditHabitScreen(
                     value = unit,
                     onValueChange = { unit = it },
                     label = { Text("단위") },
-                    placeholder = { Text("예) km, 쪽, 장, 분") },
+                    placeholder = { Text("예) km") },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedTextColor = MaterialTheme.colorScheme.onBackground,
@@ -410,6 +410,7 @@ fun AddEditHabitScreen(
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
                     )
 
+                    // 목표 유형 (적어도 vs 최대)
                     Column(modifier = Modifier.weight(1f)) {
                         Text("목표 유형", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(modifier = Modifier.height(4.dp))
@@ -429,120 +430,171 @@ fun AddEditHabitScreen(
                 }
             }
             
-            // 빈도 설정
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("빈도 설정", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                
-                val frequencies = listOf(
-                    "DAILY" to "매일",
-                    "INTERVAL" to "며칠마다",
-                    "WEEKLY_COUNT" to "주 몇회",
-                    "MONTHLY_COUNT" to "월 몇회",
-                    "COUNT_IN_DAYS" to "기간내 횟수"
-                )
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    frequencies.forEach { (type, label) ->
-                        FilterChip(
-                            selected = frequencyType == type,
-                            onClick = { frequencyType = type },
-                            label = { Text(label, fontSize = 11.sp) }
-                        )
+            // 빈도 설정 & 알림 (가로 1줄 배치)
+            var showFreqDropdown by remember { mutableStateOf(false) }
+            val freqLabelMap = mapOf(
+                "DAILY" to "매일",
+                "INTERVAL" to "며칠마다",
+                "WEEKLY_COUNT" to "주 몇회",
+                "MONTHLY_COUNT" to "월 몇회",
+                "COUNT_IN_DAYS" to "기간내 횟수"
+            )
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 빈도 셀렉트박스 (왼쪽)
+                Box(modifier = Modifier.weight(1f)) {
+                    OutlinedTextField(
+                        value = freqLabelMap[frequencyType] ?: "매일",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("빈도") },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = false,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = MaterialTheme.colorScheme.onBackground,
+                            disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        trailingIcon = { Text("▼", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { showFreqDropdown = true }
+                    )
+                    DropdownMenu(
+                        expanded = showFreqDropdown,
+                        onDismissRequest = { showFreqDropdown = false }
+                    ) {
+                        freqLabelMap.forEach { (type, label) ->
+                            DropdownMenuItem(
+                                text = { Text(label) },
+                                onClick = {
+                                    frequencyType = type
+                                    showFreqDropdown = false
+                                }
+                            )
+                        }
                     }
                 }
-                
-                Spacer(modifier = Modifier.height(4.dp))
-                
-                when (frequencyType) {
-                    "DAILY" -> {
-                        Text("매일 습관을 수행합니다.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
-                    }
-                    "INTERVAL" -> {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedTextField(
-                                value = intervalDays,
-                                onValueChange = { if (it.all { char -> char.isDigit() }) intervalDays = it },
-                                modifier = Modifier.width(80.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    focusedBorderColor = themeColor,
-                                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                                ),
-                                singleLine = true
+
+                // 알림 토글 & 시간 (오른쪽)
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("알림", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Switch(
+                            checked = isReminderEnabled,
+                            onCheckedChange = { checked ->
+                                if (checked && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    val hasPermission = ContextCompat.checkSelfPermission(
+                                        context,
+                                        android.Manifest.permission.POST_NOTIFICATIONS
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                    
+                                    if (!hasPermission) {
+                                        permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                                    } else {
+                                        isReminderEnabled = true
+                                    }
+                                } else {
+                                    isReminderEnabled = checked
+                                }
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = themeColor,
+                                uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                uncheckedTrackColor = MaterialTheme.colorScheme.background
                             )
-                            Text("일마다 수행합니다.", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp)
+                        )
+                    }
+                    if (isReminderEnabled) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { timePickerDialog.show() },
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("시간", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(
+                                text = reminderTime ?: "09:00",
+                                color = themeColor,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
                         }
                     }
-                    "WEEKLY_COUNT" -> {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("일주일에", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp)
-                            OutlinedTextField(
-                                value = weeklyCount,
-                                onValueChange = { if (it.all { char -> char.isDigit() }) weeklyCount = it },
-                                modifier = Modifier.width(80.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    focusedBorderColor = themeColor,
-                                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                                ),
-                                singleLine = true
-                            )
-                            Text("번 수행합니다.", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp)
-                        }
+                }
+            }
+            
+            // 빈도 세부 설정 입력
+            when (frequencyType) {
+                "INTERVAL" -> {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = intervalDays,
+                            onValueChange = { if (it.all { char -> char.isDigit() }) intervalDays = it },
+                            modifier = Modifier.width(80.dp),
+                            singleLine = true
+                        )
+                        Text("일마다 수행", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp)
                     }
-                    "MONTHLY_COUNT" -> {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("한 달에", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp)
-                            OutlinedTextField(
-                                value = monthlyCount,
-                                onValueChange = { if (it.all { char -> char.isDigit() }) monthlyCount = it },
-                                modifier = Modifier.width(80.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    focusedBorderColor = themeColor,
-                                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                                ),
-                                singleLine = true
-                            )
-                            Text("번 수행합니다.", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp)
-                        }
+                }
+                "WEEKLY_COUNT" -> {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("일주일에", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp)
+                        OutlinedTextField(
+                            value = weeklyCount,
+                            onValueChange = { if (it.all { char -> char.isDigit() }) weeklyCount = it },
+                            modifier = Modifier.width(80.dp),
+                            singleLine = true
+                        )
+                        Text("회 수행", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp)
                     }
-                    "COUNT_IN_DAYS" -> {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedTextField(
-                                value = countInDaysPeriod,
-                                onValueChange = { if (it.all { char -> char.isDigit() }) countInDaysPeriod = it },
-                                modifier = Modifier.width(80.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    focusedBorderColor = themeColor,
-                                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                                ),
-                                singleLine = true
-                            )
-                            Text("일 동안", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp)
-                            OutlinedTextField(
-                                value = countInDaysCount,
-                                onValueChange = { if (it.all { char -> char.isDigit() }) countInDaysCount = it },
-                                modifier = Modifier.width(80.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    focusedBorderColor = themeColor,
-                                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                                ),
-                                singleLine = true
-                            )
-                            Text("번 수행합니다.", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp)
-                        }
+                }
+                "MONTHLY_COUNT" -> {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("한 달에", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp)
+                        OutlinedTextField(
+                            value = monthlyCount,
+                            onValueChange = { if (it.all { char -> char.isDigit() }) monthlyCount = it },
+                            modifier = Modifier.width(80.dp),
+                            singleLine = true
+                        )
+                        Text("회 수행", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp)
+                    }
+                }
+                "COUNT_IN_DAYS" -> {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = countInDaysPeriod,
+                            onValueChange = { if (it.all { char -> char.isDigit() }) countInDaysPeriod = it },
+                            modifier = Modifier.width(80.dp),
+                            singleLine = true
+                        )
+                        Text("일 동안", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp)
+                        OutlinedTextField(
+                            value = countInDaysCount,
+                            onValueChange = { if (it.all { char -> char.isDigit() }) countInDaysCount = it },
+                            modifier = Modifier.width(80.dp),
+                            singleLine = true
+                        )
+                        Text("회 수행", color = MaterialTheme.colorScheme.onBackground, fontSize = 14.sp)
                     }
                 }
             }
@@ -564,89 +616,7 @@ fun AddEditHabitScreen(
                 minLines = 2
             )
             
-            // Notification / Reminder Settings (Cleaned)
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
-                    .padding(14.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("알림", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Switch(
-                        checked = isReminderEnabled,
-                        onCheckedChange = { checked ->
-                            if (checked && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                val hasPermission = ContextCompat.checkSelfPermission(
-                                    context,
-                                    android.Manifest.permission.POST_NOTIFICATIONS
-                                ) == PackageManager.PERMISSION_GRANTED
-                                
-                                if (!hasPermission) {
-                                    permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-                                } else {
-                                    isReminderEnabled = true
-                                }
-                            } else {
-                                isReminderEnabled = checked
-                            }
-                        },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Color.White,
-                            checkedTrackColor = themeColor,
-                            uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            uncheckedTrackColor = MaterialTheme.colorScheme.background
-                        )
-                    )
-                }
-                
-                if (isReminderEnabled) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("알림 시간", color = MaterialTheme.colorScheme.onSurface, fontSize = 14.sp)
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(MaterialTheme.colorScheme.background)
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
-                                .clickable { timePickerDialog.show() }
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        ) {
-                            Text(
-                                text = reminderTime ?: "09:00",
-                                color = themeColor,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
-                        }
-                    }
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Save Button
-            Button(
-                onClick = { performSave() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = themeColor),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text("Save Habit", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.White)
-            }
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }
