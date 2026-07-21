@@ -121,59 +121,74 @@ private fun HabitDetailContent(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var selectedFilter by remember { mutableStateOf("주") }
     
-    // 1) EMA score list calculation with Filter
-    val filteredScores = remember(records, selectedFilter) {
-        val sortedRecords = records.sortedBy { it.date }
-        if (sortedRecords.isEmpty()) return@remember listOf(0f)
-        
+    // 1) EMA score list & dates calculation with Filter
+    val (filteredScores, filteredDates) = remember(records, selectedFilter) {
+        val today = LocalDate.now()
+        val startDate = if (records.isNotEmpty()) {
+            records.mapNotNull { try { LocalDate.parse(it.date) } catch (e: Exception) { null } }.minOrNull() ?: today.minusDays(14)
+        } else today.minusDays(14)
+
+        val recordsMap = records.associateBy { it.date }
         val dateScoreMap = mutableMapOf<LocalDate, Float>()
+
         var currentEma = 0f
-        var first = true
-        sortedRecords.forEach { record ->
-            if (record.status != "SKIPPED") {
-                val value = if (record.status == "COMPLETED") 100f else 0f
-                currentEma = if (first) {
-                    first = false
-                    value
-                } else {
-                    0.2f * value + 0.8f * currentEma
+        val alpha = 0.15f
+        var d = startDate
+        while (!d.isAfter(today)) {
+            val rec = recordsMap[d.toString()]
+            if (rec != null) {
+                val target = when (rec.status) {
+                    "COMPLETED" -> 100f
+                    "FAILED" -> 0f
+                    else -> currentEma
+                }
+                currentEma = if (currentEma == 0f) target else currentEma * (1 - alpha) + target * alpha
+            }
+            dateScoreMap[d] = currentEma
+            d = d.plusDays(1)
+        }
+
+        val entries = dateScoreMap.entries.sortedBy { it.key }
+        if (entries.isEmpty()) listOf(0f) to listOf("오늘") else {
+            when (selectedFilter) {
+                "일" -> {
+                    val recent = entries.takeLast(12)
+                    recent.map { it.value } to recent.map { "${it.key.dayOfMonth}일" }
+                }
+                "주" -> {
+                    val weekFields = java.time.temporal.WeekFields.of(java.util.Locale.getDefault())
+                    val grouped = entries.groupBy { "${it.key.year}-W${it.key.get(weekFields.weekOfWeekBasedYear())}" }
+                    val scores = grouped.map { it.value.last().value }
+                    val dates = grouped.map { "${it.value.first().key.monthValue}월 ${it.value.first().key.dayOfMonth}일" }
+                    scores.takeLast(8) to dates.takeLast(8)
+                }
+                "월" -> {
+                    val grouped = entries.groupBy { "${it.key.year}-${it.key.monthValue}" }
+                    val scores = grouped.map { it.value.last().value }
+                    val dates = grouped.map { "${it.value.first().key.monthValue}월" }
+                    scores.takeLast(12) to dates.takeLast(12)
+                }
+                "분기" -> {
+                    val grouped = entries.groupBy {
+                        val q = (it.key.monthValue - 1) / 3 + 1
+                        "${it.key.year}-Q$q"
+                    }
+                    val scores = grouped.map { it.value.last().value }
+                    val dates = grouped.map { "${it.value.first().key.monthValue}월" }
+                    scores.takeLast(8) to dates.takeLast(8)
+                }
+                "년" -> {
+                    val grouped = entries.groupBy { "${it.key.year}" }
+                    val scores = grouped.map { it.value.last().value }
+                    val dates = grouped.map { "${it.key.year}년" }
+                    scores.takeLast(5) to dates.takeLast(5)
+                }
+                else -> {
+                    val recent = entries.takeLast(12)
+                    recent.map { it.value } to recent.map { "${it.key.dayOfMonth}일" }
                 }
             }
-            try {
-                dateScoreMap[LocalDate.parse(record.date)] = currentEma
-            } catch (e: Exception) {}
         }
-        
-        if (dateScoreMap.isEmpty()) return@remember listOf(0f)
-        
-        val grouped = when (selectedFilter) {
-            "일" -> dateScoreMap.entries.sortedBy { it.key }.map { it.value }
-            "주" -> {
-                val weekFields = java.time.temporal.WeekFields.of(java.util.Locale.getDefault())
-                dateScoreMap.entries.groupBy {
-                    "${it.key.year}-W${it.key.get(weekFields.weekOfWeekBasedYear())}"
-                }.entries.sortedBy { it.key }.map { it.value.maxByOrNull { entry -> entry.key }?.value ?: 0f }
-            }
-            "월" -> {
-                dateScoreMap.entries.groupBy {
-                    "${it.key.year}-${it.key.monthValue}"
-                }.entries.sortedBy { it.key }.map { it.value.maxByOrNull { entry -> entry.key }?.value ?: 0f }
-            }
-            "분기" -> {
-                dateScoreMap.entries.groupBy {
-                    val quarter = (it.key.monthValue - 1) / 3 + 1
-                    "${it.key.year}-Q$quarter"
-                }.entries.sortedBy { it.key }.map { it.value.maxByOrNull { entry -> entry.key }?.value ?: 0f }
-            }
-            "년" -> {
-                dateScoreMap.entries.groupBy {
-                    "${it.key.year}"
-                }.entries.sortedBy { it.key }.map { it.value.maxByOrNull { entry -> entry.key }?.value ?: 0f }
-            }
-            else -> dateScoreMap.entries.sortedBy { it.key }.map { it.value }
-        }
-        
-        if (grouped.isEmpty()) listOf(0f) else grouped
     }
     
     // 2) Streak calculation
@@ -560,11 +575,11 @@ private fun HabitDetailContent(
                             DropdownMenu(
                                 expanded = showFilterMenu,
                                 onDismissRequest = { showFilterMenu = false },
-                                modifier = Modifier.background(DarkGrayBackground)
+                                modifier = Modifier.background(MaterialTheme.colorScheme.surface)
                             ) {
                                 listOf("일", "주", "월", "분기", "년").forEach { filter ->
                                     DropdownMenuItem(
-                                        text = { Text(filter, color = Color.White) },
+                                        text = { Text(filter, color = MaterialTheme.colorScheme.onSurface) },
                                         onClick = {
                                             selectedFilter = filter
                                             showFilterMenu = false
@@ -576,6 +591,8 @@ private fun HabitDetailContent(
                     }
                     HabitScoreWidget(
                         scores = filteredScores,
+                        dates = filteredDates,
+                        selectedFilter = selectedFilter,
                         themeColor = themeColor
                     )
                 }

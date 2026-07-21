@@ -598,16 +598,22 @@ private fun DonutProgressChart(
 ) {
     Box(
         contentAlignment = Alignment.Center,
-        modifier = modifier.size(14.dp)
+        modifier = modifier.size(18.dp)
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val strokeWidth = 2f.dp.toPx()
+            val strokeWidth = 2.5.dp.toPx()
             
-            // Background ring
+            // Background ring (Always visible)
             drawCircle(
-                color = themeColor.copy(alpha = 0.15f),
+                color = themeColor.copy(alpha = 0.2f),
                 radius = size.minDimension / 2 - strokeWidth / 2,
                 style = Stroke(width = strokeWidth)
+            )
+            
+            // Inner subtle dot for center alignment
+            drawCircle(
+                color = themeColor.copy(alpha = 0.35f),
+                radius = 1.5.dp.toPx()
             )
             
             // Progress arc
@@ -646,10 +652,10 @@ private fun HabitRow(
     }
     
     val emaScore = remember(recordsMap) {
-        if (recordsMap.isEmpty()) return@remember 0f
+        if (recordsMap.isEmpty()) return@remember 0.2f // Default starting progress visualization
         val sortedRecords = recordsMap.values.sortedBy { it.date }
         var currentEma = 0f
-        val alpha = 0.1f
+        val alpha = 0.15f
         for (record in sortedRecords) {
             val target = when (record.status) {
                 "COMPLETED" -> 100f
@@ -658,14 +664,14 @@ private fun HabitRow(
             }
             currentEma = if (currentEma == 0f) target else currentEma * (1 - alpha) + target * alpha
         }
-        (currentEma / 100f).coerceIn(0f, 1f)
+        (currentEma / 100f).coerceIn(0.1f, 1f)
     }
     
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 3.dp, horizontal = 4.dp),
+                .padding(vertical = 4.dp, horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
@@ -678,11 +684,11 @@ private fun HabitRow(
                     progress = emaScore,
                     themeColor = themeColor
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = habit.title,
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = -0.5.sp,
                     maxLines = 1,
@@ -702,6 +708,9 @@ private fun HabitRow(
                     CheckWidget(
                         status = record?.status ?: "NONE",
                         themeColor = themeColor,
+                        habitType = habit.habitType,
+                        unit = habit.unit,
+                        inputValue = record?.inputValue,
                         onClick = { onCheckClick(date, record) },
                         onLongClick = { onCheckLongClick(date, record) }
                     )
