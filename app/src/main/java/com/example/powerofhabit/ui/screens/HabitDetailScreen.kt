@@ -180,7 +180,7 @@ private fun HabitDetailContent(
                 "년" -> {
                     val grouped = entries.groupBy { "${it.key.year}" }
                     val scores = grouped.map { it.value.last().value }
-                    val dates = grouped.map { "${it.key.year}년" }
+                    val dates = grouped.map { "${it.key}년" }
                     scores.takeLast(5) to dates.takeLast(5)
                 }
                 else -> {
