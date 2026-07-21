@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable data object Main : NavKey
 @Serializable data class HabitDetail(val habitId: Int) : NavKey
-@Serializable data class AddEditHabit(val habitId: Int) : NavKey
+@Serializable data class AddEditHabit(val habitId: Int, val defaultHabitType: String = "CHECK") : NavKey
 @Serializable data object Badges : NavKey

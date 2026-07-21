@@ -28,8 +28,8 @@ fun MainNavigation() {
             onNavigateToDetail = { habitId ->
               backStack.add(HabitDetail(habitId = habitId))
             },
-            onNavigateToAddHabit = {
-              backStack.add(AddEditHabit(habitId = 0))
+            onNavigateToAddHabit = { habitType ->
+              backStack.add(AddEditHabit(habitId = 0, defaultHabitType = habitType))
             },
             onNavigateToBadges = {
               backStack.add(Badges)
@@ -49,6 +49,7 @@ fun MainNavigation() {
         entry<AddEditHabit> { key ->
           AddEditHabitScreen(
             habitId = key.habitId,
+            defaultHabitType = key.defaultHabitType,
             onBack = { backStack.removeLastOrNull() }
           )
         }

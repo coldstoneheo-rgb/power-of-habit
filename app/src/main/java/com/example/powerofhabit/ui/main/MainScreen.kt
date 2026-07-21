@@ -45,7 +45,7 @@ import java.util.Locale
 @Composable
 fun MainScreen(
     onNavigateToDetail: (Int) -> Unit,
-    onNavigateToAddHabit: () -> Unit,
+    onNavigateToAddHabit: (String) -> Unit,
     onNavigateToBadges: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: MainScreenViewModel = hiltViewModel(),
@@ -109,7 +109,7 @@ internal fun MainScreenContent(
     habits: List<HabitEntity>,
     records: Map<Int, Map<String, HabitRecordEntity>>,
     onNavigateToDetail: (Int) -> Unit,
-    onNavigateToAddHabit: () -> Unit,
+    onNavigateToAddHabit: (String) -> Unit,
     onNavigateToBadges: () -> Unit,
     onUpdateRecordStatus: (Int, String, Int) -> Unit,
     onInsertRecord: (HabitRecordEntity) -> Unit,
@@ -133,10 +133,89 @@ internal fun MainScreenContent(
     
     var showValueDialogForHabit by remember { mutableStateOf<Pair<HabitEntity, LocalDate>?>(null) }
     var showBackupSettings by remember { mutableStateOf(false) }
+    var showAddTypeModal by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val backupManager = remember { com.example.powerofhabit.backup.GoogleDriveBackupManager(context) }
-    
+
+    if (showAddTypeModal) {
+        AlertDialog(
+            onDismissRequest = { showAddTypeModal = false },
+            title = {
+                Text(
+                    text = "습관 종류 선택",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    // Option 1: Yes or No (CHECK)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                showAddTypeModal = false
+                                onNavigateToAddHabit("CHECK")
+                            },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Text(
+                                text = "예 또는 아니요",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "예) 오늘 일찍 일어났나요? 운동 하셨나요? 독서를 하셨나요?",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    // Option 2: Measurable (VALUE)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                showAddTypeModal = false
+                                onNavigateToAddHabit("VALUE")
+                            },
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Text(
+                                text = "측정 가능한",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "예) 오늘 몇 km를 달렸습니까? 몇 페이지를 읽었습니까?",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showAddTypeModal = false }) {
+                    Text("취소", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -159,7 +238,7 @@ internal fun MainScreenContent(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 // Add Habit Button
                 IconButton(
-                    onClick = onNavigateToAddHabit,
+                    onClick = { showAddTypeModal = true },
                     modifier = Modifier
                         .clip(RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.surface)
