@@ -77,26 +77,43 @@ fun CheckWidget(
         contentAlignment = Alignment.Center
     ) {
         if (habitType == "VALUE") {
-            // 수치 습관인 경우 (레퍼런스 앱처럼 수치 + 단위 2줄 표기)
-            val displayValue = if (inputValue != null) {
-                if (inputValue % 1f == 0f) "${inputValue.toInt()}" else "$inputValue"
+            // 수치 습관인 경우 (레퍼런스 앱 디자인 100% 반영)
+            val hasRecord = inputValue != null
+            val displayValue = if (hasRecord) {
+                if (inputValue % 1f == 0f) "${inputValue!!.toInt()}" else "$inputValue"
             } else "0"
             val displayUnit = unit ?: ""
+            
+            // 색상 규칙: 
+            // 1. 완료(COMPLETED) -> 습관 테마 색상 (themeColor)
+            // 2. 미달성 수치 입력(FAILED / 미달) -> 진한 회색 (MaterialTheme.colorScheme.onSurface)
+            // 3. 미기록(NONE) -> 연한 회색 (0.25f alpha)
+            val textColor = when {
+                isCompleted -> themeColor
+                hasRecord -> MaterialTheme.colorScheme.onSurface
+                else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
+            }
+            
+            val unitColor = when {
+                isCompleted -> themeColor.copy(alpha = 0.85f)
+                hasRecord -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+            }
             
             androidx.compose.foundation.layout.Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = displayValue,
-                    color = if (isCompleted) themeColor else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
+                    color = textColor,
                     fontSize = 11.sp,
-                    fontWeight = if (isCompleted) FontWeight.Bold else FontWeight.Normal,
+                    fontWeight = if (isCompleted || hasRecord) FontWeight.Bold else FontWeight.Normal,
                     lineHeight = 11.sp,
                     letterSpacing = -0.5.sp
                 )
                 Text(
                     text = displayUnit,
-                    color = if (isCompleted) themeColor.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f),
+                    color = unitColor,
                     fontSize = 8.sp,
                     lineHeight = 9.sp,
                     letterSpacing = -0.5.sp
