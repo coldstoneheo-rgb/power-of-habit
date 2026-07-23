@@ -379,27 +379,33 @@ internal fun MainScreenContent(
         val existingRecord = records[habit.habitId]?.get(date.toString())
         var inputValue by remember { mutableStateOf(existingRecord?.inputValue?.toString() ?: "") }
         
+        val habitThemeColor = remember(habit.themeColor) {
+            try { Color(android.graphics.Color.parseColor(habit.themeColor)) } catch (e: Exception) { HabitOrange }
+        }
+
         AlertDialog(
             onDismissRequest = { showValueDialogForHabit = null },
-            title = { Text(text = habit.title, color = Color.White) },
+            title = { Text(text = habit.title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold) },
             text = {
                 Column {
                     Text(
                         text = habit.question,
-                        color = LightGrayText,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 13.sp,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                     OutlinedTextField(
                         value = inputValue,
                         onValueChange = { inputValue = it },
-                        label = { Text("Value (${habit.unit ?: ""})") },
+                        label = { Text("수치 (${habit.unit ?: ""})") },
+                        placeholder = { Text("예) 5.0") },
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            focusedBorderColor = HabitOrange,
-                            unfocusedBorderColor = Color.DarkGray
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            focusedBorderColor = habitThemeColor,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                         )
                     )
                 }
@@ -425,16 +431,16 @@ internal fun MainScreenContent(
                         showValueDialogForHabit = null
                     }
                 ) {
-                    Text("Save", color = HabitOrange)
+                    Text("저장", color = habitThemeColor, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showValueDialogForHabit = null }) {
-                    Text("Cancel", color = LightGrayText)
+                    Text("취소", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
-            containerColor = DarkGrayBackground,
-            titleContentColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface
         )
     }
 

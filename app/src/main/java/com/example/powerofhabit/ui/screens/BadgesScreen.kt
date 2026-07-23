@@ -51,12 +51,17 @@ val AllBadgeDefinitions = listOf(
     BadgeDefinition("STREAK_3", "작심삼일 탈출", "습관 3일 연속 달성에 성공했습니다!", "BRONZE"),
     BadgeDefinition("STREAK_5", "꾸준한 실행가", "습관 5일 연속 달성에 성공했습니다!", "SILVER"),
     BadgeDefinition("STREAK_7", "빛나는 일주일", "일주일 7일 연속 완벽 달성에 성공했습니다!", "SILVER"),
+    BadgeDefinition("STREAK_14", "2주의 기적", "2주 연속 습관 달성을 완료했습니다!", "SILVER"),
     BadgeDefinition("STREAK_21", "21일의 습관화", "습관 형성 21일의 벽을 돌파했습니다!", "SILVER"),
     BadgeDefinition("STREAK_30", "습관 마스터", "지속 가능한 성장! 습관 30일 연속 달성 완료!", "GOLD"),
     BadgeDefinition("STREAK_66", "체화된 습관", "평균 습관 형성 주기 66일을 완전히 정복했습니다!", "GOLD"),
+    BadgeDefinition("STREAK_100", "백일의 대장정", "100일 연속 달성! 전설적인 완벽 마스터!", "GOLD"),
     BadgeDefinition("HABIT_COMPLETE_10", "첫 10회의 발걸음", "습관 완수 횟수 10회를 달성했습니다!", "BRONZE"),
     BadgeDefinition("HABIT_COMPLETE_50", "반백의 열정", "습관 완수 횟수 50회를 달성했습니다!", "SILVER"),
-    BadgeDefinition("HABIT_COMPLETE_100", "백일의 기적", "습관 완수 횟수 100회를 돌파했습니다!", "GOLD")
+    BadgeDefinition("HABIT_COMPLETE_100", "백일의 기적", "습관 완수 횟수 100회를 돌파했습니다!", "GOLD"),
+    BadgeDefinition("EARLY_BIRD", "얼리버드 습관가", "아침 일찍 습관을 실천했습니다!", "SILVER"),
+    BadgeDefinition("NIGHT_OWL", "밤샘 파수꾼", "늦은 밤에도 잊지 않고 습관을 완료했습니다!", "BRONZE"),
+    BadgeDefinition("HABIT_CREATOR", "습관 설계자", "3개 이상의 다양한 습관을 등록하고 관리 중입니다!", "BRONZE")
 )
 
 @HiltViewModel
@@ -81,22 +86,22 @@ fun BadgesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("업적 배지 보관함", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp, letterSpacing = -0.5.sp) },
+                title = { Text("업적 배지 보관함", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold, fontSize = 20.sp, letterSpacing = -0.5.sp) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BlackBackground)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
-        containerColor = BlackBackground
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(BlackBackground)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -105,8 +110,8 @@ fun BadgesScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(DarkGrayBackground)
-                    .border(1.dp, MetalBorderBrush, RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                     .padding(20.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -114,15 +119,15 @@ fun BadgesScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("해제한 업적", color = LightGrayText, fontSize = 12.sp, letterSpacing = -0.5.sp)
+                    Text("해제한 업적", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp, letterSpacing = -0.5.sp)
                     Text(
                         text = "${earned.size} / ${AllBadgeDefinitions.size}",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = -0.5.sp
                     )
-                    Text("꾸준한 실천으로 메탈릭 업적 배지를 획득하세요!", color = LightGrayText, fontSize = 11.sp, letterSpacing = -0.5.sp)
+                    Text("꾸준한 실천으로 메탈릭 업적 배지를 획득하세요!", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp, letterSpacing = -0.5.sp)
                 }
             }
             
@@ -164,7 +169,7 @@ fun BadgesScreen(
             title = {
                 Text(
                     text = def.name,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     letterSpacing = -0.5.sp,
@@ -191,12 +196,12 @@ fun BadgesScreen(
                                         else -> BronzeMetalBrush
                                     }
                                 } else {
-                                    Brush.linearGradient(listOf(Color(0xFF2C2C2E), Color(0xFF1C1C1E)))
+                                    Brush.linearGradient(listOf(Color(0xFF8E8E93), Color(0xFF636366)))
                                 }
                             )
                             .border(
                                 width = if (record != null) 3.dp else 1.dp,
-                                color = if (record != null) Color.White else Color.White.copy(alpha = 0.15f),
+                                color = if (record != null) Color.White else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
                                 shape = CircleShape
                             ),
                         contentAlignment = Alignment.Center
@@ -214,7 +219,7 @@ fun BadgesScreen(
                     
                     Text(
                         text = def.description,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 14.sp,
                         textAlign = TextAlign.Center,
                         lineHeight = 20.sp,
@@ -224,7 +229,7 @@ fun BadgesScreen(
                     if (record != null) {
                         Text(
                             text = "획득 일자: $earnedTimeText",
-                            color = LightGrayText,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 12.sp,
                             textAlign = TextAlign.Center,
                             letterSpacing = -0.5.sp
@@ -246,8 +251,8 @@ fun BadgesScreen(
                     Text("확인", color = HabitOrange, fontWeight = FontWeight.Bold)
                 }
             },
-            containerColor = DarkGrayBackground,
-            titleContentColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface,
+            titleContentColor = MaterialTheme.colorScheme.onSurface
         )
     }
 }
@@ -262,8 +267,8 @@ private fun BadgeItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(DarkGrayBackground)
-            .border(1.dp, MetalBorderBrush, RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
             .clickable { onClick() }
             .padding(12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -282,12 +287,12 @@ private fun BadgeItem(
                             else -> BronzeMetalBrush
                         }
                     } else {
-                        Brush.linearGradient(listOf(Color(0xFF2C2C2E), Color(0xFF1C1C1E)))
+                        Brush.linearGradient(listOf(Color(0xFF8E8E93), Color(0xFF636366)))
                     }
                 )
                 .border(
                     width = if (isEarned) 2.dp else 1.dp,
-                    color = if (isEarned) Color.White.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.10f),
+                    color = if (isEarned) Color.White.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.15f),
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
@@ -309,7 +314,7 @@ private fun BadgeItem(
         
         Text(
             text = definition.name,
-            color = if (isEarned) Color.White else LightGrayText,
+            color = if (isEarned) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
