@@ -11,7 +11,7 @@
 3. **스킬 (Skills)**: 프로젝트 도메인 지식, L2C 캡처 규칙 및 표준 워크플로우 사전 로딩 (`SKILL.md`).
 4. **커넥터 (Connectors)**: Git, GitHub CLI(`gh`), L2C Logging Pipeline 등 자동화 손발 연동.
 5. **서브 에이전트 (Sub-agents)**: 생성 에이전트(Builder)와 검수 에이전트(Reviewer)를 분리하여 병렬 품질 검증.
-6. **상태 파일 (State Memory)**: 에이전트는 잊어도 저장소는 잊지 않는다 (`task.md`, `walkthrough.md`, `implementation_plan.md`, devlog).
+6. **상태 파일 (State Memory)**: 에이전트는 잊어도 저장소는 잊지 않는다 (`task.md`, `walkthrough.md`, `implementation_plan.md`, devlog, **`WORKLOG.md`**=오케스트레이터 보고).
 
 ## 3. 루프 실행 워크플로우 (Loop Engine Workflow)
 
@@ -28,7 +28,8 @@
   3. **[Self-Verification]**: 프로젝트 검증 커맨드 자동 실행.
   4. **[Auto-Repair Loop]**: 테스트/빌드 실패 시 상태 파일(`task.md`)을 갱신하며 자율 수정 반복.
   5. **[Commit & Push & PR]**: 표준 커밋 작성, 원격 푸시 및 PR 발행.
-  6. **[L2C Devlog Sync]**: L2C 캡처 지침에 맞춰 devlog 파일 Direct Write 및 멱등 교체.
+  6. **[L2C Devlog Sync]**: L2C 캡처 지침(§4)에 맞춰 devlog 파일 Direct Write 및 멱등 교체.
+  7. **[Worklog Sync]**: 루트 `WORKLOG.md` **맨 위**에 이번 세션 2-Layer 보고 블록 append(최신 위, append-only). devlog(§4, 콘텐츠 원재료)와 **별개** — 오케스트레이터(LC)의 `/project-scan`이 읽는 프로젝트 보고다(§5).
 
 ## 4. L2C Devlog 캡처 규칙 (L2C Integration & 정식 프로젝트명 통합)
 - **저장 경로**: `D:\AI\claude\L2C\devlog\<정식프로젝트명>\<YYYY-MM-DD>.md` (Direct Write, 아티팩트 저장 절대 금지).
@@ -42,7 +43,29 @@
   - **Mermaid 다이어그램**: 원문 devlog 흐름 보강용으로 작성하되 독자 대상 시각자료는 렌더링된 PNG로도 확보.
 - **마스킹**: 쓰기 전 비밀번호/API 키/토큰은 `***REDACTED***`로 가린다.
 
-## 5. 금지 및 예외 규칙 (Strict Constraints)
+## 5. Worklog 보고 규칙 (오케스트레이터 연동 — devlog와 별개)
+> **devlog ≠ WORKLOG.** devlog(§4)는 L2C 콘텐츠 원재료(`D:\...\L2C\devlog\`)고, `WORKLOG.md`는
+> 오케스트레이터(Life Coordinator)의 `/project-scan`이 1차 소스로 읽는 프로젝트 보고다. 목적·위치가 다르므로 **세션 끝에 둘 다** 남긴다.
+- **위치·방식**: repo 루트 `WORKLOG.md` **맨 위** append-only(최신이 위), 블록 사이 `---`. 규약 전문: LC `docs/WORKLOG_PROTOCOL.md`.
+- **블록 형식**:
+  ```yaml
+  ---
+  date: <YYYY-MM-DD>
+  project: power-of-habit
+  agent: antigravity
+  summary: <한 줄 — 이번 세션에 무엇이 바뀌었나>
+  status: on_track | blocked | pivoted | shipped | paused
+  progress: "<%/마일스톤> (근거: <PR/커밋/테스트>)"
+  changes: ["<PR/SHA> <제목>"]
+  next: <다음에 풀 1가지>
+  # 해당 시만 한 줄씩: blockers / synergy / monetization / learning_need / spinoff_idea
+  ---
+  ## 의미
+  <2~4문장: 목표에 왜 중요한가 / 무엇을 잠금해제. git이 못 주는 맥락만.>
+  ```
+- git diff·커밋 메시지 재서술 금지(링크만). `progress`는 근거 필수(자가채점 방지).
+
+## 6. 금지 및 예외 규칙 (Strict Constraints)
 - **모든 중간 질의 금지**: 자율 루프 도중 중간 빌드/커밋마다 "진행할까요?" 질의 절대 금지.
 - **오염 방지**: `scratch/`, 개인 환경설정, `.agents/` 임시 작업 파일이 Git 커밋에 포함되지 않도록 스테이징 시 엄격 차단.
 - **불확실성 차단**: 명세가 모호할 경우 Stage A에서 질문을 통해 명확히 정제한 후 루프 진입.
