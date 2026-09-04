@@ -11,7 +11,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -35,11 +34,9 @@ import com.example.powerofhabit.data.local.HabitRecordEntity
 import com.example.powerofhabit.domain.stats.HabitFrequency
 import com.example.powerofhabit.domain.stats.HabitStatsCalculator
 import com.example.powerofhabit.ui.components.widgets.*
-import com.example.powerofhabit.ui.theme.BlackBackground
-import com.example.powerofhabit.ui.theme.DarkGrayBackground
 import com.example.powerofhabit.ui.theme.HabitOrange
-import com.example.powerofhabit.ui.theme.LightGrayText
-import com.example.powerofhabit.ui.theme.MetalBorderBrush
+import com.example.powerofhabit.ui.theme.HabitTheme
+import com.example.powerofhabit.ui.theme.Space
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -59,7 +56,7 @@ fun HabitDetailScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BlackBackground)
+            .background(HabitTheme.colors.bgBase)
     ) {
         when (state) {
             HabitDetailUiState.Loading -> {
@@ -90,8 +87,8 @@ fun HabitDetailScreen(
                             color = Color.Red
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = onBack, colors = ButtonDefaults.buttonColors(containerColor = DarkGrayBackground)) {
-                            Text("Back", color = Color.White)
+                        Button(onClick = onBack, colors = ButtonDefaults.buttonColors(containerColor = HabitTheme.colors.bgLayer3)) {
+                            Text("Back", color = HabitTheme.colors.textPrimary)
                         }
                     }
                 }
@@ -201,11 +198,11 @@ private fun HabitDetailContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = HabitTheme.colors.onAccent(themeColor))
                 }
                 Text(
                     text = habit.title,
-                    color = Color.White,
+                    color = HabitTheme.colors.onAccent(themeColor),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
@@ -213,13 +210,13 @@ private fun HabitDetailContent(
                     overflow = TextOverflow.Ellipsis
                 )
                 IconButton(onClick = { onNavigateToEdit(habit.habitId) }) {
-                    Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit", tint = Color.White)
+                    Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit", tint = HabitTheme.colors.onAccent(themeColor))
                 }
                 
                 var showMenu by remember { mutableStateOf(false) }
                 Box {
                     IconButton(onClick = { showMenu = true }) {
-                        Icon(imageVector = Icons.Default.MoreVert, contentDescription = "More", tint = Color.White)
+                        Icon(imageVector = Icons.Default.MoreVert, contentDescription = "More", tint = HabitTheme.colors.onAccent(themeColor))
                     }
                     DropdownMenu(
                         expanded = showMenu,
@@ -234,7 +231,7 @@ private fun HabitDetailContent(
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("삭제", color = Color.Red) },
+                            text = { Text("삭제", color = HabitTheme.colors.statusError) },
                             onClick = {
                                 showMenu = false
                                 showDeleteDialog = true
@@ -275,8 +272,8 @@ private fun HabitDetailContent(
             
             Spacer(modifier = Modifier.height(8.dp))
             Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                shape = MaterialTheme.shapes.small,
+                color = HabitTheme.colors.bgLayer3
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -304,7 +301,7 @@ private fun HabitDetailContent(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = habit.memo,
-                    color = LightGrayText.copy(alpha = 0.7f),
+                    color = HabitTheme.colors.textSecondary.copy(alpha = 0.7f),
                     fontSize = 13.sp
                 )
             }
@@ -314,18 +311,17 @@ private fun HabitDetailContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+                .padding(horizontal = Space.screenH, vertical = Space.s3),
+            verticalArrangement = Arrangement.spacedBy(Space.s5)
         ) {
             // 1. Quick Summary (Donut Chart & 2x2 Stats Dashboard)
-            CardSection(title = "한눈에 보기") {
+            CardSection(accent = themeColor, title = "한눈에 보기") {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f), RoundedCornerShape(8.dp))
+                            .clip(MaterialTheme.shapes.small)
+                            .background(HabitTheme.colors.bgLayer3)
                             .padding(10.dp)
                     ) {
                         Text(
@@ -399,7 +395,7 @@ private fun HabitDetailContent(
             }
 
             // 2. Habit Score Trend
-            CardSection(title = "점수 추이") {
+            CardSection(accent = themeColor, title = "점수 추이") {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -408,7 +404,7 @@ private fun HabitDetailContent(
                     ) {
                         Text(
                             text = "시간 경과에 따른 습관 지수 변화 그래프입니다.",
-                            color = LightGrayText,
+                            color = HabitTheme.colors.textSecondary,
                             fontSize = 12.sp,
                             letterSpacing = -0.5.sp,
                             modifier = Modifier.weight(1f)
@@ -450,7 +446,7 @@ private fun HabitDetailContent(
             }
             
             // 3. Streak
-            CardSection(title = "연속 기록 (Streak Tracker)") {
+            CardSection(accent = themeColor, title = "연속 기록 (Streak Tracker)") {
                 StreakWidget(
                     currentStreak = currentStreak,
                     maxStreak = maxStreak,
@@ -460,7 +456,7 @@ private fun HabitDetailContent(
             }
             
             // 4. Target Goal Progress
-            CardSection(title = "목표 달성률 (Monthly Progress)") {
+            CardSection(accent = themeColor, title = "목표 달성률 (Monthly Progress)") {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     TargetGoalWidget(
                         title = "이번 달 달성률 (${frequency.label})",
@@ -476,11 +472,11 @@ private fun HabitDetailContent(
             }
             
             // 5. History Calendar with Edit function
-            CardSection(title = "실행 이력 (History Calendar)") {
+            CardSection(accent = themeColor, title = "실행 이력 (History Calendar)") {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
                         text = "💡 날짜를 누르면 과거 실행 기록을 수정할 수 있습니다.",
-                        color = LightGrayText,
+                        color = HabitTheme.colors.textSecondary,
                         fontSize = 12.sp,
                         letterSpacing = -0.5.sp
                     )
@@ -491,17 +487,17 @@ private fun HabitDetailContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(onClick = { currentMonth = currentMonth.minusMonths(1) }) {
-                            Text("<", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text("<", color = HabitTheme.colors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         }
                         Text(
                             text = "${currentMonth.year}년 ${currentMonth.monthValue}월",
-                            color = Color.White,
+                            color = HabitTheme.colors.textPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
                             letterSpacing = -0.5.sp
                         )
                         IconButton(onClick = { currentMonth = currentMonth.plusMonths(1) }) {
-                            Text(">", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                            Text(">", color = HabitTheme.colors.textPrimary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         }
                     }
                     
@@ -515,7 +511,7 @@ private fun HabitDetailContent(
             }
             
             // 6. Heatmap Frequencies
-            CardSection(title = "연간 빈도 매트릭스") {
+            CardSection(accent = themeColor, title = "연간 빈도 매트릭스") {
                 HeatmapWidget(
                     frequencies = heatmapFrequencies,
                     themeColor = themeColor
@@ -539,7 +535,7 @@ private fun HabitDetailContent(
             title = {
                 Text(
                     text = "${date.year}년 ${date.monthValue}월 ${date.dayOfMonth}일 기록 수정",
-                    color = Color.White,
+                    color = HabitTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     letterSpacing = -0.5.sp
@@ -549,7 +545,7 @@ private fun HabitDetailContent(
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text(
                         text = "달성 상태를 선택해 주세요.",
-                        color = LightGrayText,
+                        color = HabitTheme.colors.textSecondary,
                         fontSize = 14.sp,
                         letterSpacing = -0.5.sp
                     )
@@ -569,16 +565,16 @@ private fun HabitDetailContent(
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(if (isSelected) themeColor else DarkGrayBackground)
-                                    .border(1.dp, if (isSelected) SolidColor(Color.White) else MetalBorderBrush, RoundedCornerShape(8.dp))
+                                    .clip(MaterialTheme.shapes.small)
+                                    .background(if (isSelected) themeColor else HabitTheme.colors.bgLayer3)
+                                    .border(1.dp, SolidColor(if (isSelected) Color.Transparent else HabitTheme.colors.lineHair), MaterialTheme.shapes.small)
                                     .clickable { status = statKey }
                                     .padding(vertical = 8.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = statLabel,
-                                    color = if (isSelected) Color.White else LightGrayText,
+                                    color = if (isSelected) HabitTheme.colors.onAccent(themeColor) else HabitTheme.colors.textSecondary,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -595,10 +591,10 @@ private fun HabitDetailContent(
                             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
                             singleLine = true,
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = Color.White,
-                                unfocusedTextColor = Color.White,
+                                focusedTextColor = HabitTheme.colors.textPrimary,
+                                unfocusedTextColor = HabitTheme.colors.textPrimary,
                                 focusedBorderColor = themeColor,
-                                unfocusedBorderColor = Color.DarkGray
+                                unfocusedBorderColor = HabitTheme.colors.lineStrong
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -628,11 +624,11 @@ private fun HabitDetailContent(
             },
             dismissButton = {
                 TextButton(onClick = { selectedDateForEdit = null }) {
-                    Text("취소", color = LightGrayText)
+                    Text("취소", color = HabitTheme.colors.textSecondary)
                 }
             },
-            containerColor = DarkGrayBackground,
-            titleContentColor = Color.White
+            containerColor = HabitTheme.colors.bgLayer2,
+            titleContentColor = HabitTheme.colors.textPrimary
         )
     }
 
@@ -643,7 +639,7 @@ private fun HabitDetailContent(
             title = {
                 Text(
                     text = "습관 삭제",
-                    color = Color.White,
+                    color = HabitTheme.colors.textPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     letterSpacing = -0.5.sp
@@ -652,7 +648,7 @@ private fun HabitDetailContent(
             text = {
                 Text(
                     text = "정말로 이 습관을 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.",
-                    color = LightGrayText,
+                    color = HabitTheme.colors.textSecondary,
                     fontSize = 14.sp,
                     letterSpacing = -0.5.sp
                 )
@@ -669,11 +665,11 @@ private fun HabitDetailContent(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("취소", color = LightGrayText)
+                    Text("취소", color = HabitTheme.colors.textSecondary)
                 }
             },
-            containerColor = DarkGrayBackground,
-            titleContentColor = Color.White
+            containerColor = HabitTheme.colors.bgLayer2,
+            titleContentColor = HabitTheme.colors.textPrimary
         )
     }
 }
@@ -687,9 +683,8 @@ private fun StatCard(
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
-            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
+            .clip(MaterialTheme.shapes.small)
+            .background(HabitTheme.colors.bgLayer3)
             .padding(vertical = 6.dp, horizontal = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(2.dp)
@@ -713,25 +708,24 @@ private fun StatCard(
 @Composable
 private fun CardSection(
     title: String,
+    accent: Color = HabitTheme.colors.textPrimary,
     content: @Composable () -> Unit
 ) {
+    // 섹션 제목은 습관 액센트(가이드 B2: 액센트가 허용되는 5곳 중 하나). 카드는 layer2 + radius.md, 테두리 없음(B6).
     Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(Space.s3)
     ) {
         Text(
             text = title,
-            color = Color.White,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = -0.5.sp
+            color = HabitTheme.colors.accentForText(accent),
+            style = MaterialTheme.typography.titleMedium
         )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(DarkGrayBackground)
-                .border(1.dp, MetalBorderBrush, RoundedCornerShape(16.dp))
-                .padding(16.dp)
+                .clip(MaterialTheme.shapes.medium)
+                .background(HabitTheme.colors.bgLayer2)
+                .padding(Space.card)
         ) {
             content()
         }

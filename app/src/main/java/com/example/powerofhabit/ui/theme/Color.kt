@@ -2,23 +2,6 @@ package com.example.powerofhabit.ui.theme
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
-
-val BlackBackground = Color(0xFF101012) // Slightly warm black for high-end feel
-val DarkGrayBackground = Color(0xFF1C1C1E) // Matte metallic charcoal background
-val LightGrayText = Color(0xFF8E8E93)
-val WhiteText = Color(0xFFF2F2F7)
-
-// Brushed metal edge brushes and highlights
-
-val MetalBorderBrush = Brush.linearGradient(
-    colors = listOf(
-        Color(0xFFFFFFFF).copy(alpha = 0.15f),
-        Color(0xFFFFFFFF).copy(alpha = 0.02f),
-        Color(0xFFFFFFFF).copy(alpha = 0.10f)
-    )
-)
 
 val GoldenMetalBrush = Brush.linearGradient(
     colors = listOf(
@@ -90,26 +73,4 @@ val PremiumMatteColors = listOf(
     "#00BCD4" to Color(0xFF00BCD4), // Matte Ocean Blue
     "#009688" to Color(0xFF009688), // Matte Forest Teal
     "#8D6E63" to Color(0xFF8D6E63)  // Matte Cocoa Brown
-)
-
-val LightBackground = Color(0xFFF2F2F7) // System background light gray
-val LightSurface = Color(0xFFFFFFFF) // Surface white
-val DarkText = Color(0xFF1C1C1E) // Dark charcoal text
-
-val LightColorScheme = lightColorScheme(
-    primary = HabitOrange,
-    background = LightBackground,
-    surface = LightSurface,
-    onPrimary = Color.White,
-    onBackground = DarkText,
-    onSurface = DarkText
-)
-
-val DarkColorScheme = darkColorScheme(
-    primary = HabitOrange,
-    background = BlackBackground,
-    surface = DarkGrayBackground,
-    onPrimary = WhiteText,
-    onBackground = WhiteText,
-    onSurface = WhiteText
 )

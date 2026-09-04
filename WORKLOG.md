@@ -9,6 +9,27 @@
 ---
 
 ```yaml
+date: 2026-09-05
+project: power-of-habit
+agent: claude-code (harness-loop-engine)
+summary: 빈도 인지형 통계 엔진(#24) + 레퍼런스 역설계 디자인 가이드·토큰 코드화·핵심 화면 적용(#25)
+status: on_track
+progress: "PRD 통계 정확성 결함 해소 + 디자인 시스템 v1 (근거: #24 머지 fce371d·testDebugUnitTest 44/44, #25 assembleDebug 성공·자체리뷰 2회 반영)"
+changes: ["#24 feat(stats): 빈도 인지형 통계 엔진 — 주기별 스트릭·EMA·달성률", "#25 feat(design): 디자인 가이드(레퍼런스 역설계 + 토큰) + 토큰 코드화·핵심 화면 적용"]
+next: 홈 화면 위젯(AppWidget/Glance, PRD §1.1.4·§4-1) — 통계 엔진·토큰을 재사용해 1x1 체크 칩·캘린더 글랜스 뷰
+blockers: 실기기 스크린샷 미확인 — 다크/라이트 대비는 토큰 값(AA 계산)으로만 검증
+synergy: docs/DESIGN_GUIDE.md는 다른 앱(baby-naming 등)에 이식 가능한 토큰 표 — L2C "디자인 시스템 역설계" 콘텐츠 원재료
+monetization: 아직 0원(Play 배포·수익모델 미설계). 출시 준비(패키지명·서명·minify)는 후보 #5로 대기
+```
+## 의미
+"예쁘지만 틀린 숫자"를 먼저 고쳤다. 주 n회·월 n회 습관이 매일 기준으로 채점되던 결함을 기간 단위 판정으로 바꾸고,
+계산을 Composable 밖 순수 Kotlin으로 빼 테스트 가능하게 했다. 자체 리뷰에서 홈 도넛의 창(window) 불일치·오늘 실패 미반영·
+창 위상 이동 같은 실사용 버그가 추가로 잡혔다. 디자인은 레퍼런스의 문법(무채 85-12-3·톤 계단·텍스트 셀)만 추출하고
+곡률·배경·타입·층 구조를 새로 정해 토큰으로 코드화했다. 두 산출물 모두 홈 위젯 작업의 재료가 된다.
+
+---
+
+```yaml
 date: 2026-09-04
 project: power-of-habit
 agent: claude-code (harness-loop-engine)

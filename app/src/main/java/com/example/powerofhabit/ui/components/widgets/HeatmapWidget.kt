@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.powerofhabit.ui.theme.HabitTheme
 
 @Composable
 fun HeatmapWidget(
@@ -15,6 +16,7 @@ fun HeatmapWidget(
     themeColor: Color,
     modifier: Modifier = Modifier,
 ) {
+    val emptyDotColor = HabitTheme.colors.lineFocus // 빈도 0: 헤어라인 점(격자 위치 안내). Canvas 람다 밖에서 읽는다.
     Canvas(modifier = modifier.fillMaxWidth().height(150.dp)) {
         val rows = 7
         val cols = frequencies.firstOrNull()?.size ?: 0
@@ -41,8 +43,8 @@ fun HeatmapWidget(
                     )
                 } else {
                     drawCircle(
-                        color = Color.DarkGray,
-                        radius = maxRadius * 0.2f,
+                        color = emptyDotColor,
+                        radius = maxRadius * 0.1f,
                         center = Offset(
                             x = (c * cellWidth) + (cellWidth / 2f),
                             y = (r * cellHeight) + (cellHeight / 2f),

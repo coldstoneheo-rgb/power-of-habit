@@ -15,8 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.powerofhabit.ui.theme.DarkGrayBackground
-import com.example.powerofhabit.ui.theme.LightGrayText
+import com.example.powerofhabit.ui.theme.HabitTheme
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -36,7 +35,7 @@ fun HistoryCalendarWidget(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(DarkGrayBackground)
+            .background(HabitTheme.colors.bgLayer2)
             .padding(8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -48,7 +47,7 @@ fun HistoryCalendarWidget(
             daysOfWeek.forEach { day ->
                 Text(
                     text = day,
-                    color = LightGrayText,
+                    color = HabitTheme.colors.textSecondary,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
@@ -85,14 +84,14 @@ fun HistoryCalendarWidget(
                                 .background(
                                     when (status) {
                                         "COMPLETED" -> themeColor
-                                        "FAILED" -> Color.Red.copy(alpha = 0.15f)
-                                        "SKIPPED" -> Color.White.copy(alpha = 0.08f)
+                                        "FAILED" -> HabitTheme.colors.statusFail.copy(alpha = 0.16f)
+                                        "SKIPPED" -> HabitTheme.colors.lineHair
                                         else -> Color.Transparent
                                     }
                                 )
                                 .border(
                                     width = if (status == "SKIPPED") 1.dp else 0.dp,
-                                    color = if (status == "SKIPPED") Color.White.copy(alpha = 0.4f) else Color.Transparent,
+                                    color = if (status == "SKIPPED") HabitTheme.colors.lineFocus else Color.Transparent,
                                     shape = CircleShape
                                 )
                                 .clickable { onDateClick(currentDate) },
@@ -101,10 +100,10 @@ fun HistoryCalendarWidget(
                             Text(
                                 text = day.toString(),
                                 color = when (status) {
-                                    "COMPLETED" -> Color.White
-                                    "FAILED" -> Color.Red.copy(alpha = 0.8f)
-                                    "SKIPPED" -> Color.White.copy(alpha = 0.9f)
-                                    else -> Color.White.copy(alpha = 0.7f)
+                                    "COMPLETED" -> HabitTheme.colors.onAccent(themeColor)
+                                    "FAILED" -> HabitTheme.colors.statusFail
+                                    "SKIPPED" -> HabitTheme.colors.textPrimary.copy(alpha = 0.9f)
+                                    else -> HabitTheme.colors.textPrimary.copy(alpha = 0.7f)
                                 },
                                 fontSize = 13.sp,
                                 fontWeight = if (status == "COMPLETED" || status == "FAILED" || status == "SKIPPED") FontWeight.Bold else FontWeight.Normal

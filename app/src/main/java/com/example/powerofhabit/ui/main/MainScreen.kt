@@ -1,5 +1,6 @@
 package com.example.powerofhabit.ui.main
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -7,7 +8,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.StrokeCap
@@ -33,11 +33,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
 import com.example.powerofhabit.ui.components.widgets.CheckWidget
-import com.example.powerofhabit.ui.theme.BlackBackground
-import com.example.powerofhabit.ui.theme.DarkGrayBackground
 import com.example.powerofhabit.ui.theme.HabitOrange
-import com.example.powerofhabit.ui.theme.LightGrayText
-import com.example.powerofhabit.ui.theme.MetalBorderBrush
+import com.example.powerofhabit.ui.theme.HabitTheme
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
@@ -161,8 +158,9 @@ internal fun MainScreenContent(
                                 showAddTypeModal = false
                                 onNavigateToAddHabit("CHECK")
                             },
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                        shape = RoundedCornerShape(12.dp)
+                        colors = CardDefaults.cardColors(containerColor = HabitTheme.colors.bgLayer3),
+                        border = BorderStroke(1.dp, HabitTheme.colors.lineHair),
+                        shape = MaterialTheme.shapes.medium
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
                             Text(
@@ -188,8 +186,9 @@ internal fun MainScreenContent(
                                 showAddTypeModal = false
                                 onNavigateToAddHabit("VALUE")
                             },
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                        shape = RoundedCornerShape(12.dp)
+                        colors = CardDefaults.cardColors(containerColor = HabitTheme.colors.bgLayer3),
+                        border = BorderStroke(1.dp, HabitTheme.colors.lineHair),
+                        shape = MaterialTheme.shapes.medium
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
                             Text(
@@ -242,7 +241,7 @@ internal fun MainScreenContent(
                 IconButton(
                     onClick = { showAddTypeModal = true },
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(MaterialTheme.shapes.medium)
                         .background(MaterialTheme.colorScheme.surface)
                 ) {
                     Icon(
@@ -256,7 +255,7 @@ internal fun MainScreenContent(
                 IconButton(
                     onClick = onNavigateToBadges,
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(MaterialTheme.shapes.medium)
                         .background(MaterialTheme.colorScheme.surface)
                 ) {
                     Text("🏆", fontSize = 18.sp)
@@ -266,7 +265,7 @@ internal fun MainScreenContent(
                 IconButton(
                     onClick = { showBackupSettings = true },
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(MaterialTheme.shapes.medium)
                         .background(MaterialTheme.colorScheme.surface)
                 ) {
                     Icon(
@@ -287,7 +286,7 @@ internal fun MainScreenContent(
             ) {
                 Text(
                     text = "No habits. Tap + to add one!",
-                    color = LightGrayText,
+                    color = HabitTheme.colors.textSecondary,
                     fontSize = 16.sp
                 )
             }
@@ -310,7 +309,7 @@ internal fun MainScreenContent(
                         ) {
                             Text(
                                 text = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ENGLISH).uppercase(),
-                                color = LightGrayText,
+                                color = HabitTheme.colors.textSecondary,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -515,7 +514,7 @@ internal fun MainScreenContent(
 
                     Text(
                         text = "구글 드라이브를 통해 안전하게 습관 데이터를 동기화하고 복구할 수 있습니다.",
-                        color = LightGrayText,
+                        color = HabitTheme.colors.textSecondary,
                         fontSize = 13.sp,
                         lineHeight = 18.sp,
                         letterSpacing = -0.5.sp
@@ -579,7 +578,7 @@ internal fun MainScreenContent(
                         },
                         enabled = !isBackingUp && !isRestoring,
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
-                        modifier = Modifier.weight(1f).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp))
+                        modifier = Modifier.weight(1f).border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large)
                     ) {
                         Text("복원하기", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                     }
@@ -590,7 +589,7 @@ internal fun MainScreenContent(
                     onClick = { showBackupSettings = false },
                     enabled = !isBackingUp && !isRestoring
                 ) {
-                    Text("닫기", color = LightGrayText)
+                    Text("닫기", color = HabitTheme.colors.textSecondary)
                 }
             },
             containerColor = MaterialTheme.colorScheme.surface,
@@ -716,7 +715,7 @@ private fun HabitRow(
         }
         if (showDivider) {
             HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                color = HabitTheme.colors.lineHair,
                 thickness = 0.5.dp
             )
         }
