@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.powerofhabit.data.DataRepository
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
+import com.example.powerofhabit.domain.stats.HabitFrequency
+import com.example.powerofhabit.domain.stats.HabitStatsCalculator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
@@ -20,7 +22,8 @@ sealed interface MainScreenUiState {
   data class Error(val throwable: Throwable) : MainScreenUiState
   data class Success(
     val habits: List<HabitEntity>,
-    val records: Map<Int, Map<String, HabitRecordEntity>> // habitId -> (dateString -> record)
+    val records: Map<Int, Map<String, HabitRecordEntity>>, // habitId -> (dateString -> record)
+    val scores: Map<Int, Float> = emptyMap() // habitId -> 최신 EMA 점수(0~100), 전체 이력 기반
   ) : MainScreenUiState
 }
 
@@ -52,13 +55,26 @@ class MainScreenViewModel @Inject constructor(
   }.flatMapLatest { (start, end) ->
     val habitsFlow = dataRepository.getAllHabits()
     val recordsFlow = dataRepository.getRecordsBetween(start, end)
-    
-    combine(habitsFlow, recordsFlow) { habits, records ->
+    val allRecordsFlow = dataRepository.getAllRecords()
+
+    combine(habitsFlow, recordsFlow, allRecordsFlow) { habits, records, allRecords ->
       val recordsMap = records.groupBy { it.habitId }
         .mapValues { entry ->
           entry.value.associateBy { it.date }
         }
-      MainScreenUiState.Success(habits, recordsMap) as MainScreenUiState
+      // 도넛 점수는 화면 창(이달/최근 3일)이 아니라 전체 이력으로 계산해야 상세 화면과 일치한다.
+      val today = LocalDate.now()
+      val allByHabit = allRecords.groupBy { it.habitId }
+      val scores = habits.associate { habit ->
+        val stats = HabitStatsCalculator.compute(
+          records = allByHabit[habit.habitId].orEmpty(),
+          frequency = HabitFrequency.parse(habit.frequencyType, habit.frequencyValue),
+          today = today,
+          anchorDate = HabitStatsCalculator.anchorFromEpochMillis(habit.createdAt)
+        )
+        habit.habitId to stats.latestScore
+      }
+      MainScreenUiState.Success(habits, recordsMap, scores) as MainScreenUiState
     }
   }
   .catch { emit(MainScreenUiState.Error(it)) }

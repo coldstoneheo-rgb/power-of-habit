@@ -32,8 +32,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
-import com.example.powerofhabit.domain.stats.HabitFrequency
-import com.example.powerofhabit.domain.stats.HabitStatsCalculator
 import com.example.powerofhabit.ui.components.widgets.CheckWidget
 import com.example.powerofhabit.ui.theme.BlackBackground
 import com.example.powerofhabit.ui.theme.DarkGrayBackground
@@ -75,6 +73,7 @@ fun MainScreen(
                 MainScreenContent(
                     habits = successState.habits,
                     records = successState.records,
+                    scores = successState.scores,
                     onNavigateToDetail = onNavigateToDetail,
                     onNavigateToAddHabit = onNavigateToAddHabit,
                     onNavigateToBadges = onNavigateToBadges,
@@ -110,6 +109,7 @@ fun MainScreen(
 internal fun MainScreenContent(
     habits: List<HabitEntity>,
     records: Map<Int, Map<String, HabitRecordEntity>>,
+    scores: Map<Int, Float> = emptyMap(),
     onNavigateToDetail: (Int) -> Unit,
     onNavigateToAddHabit: (String) -> Unit,
     onNavigateToBadges: () -> Unit,
@@ -334,6 +334,7 @@ internal fun MainScreenContent(
                         habit = habit,
                         dates = dates,
                         recordsMap = records[habit.habitId] ?: emptyMap(),
+                        score = scores[habit.habitId],
                         showDivider = index < habits.lastIndex,
                         onNavigateToDetail = onNavigateToDetail,
                         onCheckClick = { date, record ->
@@ -646,6 +647,7 @@ private fun HabitRow(
     habit: HabitEntity,
     dates: List<LocalDate>,
     recordsMap: Map<String, HabitRecordEntity>,
+    score: Float?, // 0~100, ViewModel이 전체 이력으로 계산. null이면 점수 없음
     showDivider: Boolean,
     onNavigateToDetail: (Int) -> Unit,
     onCheckClick: (LocalDate, HabitRecordEntity?) -> Unit,
@@ -659,12 +661,8 @@ private fun HabitRow(
         }
     }
     
-    val emaScore = remember(recordsMap, habit.frequencyType, habit.frequencyValue) {
-        if (recordsMap.isEmpty()) return@remember 0.2f // Default starting progress visualization
-        val frequency = HabitFrequency.parse(habit.frequencyType, habit.frequencyValue)
-        val stats = HabitStatsCalculator.compute(recordsMap.values.toList(), frequency)
-        (stats.latestScore / 100f).coerceIn(0.1f, 1f)
-    }
+    // 기록이 전혀 없는 습관은 시작 진행도 0.2로 표시, 그 외는 점수(0~100)를 0.1~1.0으로 매핑
+    val emaScore = if (score == null) 0.2f else (score / 100f).coerceIn(0.1f, 1f)
     
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(

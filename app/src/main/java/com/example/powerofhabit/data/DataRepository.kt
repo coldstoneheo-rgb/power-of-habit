@@ -19,6 +19,7 @@ interface DataRepository {
     // Habit Records
     fun getRecordsForDate(date: String): Flow<List<HabitRecordEntity>>
     fun getRecordsForHabit(habitId: Int): Flow<List<HabitRecordEntity>>
+    fun getAllRecords(): Flow<List<HabitRecordEntity>>
     fun getRecordsBetween(startDate: String, endDate: String): Flow<List<HabitRecordEntity>>
     suspend fun insertRecord(record: HabitRecordEntity): Long
     suspend fun updateRecordStatus(recordId: Int, status: String)
@@ -47,6 +48,8 @@ class DefaultDataRepository @Inject constructor(
     override fun getRecordsForDate(date: String): Flow<List<HabitRecordEntity>> = habitDao.getRecordsForDate(date)
 
     override fun getRecordsForHabit(habitId: Int): Flow<List<HabitRecordEntity>> = habitDao.getRecordsForHabit(habitId)
+
+    override fun getAllRecords(): Flow<List<HabitRecordEntity>> = habitDao.getAllRecords()
 
     override fun getRecordsBetween(startDate: String, endDate: String): Flow<List<HabitRecordEntity>> = habitDao.getRecordsBetween(startDate, endDate)
 

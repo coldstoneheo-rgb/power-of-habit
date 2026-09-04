@@ -27,6 +27,11 @@ class HabitFrequencyTest {
     }
 
     @Test
+    fun parse_interval1_isDaily() {
+        assertEquals(HabitFrequency.Daily, HabitFrequency.parse("INTERVAL", "1"))
+    }
+
+    @Test
     fun parse_invalidValues_fallBackToDaily() {
         assertEquals(HabitFrequency.Daily, HabitFrequency.parse("INTERVAL", "0"))
         assertEquals(HabitFrequency.Daily, HabitFrequency.parse("INTERVAL", "abc"))

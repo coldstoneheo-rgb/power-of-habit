@@ -127,8 +127,14 @@ private fun HabitDetailContent(
     val frequency = remember(habit.frequencyType, habit.frequencyValue) {
         HabitFrequency.parse(habit.frequencyType, habit.frequencyValue)
     }
-    val stats = remember(records, frequency) {
-        HabitStatsCalculator.compute(records, frequency)
+    val today = LocalDate.now() // remember 키에 포함해 자정이 지나면 재계산되게 한다
+    val stats = remember(records, frequency, today) {
+        HabitStatsCalculator.compute(
+            records = records,
+            frequency = frequency,
+            today = today,
+            anchorDate = HabitStatsCalculator.anchorFromEpochMillis(habit.createdAt)
+        )
     }
     val (filteredScores, filteredDates) = remember(stats, selectedFilter) {
         HabitStatsCalculator.groupScores(stats.dailyScores, selectedFilter)

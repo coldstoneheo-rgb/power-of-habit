@@ -75,6 +75,7 @@ class MainScreenViewModelTest {
 
         override fun getRecordsForDate(date: String): Flow<List<HabitRecordEntity>> = flow { emit(emptyList()) }
         override fun getRecordsForHabit(habitId: Int): Flow<List<HabitRecordEntity>> = flow { emit(emptyList()) }
+        override fun getAllRecords(): Flow<List<HabitRecordEntity>> = flow { emit(emptyList()) }
         override fun getRecordsBetween(startDate: String, endDate: String): Flow<List<HabitRecordEntity>> = flow { emit(emptyList()) }
         override suspend fun insertRecord(record: HabitRecordEntity): Long = 0L
         override suspend fun updateRecordStatus(recordId: Int, status: String) {}

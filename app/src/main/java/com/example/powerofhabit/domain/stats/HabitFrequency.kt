@@ -58,7 +58,8 @@ sealed class HabitFrequency {
         fun parse(type: String?, value: String?): HabitFrequency {
             val v = value?.trim().orEmpty()
             return when (type) {
-                TYPE_INTERVAL -> v.toIntOrNull()?.takeIf { it >= 1 }?.let { EveryNDays(it) } ?: Daily
+                // INTERVAL 1 == 매일. 라벨·단위가 갈라지지 않도록 Daily로 정규화한다.
+                TYPE_INTERVAL -> v.toIntOrNull()?.takeIf { it >= 2 }?.let { EveryNDays(it) } ?: Daily
                 TYPE_WEEKLY_COUNT -> v.toIntOrNull()?.takeIf { it in 1..7 }?.let { TimesPerWeek(it) } ?: Daily
                 TYPE_MONTHLY_COUNT -> v.toIntOrNull()?.takeIf { it in 1..31 }?.let { TimesPerMonth(it) } ?: Daily
                 TYPE_COUNT_IN_DAYS -> {

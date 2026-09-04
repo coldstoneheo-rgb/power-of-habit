@@ -28,6 +28,9 @@ interface HabitDao {
     @Query("SELECT * FROM HabitRecords WHERE habitId = :habitId ORDER BY date DESC")
     fun getRecordsForHabit(habitId: Int): Flow<List<HabitRecordEntity>>
 
+    @Query("SELECT * FROM HabitRecords")
+    fun getAllRecords(): Flow<List<HabitRecordEntity>>
+
     @Query("SELECT * FROM HabitRecords WHERE date >= :startDate AND date <= :endDate")
     fun getRecordsBetween(startDate: String, endDate: String): Flow<List<HabitRecordEntity>>
 

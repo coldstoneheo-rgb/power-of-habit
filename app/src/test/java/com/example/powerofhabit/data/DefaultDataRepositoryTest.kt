@@ -126,6 +126,8 @@ class DefaultDataRepositoryTest {
             list.filter { it.habitId == habitId }
         }
 
+        override fun getAllRecords(): Flow<List<HabitRecordEntity>> = recordsFlow
+
         override fun getRecordsBetween(startDate: String, endDate: String): Flow<List<HabitRecordEntity>> = recordsFlow.map { list ->
             list.filter { it.date in startDate..endDate }
         }
