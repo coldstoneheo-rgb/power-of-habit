@@ -18,22 +18,23 @@ import com.example.powerofhabit.ui.theme.DarkGrayBackground
 fun StreakWidget(
     currentStreak: Int,
     maxStreak: Int,
-    themeColor: Color
+    themeColor: Color,
+    unitLabel: String = "일"
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        StreakBar("Current Streak", currentStreak, maxStreak, themeColor.copy(alpha = 0.8f))
-        StreakBar("Max Streak", maxStreak, maxStreak, themeColor)
+        StreakBar("현재 연속", currentStreak, maxStreak, unitLabel, themeColor.copy(alpha = 0.8f))
+        StreakBar("최고 연속", maxStreak, maxStreak, unitLabel, themeColor)
     }
 }
 
 @Composable
-private fun StreakBar(label: String, days: Int, maxDays: Int, color: Color) {
+private fun StreakBar(label: String, days: Int, maxDays: Int, unitLabel: String, color: Color) {
     val fraction = if (maxDays > 0) days.toFloat() / maxDays else 0f
     
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(label, color = Color.LightGray, fontSize = 14.sp)
-            Text("$days Days", color = Color.White, fontWeight = FontWeight.Bold)
+            Text("$days$unitLabel", color = Color.White, fontWeight = FontWeight.Bold)
         }
         
         Box(
