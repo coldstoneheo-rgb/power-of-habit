@@ -9,6 +9,24 @@
 ---
 
 ```yaml
+date: 2026-09-04
+project: power-of-habit
+agent: claude-code (harness-loop-engine)
+summary: Claude Code 하네스 구성(CLAUDE.md·.claude/settings.json·devlog Stop 훅) + codebase-memory-mcp 인덱싱(power-of-habit, 660 nodes/2076 edges)
+status: on_track
+progress: "하네스 이중화 완료 — Antigravity(.agents)와 Claude Code(CLAUDE.md) 동일 규약 공유 (근거: PR chore/claude-code-harness, gradle compileDebugKotlin+testDebugUnitTest 통과, index_repository status=indexed)"
+changes: ["chore/claude-code-harness Claude Code 하네스 + 코드 그래프 인덱싱"]
+next: 그래프 기반 탐색으로 다음 기능/이슈 선정(PRD 기준) → 하네스 루프 첫 실작업 PR
+synergy: L2C devlog Stop 훅이 Claude Code 세션에도 연결돼 두 에이전트 모두 콘텐츠 원재료를 자동 생성
+monetization: 아직 0원(Play 배포·수익모델 미설계)
+```
+## 의미
+지금까지 Antigravity 전용이던 하네스를 Claude Code에서도 같은 규약으로 구동할 수 있게 했다. 코드 그래프 인덱스가
+생기면서 이후 세션은 grep 대신 호출관계·영향분석으로 탐색 비용을 줄인다. 실기능 변경은 없고 다음 세션부터 루프 실작업에 들어간다.
+
+---
+
+```yaml
 date: 2026-07-24
 project: power-of-habit
 agent: antigravity(round9) — 엔트리는 LC catch-up(세션 self-report 전, git 증거 기반)

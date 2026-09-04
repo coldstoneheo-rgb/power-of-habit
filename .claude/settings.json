@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git branch *)",
+      "Bash(git fetch *)",
+      "Bash(git pull --ff-only *)",
+      "Bash(git worktree *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list *)",
+      "Bash(gh pr checks *)",
+      "Bash(gh api repos/coldstoneheo-rgb/power-of-habit/pulls/*)",
+      "Bash(./gradlew.bat compileDebugKotlin *)",
+      "Bash(./gradlew.bat testDebugUnitTest *)",
+      "Bash(./gradlew.bat assembleDebug *)",
+      "PowerShell(.\\gradlew.bat compileDebugKotlin *)",
+      "PowerShell(.\\gradlew.bat testDebugUnitTest *)",
+      "PowerShell(.\\gradlew.bat assembleDebug *)",
+      "mcp__codebase-memory-mcp__list_projects",
+      "mcp__codebase-memory-mcp__index_status",
+      "mcp__codebase-memory-mcp__search_graph",
+      "mcp__codebase-memory-mcp__search_code",
+      "mcp__codebase-memory-mcp__trace_path",
+      "mcp__codebase-memory-mcp__get_code_snippet",
+      "mcp__codebase-memory-mcp__get_architecture",
+      "mcp__codebase-memory-mcp__get_graph_schema",
+      "mcp__codebase-memory-mcp__query_graph",
+      "mcp__codebase-memory-mcp__detect_changes",
+      "mcp__codebase-memory-mcp__check_index_coverage"
+    ],
+    "deny": [
+      "Read(./local.properties)",
+      "Read(./props.txt)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)"
+    ]
+  }
+}
