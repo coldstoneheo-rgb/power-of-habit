@@ -101,6 +101,7 @@ class HabitDetailViewModel @Inject constructor(
                 val updatedRecords = repository.getRecordsForHabit(habitId).first()
                 com.example.powerofhabit.badges.BadgeManager(repository, context).checkAndAwardBadges(updatedRecords)
                 com.example.powerofhabit.backup.GoogleDriveBackupManager(context).scheduleAutoBackup()
+                com.example.powerofhabit.widget.HabitWidgets.updateAll(context)
             } catch (e: Exception) {
                 android.util.Log.e("HabitDetailViewModel", "Failed to update record for date $date", e)
             }
@@ -113,6 +114,7 @@ class HabitDetailViewModel @Inject constructor(
                 repository.deleteHabit(habit)
                 com.example.powerofhabit.reminder.HabitReminderManager(context).cancelReminder(habit.habitId)
                 com.example.powerofhabit.backup.GoogleDriveBackupManager(context).scheduleAutoBackup()
+                com.example.powerofhabit.widget.HabitWidgets.updateAll(context)
                 onSuccess()
             } catch (e: Exception) {
                 android.util.Log.e("HabitDetailViewModel", "Failed to delete habit", e)

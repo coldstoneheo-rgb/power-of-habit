@@ -87,6 +87,7 @@ class MainScreenViewModel @Inject constructor(
         val records = dataRepository.getRecordsForHabit(habitId).first()
         com.example.powerofhabit.badges.BadgeManager(dataRepository, context).checkAndAwardBadges(records)
         com.example.powerofhabit.backup.GoogleDriveBackupManager(context).scheduleAutoBackup()
+        com.example.powerofhabit.widget.HabitWidgets.updateAll(context)
       } catch (e: Exception) {
         android.util.Log.e("MainScreenViewModel", "Failed to update record status", e)
       }
@@ -100,6 +101,7 @@ class MainScreenViewModel @Inject constructor(
         val records = dataRepository.getRecordsForHabit(record.habitId).first()
         com.example.powerofhabit.badges.BadgeManager(dataRepository, context).checkAndAwardBadges(records)
         com.example.powerofhabit.backup.GoogleDriveBackupManager(context).scheduleAutoBackup()
+        com.example.powerofhabit.widget.HabitWidgets.updateAll(context)
       } catch (e: Exception) {
         android.util.Log.e("MainScreenViewModel", "Failed to insert record", e)
       }
@@ -113,6 +115,7 @@ class MainScreenViewModel @Inject constructor(
         val records = dataRepository.getRecordsForHabit(record.habitId).first()
         com.example.powerofhabit.badges.BadgeManager(dataRepository, context).checkAndAwardBadges(records)
         com.example.powerofhabit.backup.GoogleDriveBackupManager(context).scheduleAutoBackup()
+        com.example.powerofhabit.widget.HabitWidgets.updateAll(context)
       } catch (e: Exception) {
         android.util.Log.e("MainScreenViewModel", "Failed to delete record", e)
       }
