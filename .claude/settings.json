@@ -1,0 +1,50 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git branch)",
+      "Bash(git branch -a *)",
+      "Bash(git branch --show-current)",
+      "Bash(git fetch origin *)",
+      "Bash(git pull --ff-only origin main)",
+      "Bash(git worktree list *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push -u origin *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list *)",
+      "Bash(gh pr checks *)",
+      "Bash(gh pr create --base main *)",
+      "Bash(gh pr comment *)",
+      "Bash(./gradlew.bat testDebugUnitTest *)",
+      "Bash(./gradlew.bat compileDebugKotlin *)",
+      "Bash(./gradlew.bat assembleDebug *)",
+      "PowerShell(.\\gradlew.bat testDebugUnitTest *)",
+      "PowerShell(.\\gradlew.bat compileDebugKotlin *)",
+      "PowerShell(.\\gradlew.bat assembleDebug *)",
+      "mcp__codebase-memory-mcp__list_projects",
+      "mcp__codebase-memory-mcp__index_status",
+      "mcp__codebase-memory-mcp__index_repository",
+      "mcp__codebase-memory-mcp__search_graph",
+      "mcp__codebase-memory-mcp__search_code",
+      "mcp__codebase-memory-mcp__trace_path",
+      "mcp__codebase-memory-mcp__get_code_snippet",
+      "mcp__codebase-memory-mcp__get_architecture",
+      "mcp__codebase-memory-mcp__get_graph_schema",
+      "mcp__codebase-memory-mcp__query_graph",
+      "mcp__codebase-memory-mcp__detect_changes",
+      "mcp__codebase-memory-mcp__check_index_coverage"
+    ],
+    "deny": [
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push * --force*)",
+      "Bash(git push * -f *)",
+      "Bash(git push --force-with-lease*)",
+      "Bash(git push * +*)",
+      "mcp__codebase-memory-mcp__delete_project"
+    ]
+  }
+}

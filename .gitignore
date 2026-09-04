@@ -10,3 +10,7 @@
 local.properties
 props.txt
 .kotlin/
+
+# Claude Code 로컬 전용(머신 고유 훅 경로·격리 작업공간)
+.claude/settings.local.json
+.claude/worktrees/
