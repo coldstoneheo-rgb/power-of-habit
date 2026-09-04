@@ -1,4 +1,4 @@
-# AGENTS.md — 루프 엔지니어링 기반 자율 하네스 지침 (60줄)
+# AGENTS.md — 루프 엔지니어링 기반 자율 하네스 지침
 
 ## 1. 기본 원칙 (Core Principles)
 - **에이전틱 지렛대**: 사용자는 프롬프트를 일일이 던지는 실행자가 아니라, 완료 조건을 정의하고 결과를 검토하는 감독관이다.
@@ -70,7 +70,6 @@
 - **오염 방지**: `scratch/`, 개인 환경설정, `.agents/` 임시 작업 파일이 Git 커밋에 포함되지 않도록 스테이징 시 엄격 차단.
 - **불확실성 차단**: 명세가 모호할 경우 Stage A에서 질문을 통해 명확히 정제한 후 루프 진입.
 
-## 7. Claude Code 하네스 병행 & 코드 그래프 (2026-09-04 추가)
-- **이중 하네스**: Antigravity는 이 파일, Claude Code는 루트 `CLAUDE.md`를 읽는다. 규약(§3~§6)은 여기가 SSOT이며 `CLAUDE.md`는 이를 참조한다.
-- **codebase-memory-mcp**: 저장소가 `power-of-habit` 이름으로 인덱싱돼 있다. 구조 탐색(심볼·호출관계·영향분석)은 grep보다 그래프 도구(`search_graph`·`trace_path`·`get_code_snippet`·`detect_changes`)를 우선한다.
-- **로컬 전용 파일**: `.claude/settings.local.json`(devlog Stop 훅, 머신 고유 경로)·`.claude/worktrees/`는 gitignore 대상 — 커밋 금지.
+## 7. Claude Code 하네스 병행 (2026-09-04 추가)
+- **이중 하네스**: Antigravity는 이 파일, Claude Code는 루트 `CLAUDE.md`를 읽는다. 공통 규약(§3~§6)은 여기가 SSOT이며 `CLAUDE.md`는 Claude Code 고유 델타(권한·검증 커맨드·코드 그래프 사용법)만 담는다.
+- **codebase-memory-mcp**: 저장소가 `power-of-habit` 이름으로 인덱싱돼 있다. 구조 탐색(심볼·호출관계·영향분석)은 grep보다 그래프 도구를 우선한다(사용법은 `CLAUDE.md` §2).
