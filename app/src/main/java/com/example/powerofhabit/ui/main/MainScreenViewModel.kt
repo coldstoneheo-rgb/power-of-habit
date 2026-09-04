@@ -3,6 +3,7 @@ package com.example.powerofhabit.ui.main
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.powerofhabit.data.DataRepository
+import com.example.powerofhabit.data.RecordSideEffects
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
 import com.example.powerofhabit.domain.stats.HabitFrequency
@@ -80,13 +81,23 @@ class MainScreenViewModel @Inject constructor(
   .catch { emit(MainScreenUiState.Error(it)) }
   .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), MainScreenUiState.Loading)
 
+  /** 체크형 습관의 셀 탭. 위젯과 같은 트랜잭션 토글을 쓴다. */
+  fun toggleCompletion(habitId: Int, date: LocalDate) {
+    viewModelScope.launch {
+      try {
+        dataRepository.toggleCompletion(habitId, date.toString())
+        RecordSideEffects.afterRecordChange(context, dataRepository, habitId)
+      } catch (e: Exception) {
+        android.util.Log.e("MainScreenViewModel", "Failed to toggle completion", e)
+      }
+    }
+  }
+
   fun updateRecordStatus(recordId: Int, status: String, habitId: Int) {
     viewModelScope.launch {
       try {
         dataRepository.updateRecordStatus(recordId, status)
-        val records = dataRepository.getRecordsForHabit(habitId).first()
-        com.example.powerofhabit.badges.BadgeManager(dataRepository, context).checkAndAwardBadges(records)
-        com.example.powerofhabit.backup.GoogleDriveBackupManager(context).scheduleAutoBackup()
+        RecordSideEffects.afterRecordChange(context, dataRepository, habitId)
       } catch (e: Exception) {
         android.util.Log.e("MainScreenViewModel", "Failed to update record status", e)
       }
@@ -97,9 +108,7 @@ class MainScreenViewModel @Inject constructor(
     viewModelScope.launch {
       try {
         dataRepository.insertRecord(record)
-        val records = dataRepository.getRecordsForHabit(record.habitId).first()
-        com.example.powerofhabit.badges.BadgeManager(dataRepository, context).checkAndAwardBadges(records)
-        com.example.powerofhabit.backup.GoogleDriveBackupManager(context).scheduleAutoBackup()
+        RecordSideEffects.afterRecordChange(context, dataRepository, record.habitId)
       } catch (e: Exception) {
         android.util.Log.e("MainScreenViewModel", "Failed to insert record", e)
       }
@@ -110,9 +119,7 @@ class MainScreenViewModel @Inject constructor(
     viewModelScope.launch {
       try {
         dataRepository.deleteRecord(record)
-        val records = dataRepository.getRecordsForHabit(record.habitId).first()
-        com.example.powerofhabit.badges.BadgeManager(dataRepository, context).checkAndAwardBadges(records)
-        com.example.powerofhabit.backup.GoogleDriveBackupManager(context).scheduleAutoBackup()
+        RecordSideEffects.afterRecordChange(context, dataRepository, record.habitId)
       } catch (e: Exception) {
         android.util.Log.e("MainScreenViewModel", "Failed to delete record", e)
       }

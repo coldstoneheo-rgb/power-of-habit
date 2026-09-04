@@ -31,6 +31,12 @@ interface HabitDao {
     @Query("SELECT * FROM HabitRecords")
     fun getAllRecords(): Flow<List<HabitRecordEntity>>
 
+    @Query("SELECT * FROM HabitRecords WHERE habitId = :habitId AND date = :date LIMIT 1")
+    suspend fun getRecord(habitId: Int, date: String): HabitRecordEntity?
+
+    @Query("SELECT * FROM HabitRecords WHERE habitId = :habitId AND date >= :startDate AND date <= :endDate")
+    fun getRecordsForHabitBetween(habitId: Int, startDate: String, endDate: String): Flow<List<HabitRecordEntity>>
+
     @Query("SELECT * FROM HabitRecords WHERE date >= :startDate AND date <= :endDate")
     fun getRecordsBetween(startDate: String, endDate: String): Flow<List<HabitRecordEntity>>
 
@@ -42,6 +48,23 @@ interface HabitDao {
 
     @Delete
     suspend fun deleteRecord(record: HabitRecordEntity)
+
+    /**
+     * 체크 토글의 단일 정의: 없음 → COMPLETED, COMPLETED → FAILED, 그 외(FAILED/SKIPPED) → COMPLETED.
+     * 트랜잭션이라 동시 호출(위젯 연타)에도 같은 날 행이 두 개 생기지 않는다. 결과 상태를 돌려준다.
+     */
+    @Transaction
+    suspend fun toggleCompletion(habitId: Int, date: String): String {
+        val existing = getRecord(habitId, date)
+        return if (existing == null) {
+            insertRecord(HabitRecordEntity(habitId = habitId, date = date, status = "COMPLETED", inputValue = null))
+            "COMPLETED"
+        } else {
+            val next = if (existing.status == "COMPLETED") "FAILED" else "COMPLETED"
+            updateRecordStatus(existing.recordId, next)
+            next
+        }
+    }
 
     // Badges
     @Query("SELECT * FROM Badges ORDER BY earnedAt DESC")

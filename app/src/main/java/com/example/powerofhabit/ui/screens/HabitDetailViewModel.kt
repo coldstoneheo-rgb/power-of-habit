@@ -3,6 +3,7 @@ package com.example.powerofhabit.ui.screens
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.powerofhabit.data.DataRepository
+import com.example.powerofhabit.data.RecordSideEffects
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -98,9 +99,7 @@ class HabitDetailViewModel @Inject constructor(
                     )
                 }
 
-                val updatedRecords = repository.getRecordsForHabit(habitId).first()
-                com.example.powerofhabit.badges.BadgeManager(repository, context).checkAndAwardBadges(updatedRecords)
-                com.example.powerofhabit.backup.GoogleDriveBackupManager(context).scheduleAutoBackup()
+                RecordSideEffects.afterRecordChange(context, repository, habitId)
             } catch (e: Exception) {
                 android.util.Log.e("HabitDetailViewModel", "Failed to update record for date $date", e)
             }

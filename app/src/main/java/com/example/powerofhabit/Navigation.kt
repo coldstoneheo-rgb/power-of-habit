@@ -3,6 +3,7 @@ package com.example.powerofhabit
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.entryProvider
@@ -15,8 +16,25 @@ import com.example.powerofhabit.ui.screens.AddEditHabitScreen
 import com.example.powerofhabit.ui.screens.BadgesScreen
 
 @Composable
-fun MainNavigation() {
+fun MainNavigation(
+  initialHabitId: Int = -1,
+  onInitialHabitConsumed: () -> Unit = {}
+) {
   val backStack = rememberNavBackStack(Main)
+
+  // 홈 위젯에서 진입: 해당 습관 상세를 스택 위에 올린다.
+  LaunchedEffect(initialHabitId) {
+    if (initialHabitId > 0) {
+      val target = HabitDetail(habitId = initialHabitId)
+      val index = backStack.indexOfLast { it == target }
+      if (index >= 0) {
+        while (backStack.size > index + 1) backStack.removeLastOrNull()
+      } else {
+        backStack.add(target)
+      }
+      onInitialHabitConsumed()
+    }
+  }
 
   NavDisplay(
     backStack = backStack,

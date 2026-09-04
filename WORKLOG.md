@@ -12,6 +12,27 @@
 date: 2026-09-05
 project: power-of-habit
 agent: claude-code (harness-loop-engine)
+summary: 홈 화면 위젯 2종(1x1 체크·2x2 캘린더 글랜스, Jetpack Glance) + DB 관찰 기반 위젯 자동 갱신 + 체크 토글 트랜잭션 단일화
+status: on_track
+progress: "PRD §1.1.4·§4-1 홈 위젯 구현 완료 (근거: #26, testDebugUnitTest 48/48, assembleDebug 성공, 자체리뷰 10건 반영). 실기기 배치·탭은 미검증"
+changes: ["#26 feat(widget): 홈 화면 위젯 — 1x1 체크 + 2x2 캘린더 글랜스 (Glance)"]
+next: 실기기에서 위젯 추가·탭·자정 갱신 확인 → 문제 없으면 출시 준비(패키지명·서명·minify) 또는 목표/연속/점수 2x2 위젯 확장
+blockers: 에뮬레이터/실기기 미확인 — Glance 렌더링·런처 배치·재설정 흐름은 기기 테스트 필요
+synergy: RecordSideEffects·toggleCompletion 트랜잭션·WidgetRefreshObserver는 향후 알림 "완료" 액션·임포트 등 어떤 쓰기 경로에도 재사용
+monetization: 아직 0원(Play 배포·수익모델 미설계)
+```
+## 의미
+PRD에서 유일하게 비어 있던 "홈 화면과의 유기적 연결"을 채웠다. 위젯을 붙이면서 기록 쓰기 경로가 화면·위젯 두 갈래가 되므로,
+토글 규칙은 DAO 트랜잭션 한 곳으로, 뱃지·백업은 RecordSideEffects 한 곳으로, 위젯 갱신은 Room 무효화 Flow를 관찰하는
+옵저버 한 곳으로 모았다. 자체 리뷰가 잡은 회전 시 딥링크 재발화·연타 중복 행·자정 이후 잘못된 날짜 기록·삭제된 습관의
+죽은 위젯 같은 실사용 결함도 같이 막았다. 앞으로 어떤 경로로 기록이 바뀌어도 위젯이 따라온다.
+
+---
+
+```yaml
+date: 2026-09-05
+project: power-of-habit
+agent: claude-code (harness-loop-engine)
 summary: 빈도 인지형 통계 엔진(#24) + 레퍼런스 역설계 디자인 가이드·토큰 코드화·핵심 화면 적용(#25)
 status: on_track
 progress: "PRD 통계 정확성 결함 해소 + 디자인 시스템 v1 (근거: #24 머지 fce371d·testDebugUnitTest 44/44, #25 assembleDebug 성공·자체리뷰 2회 반영)"
