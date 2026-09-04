@@ -5,10 +5,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 
-val BlackBackground = Color(0xFF101012) // Slightly warm black for high-end feel
-val DarkGrayBackground = Color(0xFF1C1C1E) // Matte metallic charcoal background
-val LightGrayText = Color(0xFF8E8E93)
-val WhiteText = Color(0xFFF2F2F7)
+// 레거시 별칭 — 새 코드는 HabitTheme.colors.* 토큰(Tokens.kt)을 쓴다. 값은 다크 토큰과 동일하게 맞춰 두었다.
+val BlackBackground = DarkTokens.bgBase
+val DarkGrayBackground = DarkTokens.bgLayer2
+val LightGrayText = DarkTokens.textSecondary
+val WhiteText = DarkTokens.textPrimary
 
 // Brushed metal edge brushes and highlights
 
@@ -92,24 +93,31 @@ val PremiumMatteColors = listOf(
     "#8D6E63" to Color(0xFF8D6E63)  // Matte Cocoa Brown
 )
 
-val LightBackground = Color(0xFFF2F2F7) // System background light gray
-val LightSurface = Color(0xFFFFFFFF) // Surface white
-val DarkText = Color(0xFF1C1C1E) // Dark charcoal text
-
+// M3 colorScheme은 토큰에서 파생한다. primary(HabitOrange)는 버튼·스위치·로딩 등 습관 컨텍스트 밖 강조에만 남긴다.
 val LightColorScheme = lightColorScheme(
     primary = HabitOrange,
-    background = LightBackground,
-    surface = LightSurface,
     onPrimary = Color.White,
-    onBackground = DarkText,
-    onSurface = DarkText
+    background = LightTokens.bgBase,
+    onBackground = LightTokens.textPrimary,
+    surface = LightTokens.bgLayer2,
+    onSurface = LightTokens.textPrimary,
+    surfaceVariant = LightTokens.bgLayer3,
+    onSurfaceVariant = LightTokens.textSecondary,
+    outline = LightTokens.lineFocus,
+    outlineVariant = LightTokens.lineHair,
+    error = LightTokens.statusError
 )
 
 val DarkColorScheme = darkColorScheme(
     primary = HabitOrange,
-    background = BlackBackground,
-    surface = DarkGrayBackground,
-    onPrimary = WhiteText,
-    onBackground = WhiteText,
-    onSurface = WhiteText
+    onPrimary = Color.White,
+    background = DarkTokens.bgBase,
+    onBackground = DarkTokens.textPrimary,
+    surface = DarkTokens.bgLayer2,
+    onSurface = DarkTokens.textPrimary,
+    surfaceVariant = DarkTokens.bgLayer3,
+    onSurfaceVariant = DarkTokens.textSecondary,
+    outline = DarkTokens.lineFocus,
+    outlineVariant = DarkTokens.lineHair,
+    error = DarkTokens.statusError
 )

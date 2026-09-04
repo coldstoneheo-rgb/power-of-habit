@@ -10,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.powerofhabit.ui.theme.HabitTheme
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -86,18 +86,18 @@ fun CheckWidget(
             
             // 색상 규칙: 
             // 1. 완료(COMPLETED) -> 습관 테마 색상 (themeColor)
-            // 2. 미달성 수치 입력(FAILED / 미달) -> 진한 회색 (MaterialTheme.colorScheme.onSurface)
+            // 2. 미달성 수치 입력(FAILED / 미달) -> text.primary
             // 3. 미기록(NONE) -> 연한 회색 (0.25f alpha)
             val textColor = when {
                 isCompleted -> themeColor
-                hasRecord -> MaterialTheme.colorScheme.onSurface
-                else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
+                hasRecord -> HabitTheme.colors.textPrimary
+                else -> HabitTheme.colors.textDisabled
             }
             
             val unitColor = when {
                 isCompleted -> themeColor.copy(alpha = 0.85f)
-                hasRecord -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                hasRecord -> HabitTheme.colors.textSecondary
+                else -> HabitTheme.colors.textDisabled
             }
             
             androidx.compose.foundation.layout.Column(
@@ -131,7 +131,7 @@ fun CheckWidget(
             } else if (isSkipped) {
                 Text(
                     text = "–",
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                    color = HabitTheme.colors.statusSkip,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -139,7 +139,7 @@ fun CheckWidget(
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Uncompleted",
-                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.22f),
+                    tint = HabitTheme.colors.textDisabled,
                     modifier = Modifier.size(13.dp)
                 )
             }

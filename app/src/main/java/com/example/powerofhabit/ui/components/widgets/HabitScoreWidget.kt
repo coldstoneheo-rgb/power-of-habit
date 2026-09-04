@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.powerofhabit.ui.theme.HabitTheme
 import androidx.compose.ui.unit.sp
 import java.time.LocalDate
 
@@ -60,6 +61,7 @@ fun HabitScoreWidget(
             Spacer(modifier = Modifier.width(8.dp))
 
             // Canvas area for grid lines, trend line, and nodes
+            val nodeCoreColor = HabitTheme.colors.textPrimary // Canvas 람다는 @Composable이 아니므로 밖에서 읽는다
             Canvas(
                 modifier = Modifier
                     .weight(1f)
@@ -114,7 +116,7 @@ fun HabitScoreWidget(
                         center = point
                     )
                     drawCircle(
-                        color = Color.White,
+                        color = nodeCoreColor,
                         radius = 2.dp.toPx(),
                         center = point
                     )
