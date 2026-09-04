@@ -32,6 +32,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
+import com.example.powerofhabit.domain.stats.HabitFrequency
+import com.example.powerofhabit.domain.stats.HabitStatsCalculator
 import com.example.powerofhabit.ui.components.widgets.*
 import com.example.powerofhabit.ui.theme.BlackBackground
 import com.example.powerofhabit.ui.theme.DarkGrayBackground
@@ -121,165 +123,20 @@ private fun HabitDetailContent(
     var showDeleteDialog by remember { mutableStateOf(false) }
     var selectedFilter by remember { mutableStateOf("주") }
     
-    // 1) EMA score list & dates calculation with Filter
-    val (filteredScores, filteredDates) = remember(records, selectedFilter) {
-        val today = LocalDate.now()
-        val startDate = if (records.isNotEmpty()) {
-            records.mapNotNull { try { LocalDate.parse(it.date) } catch (e: Exception) { null } }.minOrNull() ?: today.minusDays(14)
-        } else today.minusDays(14)
-
-        val recordsMap = records.associateBy { it.date }
-        val dateScoreMap = mutableMapOf<LocalDate, Float>()
-
-        var currentEma = 0f
-        val alpha = 0.15f
-        var d = startDate
-        while (!d.isAfter(today)) {
-            val rec = recordsMap[d.toString()]
-            if (rec != null) {
-                val target = when (rec.status) {
-                    "COMPLETED" -> 100f
-                    "FAILED" -> 0f
-                    else -> currentEma
-                }
-                currentEma = if (currentEma == 0f) target else currentEma * (1 - alpha) + target * alpha
-            }
-            dateScoreMap[d] = currentEma
-            d = d.plusDays(1)
-        }
-
-        val entries = dateScoreMap.entries.sortedBy { it.key }
-        if (entries.isEmpty()) listOf(0f) to listOf("오늘") else {
-            when (selectedFilter) {
-                "일" -> {
-                    val recent = entries.takeLast(12)
-                    recent.map { it.value } to recent.map { "${it.key.dayOfMonth}일" }
-                }
-                "주" -> {
-                    val weekFields = java.time.temporal.WeekFields.of(java.util.Locale.getDefault())
-                    val grouped = entries.groupBy { "${it.key.year}-W${it.key.get(weekFields.weekOfWeekBasedYear())}" }
-                    val scores = grouped.map { it.value.last().value }
-                    val dates = grouped.map { "${it.value.first().key.monthValue}월 ${it.value.first().key.dayOfMonth}일" }
-                    scores.takeLast(8) to dates.takeLast(8)
-                }
-                "월" -> {
-                    val grouped = entries.groupBy { "${it.key.year}-${it.key.monthValue}" }
-                    val scores = grouped.map { it.value.last().value }
-                    val dates = grouped.map { "${it.value.first().key.monthValue}월" }
-                    scores.takeLast(12) to dates.takeLast(12)
-                }
-                "분기" -> {
-                    val grouped = entries.groupBy {
-                        val q = (it.key.monthValue - 1) / 3 + 1
-                        "${it.key.year}-Q$q"
-                    }
-                    val scores = grouped.map { it.value.last().value }
-                    val dates = grouped.map { "${it.value.first().key.monthValue}월" }
-                    scores.takeLast(8) to dates.takeLast(8)
-                }
-                "년" -> {
-                    val grouped = entries.groupBy { "${it.key.year}" }
-                    val scores = grouped.map { it.value.last().value }
-                    val dates = grouped.map { "${it.key}년" }
-                    scores.takeLast(5) to dates.takeLast(5)
-                }
-                else -> {
-                    val recent = entries.takeLast(12)
-                    recent.map { it.value } to recent.map { "${it.key.dayOfMonth}일" }
-                }
-            }
-        }
+    // 1~3) 빈도 인지형 통계 (EMA 점수·스트릭·달성률) — 계산은 HabitStatsCalculator가 담당
+    val frequency = remember(habit.frequencyType, habit.frequencyValue) {
+        HabitFrequency.parse(habit.frequencyType, habit.frequencyValue)
     }
-    
-    // 2) Streak calculation
-    val streaks = remember(records) {
-        if (records.isEmpty()) return@remember 0 to 0
-        
-        val recordsMap = records.associateBy { it.date }
-        val sortedDates = records.mapNotNull { 
-            try { LocalDate.parse(it.date) } catch (e: Exception) { null }
-        }.sorted()
-        
-        if (sortedDates.isEmpty()) return@remember 0 to 0
-        
-        val startDate = sortedDates.first()
-        val today = LocalDate.now()
-        
-        var maxStreak = 0
-        var tempStreak = 0
-        var currentDate = startDate
-        
-        // Calculate max streak by iterating from startDate to today
-        while (!currentDate.isAfter(today)) {
-            val dateStr = currentDate.toString()
-            val record = recordsMap[dateStr]
-            
-            if (record != null) {
-                when (record.status) {
-                    "COMPLETED" -> {
-                        tempStreak++
-                        if (tempStreak > maxStreak) {
-                            maxStreak = tempStreak
-                        }
-                    }
-                    "FAILED" -> {
-                        tempStreak = 0
-                    }
-                    "SKIPPED" -> {
-                        // Skipped days do not break or increment the streak
-                    }
-                }
-            } else {
-                // Missing record for a past day breaks the streak
-                if (currentDate != today) {
-                    tempStreak = 0
-                }
-            }
-            currentDate = currentDate.plusDays(1)
-        }
-        
-        // Calculate current streak going backwards from today
-        var currentStreak = 0
-        var checkDate = today
-        while (true) {
-            val dateStr = checkDate.toString()
-            val record = recordsMap[dateStr]
-            if (record != null) {
-                when (record.status) {
-                    "COMPLETED" -> {
-                        currentStreak++
-                    }
-                    "FAILED" -> {
-                        break
-                    }
-                    "SKIPPED" -> {
-                        // Skipped days are ignored, continue backwards
-                    }
-                }
-            } else {
-                if (checkDate != today) {
-                    break
-                }
-            }
-            checkDate = checkDate.minusDays(1)
-            if (checkDate.isBefore(startDate)) {
-                break
-            }
-        }
-        
-        currentStreak to maxStreak
+    val stats = remember(records, frequency) {
+        HabitStatsCalculator.compute(records, frequency)
     }
-    val (currentStreak, maxStreak) = streaks
-    
-    // 3) Progress calculation (Monthly goal completion rate)
-    val progress = remember(records) {
-        val today = LocalDate.now()
-        val currentMonthPrefix = today.toString().substring(0, 7) // "YYYY-MM"
-        val completedCount = records.count { it.date.startsWith(currentMonthPrefix) && it.status == "COMPLETED" }
-        val elapsedDaysInMonth = today.dayOfMonth
-        if (elapsedDaysInMonth > 0) (completedCount.toFloat() / elapsedDaysInMonth).coerceIn(0f, 1f) else 0f
+    val (filteredScores, filteredDates) = remember(stats, selectedFilter) {
+        HabitStatsCalculator.groupScores(stats.dailyScores, selectedFilter)
     }
-    
+    val currentStreak = stats.currentStreak
+    val maxStreak = stats.maxStreak
+    val progress = stats.monthProgress
+
     // 4) Calendar records map
     val calendarRecords = remember(records) {
         records.associate {
@@ -402,19 +259,7 @@ private fun HabitDetailContent(
                 } else null
             }
 
-            val freqText = remember(habit) {
-                when (habit.frequencyType) {
-                    "DAILY" -> "매일"
-                    "INTERVAL" -> "${habit.frequencyValue}일마다"
-                    "WEEKLY_COUNT" -> "주 ${habit.frequencyValue}회"
-                    "MONTHLY_COUNT" -> "월 ${habit.frequencyValue}회"
-                    "COUNT_IN_DAYS" -> {
-                        val parts = habit.frequencyValue.split("/")
-                        if (parts.size == 2) "${parts[1]}일내 ${parts[0]}회" else "매일"
-                    }
-                    else -> "매일"
-                }
-            }
+            val freqText = remember(frequency) { frequency.label }
 
             val reminderText = remember(habit) {
                 if (habit.isReminderEnabled) {
@@ -603,17 +448,25 @@ private fun HabitDetailContent(
                 StreakWidget(
                     currentStreak = currentStreak,
                     maxStreak = maxStreak,
+                    unitLabel = stats.streakUnit,
                     themeColor = themeColor
                 )
             }
             
             // 4. Target Goal Progress
             CardSection(title = "목표 달성률 (Monthly Progress)") {
-                TargetGoalWidget(
-                    title = "목표 대비 달성도",
-                    progress = progress,
-                    themeColor = themeColor
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    TargetGoalWidget(
+                        title = "이번 달 달성률 (${frequency.label})",
+                        progress = progress,
+                        themeColor = themeColor
+                    )
+                    TargetGoalWidget(
+                        title = "${stats.currentPeriod.label} ${stats.currentPeriod.completed}/${stats.currentPeriod.required}회",
+                        progress = stats.currentPeriod.fraction,
+                        themeColor = themeColor
+                    )
+                }
             }
             
             // 5. History Calendar with Edit function

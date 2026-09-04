@@ -32,6 +32,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
+import com.example.powerofhabit.domain.stats.HabitFrequency
+import com.example.powerofhabit.domain.stats.HabitStatsCalculator
 import com.example.powerofhabit.ui.components.widgets.CheckWidget
 import com.example.powerofhabit.ui.theme.BlackBackground
 import com.example.powerofhabit.ui.theme.DarkGrayBackground
@@ -657,20 +659,11 @@ private fun HabitRow(
         }
     }
     
-    val emaScore = remember(recordsMap) {
+    val emaScore = remember(recordsMap, habit.frequencyType, habit.frequencyValue) {
         if (recordsMap.isEmpty()) return@remember 0.2f // Default starting progress visualization
-        val sortedRecords = recordsMap.values.sortedBy { it.date }
-        var currentEma = 0f
-        val alpha = 0.15f
-        for (record in sortedRecords) {
-            val target = when (record.status) {
-                "COMPLETED" -> 100f
-                "FAILED" -> 0f
-                else -> continue
-            }
-            currentEma = if (currentEma == 0f) target else currentEma * (1 - alpha) + target * alpha
-        }
-        (currentEma / 100f).coerceIn(0.1f, 1f)
+        val frequency = HabitFrequency.parse(habit.frequencyType, habit.frequencyValue)
+        val stats = HabitStatsCalculator.compute(recordsMap.values.toList(), frequency)
+        (stats.latestScore / 100f).coerceIn(0.1f, 1f)
     }
     
     Column(modifier = Modifier.fillMaxWidth()) {
