@@ -85,6 +85,7 @@
 | `bg.layer3` | `#26262B` | 카드 내부 강조 블록, 입력 필드, 바 트랙 |
 | `line.hair` | `#FFFFFF` @ 8% | 구분선. 항상 알파, 절대 불투명 회색 금지 |
 | `line.focus` | `#FFFFFF` @ 16% | 포커스/선택 테두리 |
+| `line.strong` | `#FFFFFF` @ 28% | 입력 필드 등 "있어야 보이는" 테두리 (M3 `outlineVariant`) |
 | `text.primary` | `#F2F2F7` | 제목·숫자 |
 | `text.secondary` | `#9A9AA3` | 캡션·단위·축 |
 | `text.disabled` | `#55555E` | 미완료 마크, 비활성 |
@@ -93,14 +94,16 @@
 | `accent.habit.glow` | accent @ 12% | 선택 셀 배경, 캘린더 오늘 |
 | `status.success` | accent.habit | 별도 초록 쓰지 않음(색 = 습관) |
 | `status.skip` | `#9A9AA3` | 건너뜀 `–` |
+| `status.fail` | `#D26A6A` | 사용자가 "실패"로 표시한 날(캘린더). 저채도 적색, 시스템 오류색과 구분 |
+| `on.accent` | 액센트 명도 > 0.4 → `#1C1C1E`, 아니면 `#F2F2F7` | 액센트로 채운 면(헤더·선택 칩·완료 날짜) 위의 잉크 |
 | `status.error` | `#FF6B6B` | 삭제·복원 실패 등 시스템 오류만 |
 
 #### 라이트
 | 토큰 | 값 |
 |---|---|
 | `bg.base` `#F4F4F6` · `bg.layer1` `#FFFFFF` · `bg.layer2` `#FFFFFF` · `bg.layer3` `#ECECF0` |
-| `line.hair` `#000000` @ 8% · `text.primary` `#1C1C1E` · `text.secondary` `#6B6B75` · `text.disabled` `#B5B5BD` |
-| 액센트는 다크와 동일 팔레트. 흰 배경 대비 4.5:1 미달색(옐로·라임·민트)은 텍스트에 쓸 때 `accent.onLight`(명도 −18%)로 자동 보정 |
+| `line.hair` `#000000` @ 8% · `line.strong` `#000000` @ 24% · `text.primary` `#1C1C1E` · `text.secondary` `#6B6B75` · `text.disabled` `#B5B5BD` · `status.fail` `#B94A4A` |
+| 액센트는 다크와 동일 팔레트. 바탕 위 액센트 글자는 `accentForText`가 4.5:1(AA)에 닿을 때까지 다크는 밝게·라이트는 어둡게 당겨 자동 보정 |
 
 #### 비율 규칙
 - 화면 면적 **85%** 무채(bg.*), **12%** 텍스트(text.*), **3%** 액센트. 액센트 면적이 커지는 순간(큰 버튼·앱바 배경) 이 앱이 아니다.
@@ -153,9 +156,9 @@
 | 섹션 카드(상세) | layer2 · radius.md · 패딩 space.4 · 제목 title(accent) + 우측 기간 드롭다운(label) |
 | 프로그레스 바 | 높이 8 · radius.pill · 트랙 layer3 · 채움 accent · 우측 % bodyStrong |
 | 스트릭 바 | 높이 24 · radius.pill · 최고 기록 accent, 나머지 accent.dim · 막대 안 숫자 bodyStrong |
-| 도트 매트릭스 | 셀 24 · 원 반지름 2/4/6dp 3단 · 색 accent, 빈도 0은 점 없음 |
+| 도트 매트릭스 | 셀 24 · 원 반지름 빈도 비례 · 색 accent, 빈도 0은 line.focus 헤어라인 점(격자 위치 안내) |
 | 점수 라인 | 격자선 line.hair · 축 캡션 · 데이터 점 accent 4dp · 선 1.5dp |
-| 캘린더 칩 | 28×28 · radius.xs · 완료 accent 채움 + text.primary · 실패 layer3 + text.secondary · 오늘 accent.glow 테두리 |
+| 캘린더 칩 | 28×28 · radius.xs · 완료 accent 채움 + on.accent · 실패 status.fail @16% 채움 + status.fail 글자 · 건너뜀 line.hair 채움 · 오늘 accent.glow 테두리 |
 | 입력 필드 | layer3 · radius.sm · 높이 48 · 라벨 caption 상단 · 밑줄 없음 |
 | 버튼(주) | text 버튼 우선. 채움 버튼이 꼭 필요하면 layer3 배경 + text.primary(액센트 배경 금지) |
 | 다이얼로그 | layer2 · radius.lg · 패딩 space.6 |
@@ -171,7 +174,8 @@
 - `ui/theme/Tokens.kt` — 색(다크/라이트)·간격·곡률 토큰, `LocalHabitTokens`/`HabitTheme.colors`, `HabitShapes`, `accentDim/accentGlow/accentForText`
 - `Type.kt` — B3 타입 스케일을 M3 Typography에 매핑 · `Color.kt`/`Theme.kt` — colorScheme을 토큰에서 파생, 레거시 색 이름은 토큰 별칭
 - 메인: 구분선 line.hair, 캡션 text.secondary, 곡률 토큰 · 체크 셀: 미완료 text.disabled, 건너뜀 status.skip, 수치 text.primary/secondary
-- 상세: `CardSection` layer2 + radius.md + 액센트 제목(테두리 제거), `StatCard`·힌트 블록 layer3, 헤더/다이얼로그/칩 토큰화, 캘린더 실패 = layer3 + text.secondary
+- 상세: `CardSection` layer2 + radius.md + 액센트 제목(테두리 제거), `StatCard`·힌트 블록 layer3, 헤더(on.accent 잉크)/다이얼로그/칩 토큰화, 캘린더 완료 = on.accent·실패 = status.fail
+- M3 매핑: `surface*`·`surfaceContainer*`를 톤 계단에, `outline`=text.disabled, `outlineVariant`=line.strong, `shapes`=HabitShapes(카드 medium·내부 small·다이얼로그 large)
 - 프로그레스/스트릭 바: pill + 트랙 layer3 + accentDim
 
 후속

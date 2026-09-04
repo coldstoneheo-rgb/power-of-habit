@@ -11,7 +11,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -37,7 +36,6 @@ import com.example.powerofhabit.domain.stats.HabitStatsCalculator
 import com.example.powerofhabit.ui.components.widgets.*
 import com.example.powerofhabit.ui.theme.HabitOrange
 import com.example.powerofhabit.ui.theme.HabitTheme
-import com.example.powerofhabit.ui.theme.Radius
 import com.example.powerofhabit.ui.theme.Space
 import java.time.LocalDate
 import java.time.YearMonth
@@ -200,11 +198,11 @@ private fun HabitDetailContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = HabitTheme.colors.textPrimary)
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = HabitTheme.colors.onAccent(themeColor))
                 }
                 Text(
                     text = habit.title,
-                    color = HabitTheme.colors.textPrimary,
+                    color = HabitTheme.colors.onAccent(themeColor),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
@@ -212,13 +210,13 @@ private fun HabitDetailContent(
                     overflow = TextOverflow.Ellipsis
                 )
                 IconButton(onClick = { onNavigateToEdit(habit.habitId) }) {
-                    Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit", tint = HabitTheme.colors.textPrimary)
+                    Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit", tint = HabitTheme.colors.onAccent(themeColor))
                 }
                 
                 var showMenu by remember { mutableStateOf(false) }
                 Box {
                     IconButton(onClick = { showMenu = true }) {
-                        Icon(imageVector = Icons.Default.MoreVert, contentDescription = "More", tint = HabitTheme.colors.textPrimary)
+                        Icon(imageVector = Icons.Default.MoreVert, contentDescription = "More", tint = HabitTheme.colors.onAccent(themeColor))
                     }
                     DropdownMenu(
                         expanded = showMenu,
@@ -274,8 +272,8 @@ private fun HabitDetailContent(
             
             Spacer(modifier = Modifier.height(8.dp))
             Surface(
-                shape = RoundedCornerShape(Radius.sm),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                shape = MaterialTheme.shapes.small,
+                color = HabitTheme.colors.bgLayer3
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
@@ -322,7 +320,7 @@ private fun HabitDetailContent(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(Radius.sm))
+                            .clip(MaterialTheme.shapes.small)
                             .background(HabitTheme.colors.bgLayer3)
                             .padding(10.dp)
                     ) {
@@ -567,16 +565,16 @@ private fun HabitDetailContent(
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(Radius.sm))
+                                    .clip(MaterialTheme.shapes.small)
                                     .background(if (isSelected) themeColor else HabitTheme.colors.bgLayer3)
-                                    .border(1.dp, SolidColor(if (isSelected) HabitTheme.colors.lineFocus else HabitTheme.colors.lineHair), RoundedCornerShape(Radius.sm))
+                                    .border(1.dp, SolidColor(if (isSelected) Color.Transparent else HabitTheme.colors.lineHair), MaterialTheme.shapes.small)
                                     .clickable { status = statKey }
                                     .padding(vertical = 8.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = statLabel,
-                                    color = if (isSelected) HabitTheme.colors.textPrimary else HabitTheme.colors.textSecondary,
+                                    color = if (isSelected) HabitTheme.colors.onAccent(themeColor) else HabitTheme.colors.textSecondary,
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -596,7 +594,7 @@ private fun HabitDetailContent(
                                 focusedTextColor = HabitTheme.colors.textPrimary,
                                 unfocusedTextColor = HabitTheme.colors.textPrimary,
                                 focusedBorderColor = themeColor,
-                                unfocusedBorderColor = Color.DarkGray
+                                unfocusedBorderColor = HabitTheme.colors.lineStrong
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -685,7 +683,7 @@ private fun StatCard(
 ) {
     Column(
         modifier = modifier
-            .clip(RoundedCornerShape(Radius.sm))
+            .clip(MaterialTheme.shapes.small)
             .background(HabitTheme.colors.bgLayer3)
             .padding(vertical = 6.dp, horizontal = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -725,7 +723,7 @@ private fun CardSection(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(Radius.md))
+                .clip(MaterialTheme.shapes.medium)
                 .background(HabitTheme.colors.bgLayer2)
                 .padding(Space.card)
         ) {

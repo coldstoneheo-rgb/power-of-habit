@@ -5,6 +5,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -15,7 +16,8 @@ fun PowerOfHabitTheme(
     content: @Composable () -> Unit
 ) {
     val tokens = if (darkTheme) DarkTokens else LightTokens
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    // primary(HabitOrange)는 버튼·스위치·로딩 등 습관 컨텍스트 밖 강조에만 남긴다(가이드 B2 후속 과제).
+    val colorScheme = remember(tokens) { tokens.toColorScheme(primary = HabitOrange) }
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {

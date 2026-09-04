@@ -2,24 +2,6 @@ package com.example.powerofhabit.ui.theme
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
-
-// 레거시 별칭 — 새 코드는 HabitTheme.colors.* 토큰(Tokens.kt)을 쓴다. 값은 다크 토큰과 동일하게 맞춰 두었다.
-val BlackBackground = DarkTokens.bgBase
-val DarkGrayBackground = DarkTokens.bgLayer2
-val LightGrayText = DarkTokens.textSecondary
-val WhiteText = DarkTokens.textPrimary
-
-// Brushed metal edge brushes and highlights
-
-val MetalBorderBrush = Brush.linearGradient(
-    colors = listOf(
-        Color(0xFFFFFFFF).copy(alpha = 0.15f),
-        Color(0xFFFFFFFF).copy(alpha = 0.02f),
-        Color(0xFFFFFFFF).copy(alpha = 0.10f)
-    )
-)
 
 val GoldenMetalBrush = Brush.linearGradient(
     colors = listOf(
@@ -91,33 +73,4 @@ val PremiumMatteColors = listOf(
     "#00BCD4" to Color(0xFF00BCD4), // Matte Ocean Blue
     "#009688" to Color(0xFF009688), // Matte Forest Teal
     "#8D6E63" to Color(0xFF8D6E63)  // Matte Cocoa Brown
-)
-
-// M3 colorScheme은 토큰에서 파생한다. primary(HabitOrange)는 버튼·스위치·로딩 등 습관 컨텍스트 밖 강조에만 남긴다.
-val LightColorScheme = lightColorScheme(
-    primary = HabitOrange,
-    onPrimary = Color.White,
-    background = LightTokens.bgBase,
-    onBackground = LightTokens.textPrimary,
-    surface = LightTokens.bgLayer2,
-    onSurface = LightTokens.textPrimary,
-    surfaceVariant = LightTokens.bgLayer3,
-    onSurfaceVariant = LightTokens.textSecondary,
-    outline = LightTokens.lineFocus,
-    outlineVariant = LightTokens.lineHair,
-    error = LightTokens.statusError
-)
-
-val DarkColorScheme = darkColorScheme(
-    primary = HabitOrange,
-    onPrimary = Color.White,
-    background = DarkTokens.bgBase,
-    onBackground = DarkTokens.textPrimary,
-    surface = DarkTokens.bgLayer2,
-    onSurface = DarkTokens.textPrimary,
-    surfaceVariant = DarkTokens.bgLayer3,
-    onSurfaceVariant = DarkTokens.textSecondary,
-    outline = DarkTokens.lineFocus,
-    outlineVariant = DarkTokens.lineHair,
-    error = DarkTokens.statusError
 )

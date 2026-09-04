@@ -84,7 +84,7 @@ fun HistoryCalendarWidget(
                                 .background(
                                     when (status) {
                                         "COMPLETED" -> themeColor
-                                        "FAILED" -> HabitTheme.colors.bgLayer3
+                                        "FAILED" -> HabitTheme.colors.statusFail.copy(alpha = 0.16f)
                                         "SKIPPED" -> HabitTheme.colors.lineHair
                                         else -> Color.Transparent
                                     }
@@ -100,8 +100,8 @@ fun HistoryCalendarWidget(
                             Text(
                                 text = day.toString(),
                                 color = when (status) {
-                                    "COMPLETED" -> HabitTheme.colors.textPrimary
-                                    "FAILED" -> HabitTheme.colors.textSecondary
+                                    "COMPLETED" -> HabitTheme.colors.onAccent(themeColor)
+                                    "FAILED" -> HabitTheme.colors.statusFail
                                     "SKIPPED" -> HabitTheme.colors.textPrimary.copy(alpha = 0.9f)
                                     else -> HabitTheme.colors.textPrimary.copy(alpha = 0.7f)
                                 },

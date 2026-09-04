@@ -28,7 +28,7 @@ fun HabitScoreWidget(
 ) {
     val yLabels = listOf("100%", "80%", "60%", "40%", "20%")
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val gridColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+    val gridColor = HabitTheme.colors.lineHair
 
     Column(
         modifier = modifier
