@@ -61,7 +61,7 @@ class WidgetConfigActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         appWidgetId = intent?.extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
             ?: AppWidgetManager.INVALID_APPWIDGET_ID
-        // 런처가 취소하면 위젯이 남지 않도록 기본은 CANCELED.
+        // 런처가 취소하면 위젯이 남지 않도록 기본은 CANCELED. (빈 위젯의 재설정 탭으로도 열린다 — 결과는 무시됨)
         setResult(RESULT_CANCELED, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId))
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             finish()
@@ -89,11 +89,8 @@ class WidgetConfigActivity : ComponentActivity() {
             updateAppWidgetState(this@WidgetConfigActivity, glanceId) { prefs ->
                 prefs[HabitWidgets.HABIT_ID] = habit.habitId
             }
-            if (manager.getGlanceIds(CheckGlanceWidget::class.java).contains(glanceId)) {
-                CheckGlanceWidget().update(this@WidgetConfigActivity, glanceId)
-            } else {
-                CalendarGlanceWidget().update(this@WidgetConfigActivity, glanceId)
-            }
+            // 어떤 provider의 위젯인지 Glance 쪽 매핑이 아직 없을 수 있어(첫 배치) 둘 다 갱신한다.
+            HabitWidgets.updateAll(this@WidgetConfigActivity)
             setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId))
             finish()
         }

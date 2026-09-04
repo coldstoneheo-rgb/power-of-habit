@@ -74,6 +74,7 @@ fun MainScreen(
                     onNavigateToDetail = onNavigateToDetail,
                     onNavigateToAddHabit = onNavigateToAddHabit,
                     onNavigateToBadges = onNavigateToBadges,
+                    onToggleCompletion = { habitId, date -> viewModel.toggleCompletion(habitId, date) },
                     onUpdateRecordStatus = { recordId, status, habitId ->
                         viewModel.updateRecordStatus(recordId, status, habitId)
                     },
@@ -112,6 +113,7 @@ internal fun MainScreenContent(
     onNavigateToBadges: () -> Unit,
     onUpdateRecordStatus: (Int, String, Int) -> Unit,
     onInsertRecord: (HabitRecordEntity) -> Unit,
+    onToggleCompletion: (Int, LocalDate) -> Unit = { _, _ -> },
     onDeleteRecord: (HabitRecordEntity) -> Unit,
     isDarkMode: Boolean,
     isDateDescending: Boolean,
@@ -340,19 +342,8 @@ internal fun MainScreenContent(
                             if (habit.habitType == "VALUE") {
                                 showValueDialogForHabit = habit to date
                             } else {
-                                if (record != null) {
-                                    val nextStatus = if (record.status == "COMPLETED") "FAILED" else "COMPLETED"
-                                    onUpdateRecordStatus(record.recordId, nextStatus, habit.habitId)
-                                } else {
-                                    onInsertRecord(
-                                        HabitRecordEntity(
-                                            habitId = habit.habitId,
-                                            date = date.toString(),
-                                            status = "COMPLETED",
-                                            inputValue = null
-                                        )
-                                    )
-                                }
+                                // 규칙(없음→완료, 완료→실패, 그 외→완료)은 HabitDao.toggleCompletion 한 곳에 있다.
+                                onToggleCompletion(habit.habitId, date)
                             }
                         },
                         onCheckLongClick = { date, record ->

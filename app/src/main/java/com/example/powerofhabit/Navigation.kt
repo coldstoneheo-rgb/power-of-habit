@@ -25,9 +25,12 @@ fun MainNavigation(
   // 홈 위젯에서 진입: 해당 습관 상세를 스택 위에 올린다.
   LaunchedEffect(initialHabitId) {
     if (initialHabitId > 0) {
-      val top = backStack.lastOrNull()
-      if (top !is HabitDetail || top.habitId != initialHabitId) {
-        backStack.add(HabitDetail(habitId = initialHabitId))
+      val target = HabitDetail(habitId = initialHabitId)
+      val index = backStack.indexOfLast { it == target }
+      if (index >= 0) {
+        while (backStack.size > index + 1) backStack.removeLastOrNull()
+      } else {
+        backStack.add(target)
       }
       onInitialHabitConsumed()
     }

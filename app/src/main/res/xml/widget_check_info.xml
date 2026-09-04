@@ -9,6 +9,7 @@
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="1800000"
     android:widgetCategory="home_screen"
+    android:widgetFeatures="reconfigurable"
     android:configure="com.example.powerofhabit.widget.WidgetConfigActivity"
     android:initialLayout="@layout/glance_default_loading_layout"
     android:description="@string/widget_check_description" />

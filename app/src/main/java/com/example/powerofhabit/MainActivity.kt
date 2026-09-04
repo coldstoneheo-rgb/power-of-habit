@@ -30,12 +30,16 @@ class MainActivity : ComponentActivity() {
 
   override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
+    setIntent(intent)
     pendingHabitId = intent.getIntExtra(HabitWidgets.EXTRA_HABIT_ID, -1)
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    pendingHabitId = intent?.getIntExtra(HabitWidgets.EXTRA_HABIT_ID, -1) ?: -1
+    // 회전·프로세스 복원 시에는 백스택이 복원되므로 딥링크를 다시 적용하지 않는다.
+    if (savedInstanceState == null) {
+      pendingHabitId = intent?.getIntExtra(HabitWidgets.EXTRA_HABIT_ID, -1) ?: -1
+    }
 
     enableEdgeToEdge()
     setContent {

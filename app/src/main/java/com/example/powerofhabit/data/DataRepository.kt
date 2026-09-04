@@ -20,6 +20,10 @@ interface DataRepository {
     fun getRecordsForDate(date: String): Flow<List<HabitRecordEntity>>
     fun getRecordsForHabit(habitId: Int): Flow<List<HabitRecordEntity>>
     fun getAllRecords(): Flow<List<HabitRecordEntity>>
+    suspend fun getRecord(habitId: Int, date: String): HabitRecordEntity?
+    fun getRecordsForHabitBetween(habitId: Int, startDate: String, endDate: String): Flow<List<HabitRecordEntity>>
+    /** 체크 토글(트랜잭션). 규칙은 HabitDao.toggleCompletion 참조. 결과 상태 반환. */
+    suspend fun toggleCompletion(habitId: Int, date: String): String
     fun getRecordsBetween(startDate: String, endDate: String): Flow<List<HabitRecordEntity>>
     suspend fun insertRecord(record: HabitRecordEntity): Long
     suspend fun updateRecordStatus(recordId: Int, status: String)
@@ -50,6 +54,13 @@ class DefaultDataRepository @Inject constructor(
     override fun getRecordsForHabit(habitId: Int): Flow<List<HabitRecordEntity>> = habitDao.getRecordsForHabit(habitId)
 
     override fun getAllRecords(): Flow<List<HabitRecordEntity>> = habitDao.getAllRecords()
+
+    override suspend fun getRecord(habitId: Int, date: String): HabitRecordEntity? = habitDao.getRecord(habitId, date)
+
+    override fun getRecordsForHabitBetween(habitId: Int, startDate: String, endDate: String): Flow<List<HabitRecordEntity>> =
+        habitDao.getRecordsForHabitBetween(habitId, startDate, endDate)
+
+    override suspend fun toggleCompletion(habitId: Int, date: String): String = habitDao.toggleCompletion(habitId, date)
 
     override fun getRecordsBetween(startDate: String, endDate: String): Flow<List<HabitRecordEntity>> = habitDao.getRecordsBetween(startDate, endDate)
 

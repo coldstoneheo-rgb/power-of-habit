@@ -127,6 +127,10 @@ class DefaultDataRepositoryTest {
         }
 
         override fun getAllRecords(): Flow<List<HabitRecordEntity>> = recordsFlow
+        override suspend fun getRecord(habitId: Int, date: String): HabitRecordEntity? =
+            recordsFlow.value.firstOrNull { it.habitId == habitId && it.date == date }
+        override fun getRecordsForHabitBetween(habitId: Int, startDate: String, endDate: String): Flow<List<HabitRecordEntity>> =
+            recordsFlow.map { list -> list.filter { it.habitId == habitId && it.date >= startDate && it.date <= endDate } }
 
         override fun getRecordsBetween(startDate: String, endDate: String): Flow<List<HabitRecordEntity>> = recordsFlow.map { list ->
             list.filter { it.date in startDate..endDate }
