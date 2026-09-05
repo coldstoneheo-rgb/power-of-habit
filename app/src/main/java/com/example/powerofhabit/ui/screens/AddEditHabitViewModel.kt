@@ -126,6 +126,12 @@ class AddEditHabitViewModel @Inject constructor(
                             }
                         }
                         reminderManager.scheduleReminder(updatedHabit)
+                        // 빈도·목표가 바뀌면 스트릭·완료 수가 달라지므로 기록이 바뀐 것과 같이 뱃지를 다시 판정한다.
+                        val frequencyChanged = existingHabit.frequencyType != updatedHabit.frequencyType ||
+                            existingHabit.frequencyValue != updatedHabit.frequencyValue
+                        if (targetChanged || frequencyChanged) {
+                            com.example.powerofhabit.data.RecordSideEffects.afterRecordChange(context, repository, habitId)
+                        }
                     } else {
                         _uiEvent.emit(AddEditHabitUiEvent.Error("Habit not found"))
                         return@launch

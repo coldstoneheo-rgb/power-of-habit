@@ -76,6 +76,20 @@ class BadgeRulesTest {
     }
 
     @Test
+    fun due_fromRecords_countsOnlyCompletedRows() {
+        val records = listOf(rec("2026-08-01"), rec("2026-08-02", "FAILED"), rec("2026-08-03", "SKIPPED"), rec("2026-08-04"))
+        // 완료 2회, 스트릭 2(8/2 실패로 끊김, 8/3 건너뜀은 중립) → START_FIRST만
+        assertEquals(listOf("START_FIRST"), BadgeRules.due(habit(), records, emptySet(), today = LocalDate.parse("2026-08-04")).map { it.id })
+    }
+
+    @Test
+    fun all_listsEveryAwardableBadgeOnce() {
+        val ids = BadgeRules.all.map { it.id }
+        assertEquals(ids.size, ids.toSet().size)
+        assertEquals(1 + BadgeRules.STREAK.size + BadgeRules.CUMULATIVE.size, ids.size)
+    }
+
+    @Test
     fun due_firstSuccessGivesStartBadge() {
         assertEquals(listOf("START_FIRST"), BadgeRules.due(1, 1, emptySet()).map { it.id })
     }

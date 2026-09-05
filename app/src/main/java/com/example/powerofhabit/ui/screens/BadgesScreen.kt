@@ -1,5 +1,6 @@
 package com.example.powerofhabit.ui.screens
 
+import com.example.powerofhabit.badges.BadgeRules
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -38,7 +39,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
-// Static definition of all available badges in the app
+// 뱃지 카드 표시용 정의(BadgeRules.BadgeSpec과 같은 필드)
 data class BadgeDefinition(
     val id: String,
     val name: String,
@@ -46,23 +47,11 @@ data class BadgeDefinition(
     val iconType: String // "GOLD", "SILVER", "BRONZE"
 )
 
-val AllBadgeDefinitions = listOf(
-    BadgeDefinition("START_FIRST", "습관 여행의 시작", "첫 번째 습관 실천을 완료했습니다!", "BRONZE"),
-    BadgeDefinition("STREAK_3", "작심삼일 탈출", "습관 3일 연속 달성에 성공했습니다!", "BRONZE"),
-    BadgeDefinition("STREAK_5", "꾸준한 실행가", "습관 5일 연속 달성에 성공했습니다!", "SILVER"),
-    BadgeDefinition("STREAK_7", "빛나는 일주일", "일주일 7일 연속 완벽 달성에 성공했습니다!", "SILVER"),
-    BadgeDefinition("STREAK_14", "2주의 기적", "2주 연속 습관 달성을 완료했습니다!", "SILVER"),
-    BadgeDefinition("STREAK_21", "21일의 습관화", "습관 형성 21일의 벽을 돌파했습니다!", "SILVER"),
-    BadgeDefinition("STREAK_30", "습관 마스터", "지속 가능한 성장! 습관 30일 연속 달성 완료!", "GOLD"),
-    BadgeDefinition("STREAK_66", "체화된 습관", "평균 습관 형성 주기 66일을 완전히 정복했습니다!", "GOLD"),
-    BadgeDefinition("STREAK_100", "백일의 대장정", "100일 연속 달성! 전설적인 완벽 마스터!", "GOLD"),
-    BadgeDefinition("HABIT_COMPLETE_10", "첫 10회의 발걸음", "습관 완수 횟수 10회를 달성했습니다!", "BRONZE"),
-    BadgeDefinition("HABIT_COMPLETE_50", "반백의 열정", "습관 완수 횟수 50회를 달성했습니다!", "SILVER"),
-    BadgeDefinition("HABIT_COMPLETE_100", "백일의 기적", "습관 완수 횟수 100회를 돌파했습니다!", "GOLD"),
-    BadgeDefinition("EARLY_BIRD", "얼리버드 습관가", "아침 일찍 습관을 실천했습니다!", "SILVER"),
-    BadgeDefinition("NIGHT_OWL", "밤샘 파수꾼", "늦은 밤에도 잊지 않고 습관을 완료했습니다!", "BRONZE"),
-    BadgeDefinition("HABIT_CREATOR", "습관 설계자", "3개 이상의 다양한 습관을 등록하고 관리 중입니다!", "BRONZE")
-)
+/**
+ * 보관함에 보이는 뱃지 = 앱이 실제로 줄 수 있는 뱃지([BadgeRules.all]). 예전의 별도 카탈로그는 판정 규칙과 문구가 어긋나고
+ * 어떤 경로로도 받을 수 없는 뱃지(STREAK_14·STREAK_100·EARLY_BIRD·NIGHT_OWL·HABIT_CREATOR)를 보여 주고 있었다(결정 기록 2026-09-06 뱃지 스트릭).
+ */
+val AllBadgeDefinitions: List<BadgeDefinition> = BadgeRules.all.map { BadgeDefinition(it.id, it.name, it.description, it.iconType) }
 
 @HiltViewModel
 class BadgesViewModel @Inject constructor(

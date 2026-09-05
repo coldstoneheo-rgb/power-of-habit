@@ -18,3 +18,9 @@
 **합의:** 스트릭 = `HabitStatsCalculator.compute().maxStreak`(연속 MET 기간). 매일 습관은 예전과 같이 일 단위. 임계값은 유지, 이름 유지, 설명은 "연속 N회 달성"으로 단위 중립. 이미 받은 뱃지는 회수하지 않는다. 판정 규칙은 `BadgeRules`(순수 Kotlin, 테스트)로 뽑고 `BadgeManager`는 DB 읽기/쓰기만 한다.
 
 **하지 않는 것:** 빈도별 임계값 분기, 전체 습관 합산 뱃지, 과거 뱃지 재판정·회수, 뱃지 화면 UI 변경.
+
+## 자체 리뷰 뒤 덧붙인 규칙
+- **보관함 카탈로그 = 규칙**: `BadgesScreen`의 별도 뱃지 목록을 없애고 `BadgeRules.all`로 그린다. 그 목록에는 어떤 경로로도 받을 수 없던 뱃지 5종(STREAK_14·STREAK_100·EARLY_BIRD·NIGHT_OWL·HABIT_CREATOR)이 있었고 설명 문구도 규칙과 달랐다 — 받을 수 없는 뱃지를 보여 주는 것은 결함으로 보고 제거했다. 필요해지면 규칙과 함께 되살린다.
+- **빈도·목표를 바꾼 뒤, 가져오기 뒤에도 뱃지 재판정**: 스트릭이 빈도에 달려 있으므로 기록이 바뀐 것과 같이 `RecordSideEffects`/`BadgeManager`를 부른다.
+- **같은 날짜 중복 행**: 통계 엔진은 날짜당 한 행만 본다(`toMap`). 옛 뱃지 로직은 "어느 행이든 COMPLETED면 완료"였다. 위젯 연타로 중복 행이 생겼던 옛 DB에서는 스트릭이 다르게 나올 수 있다 — 통계 화면과 같은 숫자를 택했고, 중복 행 정리는 별도 과제.
+- `insertBadge`는 IGNORE(첫 획득 시각 유지), `BadgeManager`는 `CancellationException`을 다시 던지고 읽기 실패를 삼킨다(기록 저장은 이미 끝났으므로 호출자가 "저장 실패"로 오해하지 않게). `HabitStatsCalculator.compute(habit, records, today)` 오버로드 하나를 홈·상세·뱃지가 같이 쓴다.

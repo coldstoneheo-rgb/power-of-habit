@@ -165,13 +165,8 @@ private fun HabitDetailContent(
         HabitFrequency.parse(habit.frequencyType, habit.frequencyValue)
     }
     val today = LocalDate.now() // remember 키에 포함해 자정이 지나면 재계산되게 한다
-    val stats = remember(records, frequency, today) {
-        HabitStatsCalculator.compute(
-            records = records,
-            frequency = frequency,
-            today = today,
-            anchorDate = HabitStatsCalculator.anchorFromEpochMillis(habit.createdAt)
-        )
+    val stats = remember(records, habit, today) {
+        HabitStatsCalculator.compute(habit, records, today) // 홈 점수·뱃지와 같은 오버로드
     }
     val (filteredScores, filteredDates) = remember(stats, selectedFilter) {
         HabitStatsCalculator.groupScores(stats.dailyScores, selectedFilter)

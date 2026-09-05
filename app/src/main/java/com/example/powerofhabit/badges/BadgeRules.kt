@@ -2,11 +2,10 @@ package com.example.powerofhabit.badges
 
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
-import com.example.powerofhabit.domain.stats.HabitFrequency
 import com.example.powerofhabit.domain.stats.HabitStatsCalculator
 import java.time.LocalDate
 
-/** 수여할 뱃지 한 장의 정의. */
+/** 수여할 뱃지 한 장의 정의. 뱃지 보관함 화면도 이 목록으로 그린다(따로 든 카탈로그 없음). */
 data class BadgeSpec(val id: String, val name: String, val description: String, val iconType: String)
 
 /**
@@ -38,17 +37,20 @@ object BadgeRules {
         66 to BadgeSpec("STREAK_66", "체화된 습관", "평균 습관 형성 주기 66회 연속 달성을 완전히 정복했습니다!", "GOLD")
     )
 
+    /** 앱이 실제로 줄 수 있는 뱃지 전부(보관함 표시 순서). */
+    val all: List<BadgeSpec> = listOf(START_FIRST) + STREAK.map { it.second } + CUMULATIVE.map { it.second }
+
     /** 이 습관의 최대 스트릭(기간 단위). 통계 화면의 "최고 스트릭"과 같은 숫자다. */
-    fun maxStreak(habit: HabitEntity, records: List<HabitRecordEntity>, today: LocalDate = LocalDate.now()): Int {
-        if (records.isEmpty()) return 0
-        val frequency = HabitFrequency.parse(habit.frequencyType, habit.frequencyValue)
-        return HabitStatsCalculator.compute(
-            records = records,
-            frequency = frequency,
-            today = today,
-            anchorDate = HabitStatsCalculator.anchorFromEpochMillis(habit.createdAt)
-        ).maxStreak
-    }
+    fun maxStreak(habit: HabitEntity, records: List<HabitRecordEntity>, today: LocalDate = LocalDate.now()): Int =
+        HabitStatsCalculator.compute(habit, records, today).maxStreak
+
+    /** 이 습관의 기록으로 지금 새로 받을 뱃지. 누적 완료는 COMPLETED 행 수(통계 엔진과 같은 문자열). */
+    fun due(habit: HabitEntity, records: List<HabitRecordEntity>, earned: Set<String>, today: LocalDate = LocalDate.now()): List<BadgeSpec> =
+        due(
+            totalCompleted = records.count { it.status == HabitStatsCalculator.STATUS_COMPLETED },
+            maxStreak = maxStreak(habit, records, today),
+            earned = earned
+        )
 
     /** 아직 받지 않았고 조건을 넘은 뱃지. 순서는 시작 → 누적 → 스트릭. */
     fun due(totalCompleted: Int, maxStreak: Int, earned: Set<String>): List<BadgeSpec> {

@@ -76,12 +76,7 @@ class MainScreenViewModel @Inject constructor(
       val today = LocalDate.now()
       val allByHabit = allRecords.groupBy { it.habitId }
       val scores = habits.associate { habit ->
-        val stats = HabitStatsCalculator.compute(
-          records = allByHabit[habit.habitId].orEmpty(),
-          frequency = HabitFrequency.parse(habit.frequencyType, habit.frequencyValue),
-          today = today,
-          anchorDate = HabitStatsCalculator.anchorFromEpochMillis(habit.createdAt)
-        )
+        val stats = HabitStatsCalculator.compute(habit, allByHabit[habit.habitId].orEmpty(), today)
         habit.habitId to stats.latestScore
       }
       MainScreenUiState.Success(habits, recordsMap, scores) as MainScreenUiState
