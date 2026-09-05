@@ -28,7 +28,10 @@ applicationId와 서명 키가 바뀌었으므로 Drive API용 Android OAuth 클
 1. `keytool -list -v -keystore release.jks -alias powerofhabit` 로 업로드 키 SHA-1 확인. Play Console → 앱 무결성에서 **Play 앱 서명 키 SHA-1**도 확인.
 2. Cloud Console → 사용자 인증 정보 → OAuth 클라이언트 ID(Android) → 패키지 `com.woodpeckerai.powerofhabit` + 두 SHA-1 각각 등록(디버그 키 SHA-1도 개발용으로 추가).
 3. 다른 Cloud 프로젝트에 만들면 `appDataFolder`가 분리돼 예전 백업 파일이 보이지 않는다.
-> **현재 상태(2026-09-05)**: 앱에 Google 로그인 흐름이 없어 `GoogleSignIn.getLastSignedInAccount()`가 항상 null → 백업·복원이 모두 `false`로 끝난다. 로그인 UI 추가가 선행돼야 한다(후속 과제).
+4. 디버그 빌드로 테스트하려면 디버그 키 SHA-1도 등록한다:
+   `keytool -list -v -keystore %USERPROFILE%\.android\debug.keystore -alias androiddebugkey -storepass android -keypass android`
+5. Cloud Console → API 및 서비스 → **Google Drive API 사용 설정**. OAuth 동의 화면은 "테스트" 상태여도 되며(`drive.appdata`는 비민감 범위), 테스트 사용자에 본인 계정을 넣는다.
+> **현재 상태(2026-09-05, 이 PR 이후)**: 설정 → 백업하기/복원하기를 누르면 앱이 Google 로그인을 요청하고(`drive.appdata` 범위), 성공하면 바로 이어서 백업/복원한다. OAuth 클라이언트가 등록돼 있지 않으면 로그인 결과가 **코드 10(DEVELOPER_ERROR)** 로 실패하며 앱이 그 사실을 토스트로 알린다 — 위 1~5를 끝내면 코드 없이 해결된다.
 
 ## 1. 빌드 규칙
 | 항목 | 규칙 |

@@ -3,6 +3,13 @@ package com.example.powerofhabit.backup
 import android.content.Context
 import android.util.Log
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInStatusCodes
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.CommonStatusCodes
+import com.google.android.gms.common.api.Scope
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
@@ -30,6 +37,8 @@ class GoogleDriveBackupManager(private val context: Context) {
     companion object {
         private const val TAG = "GoogleDriveBackup"
         private const val BACKUP_FILE_NAME = "power_of_habit_backup.zip"
+        /** 앱 전용 숨김 폴더(appDataFolder)만 접근하는 최소 권한 스코프. */
+        private val DRIVE_APPDATA_SCOPE = Scope(DriveScopes.DRIVE_APPDATA)
 
         // Global debounced backup scheduler
         private val backupScope = CoroutineScope(
@@ -53,12 +62,53 @@ class GoogleDriveBackupManager(private val context: Context) {
         }
     }
 
+    /** 로그인돼 있고 Drive appDataFolder 권한까지 승인된 계정이 있는가. 백업·복원 버튼은 이 값이 false면 먼저 [signInClient]로 인증을 요청한다. */
     fun isGoogleSignedIn(): Boolean {
         return try {
-            GoogleSignIn.getLastSignedInAccount(context) != null
+            val account = GoogleSignIn.getLastSignedInAccount(context) ?: return false
+            GoogleSignIn.hasPermissions(account, DRIVE_APPDATA_SCOPE)
         } catch (e: Exception) {
             false
         }
+    }
+
+    /** 연결된 Google 계정 이메일(표시용). 없으면 null. */
+    fun signedInEmail(): String? = try {
+        GoogleSignIn.getLastSignedInAccount(context)?.email
+    } catch (e: Exception) {
+        null
+    }
+
+    /**
+     * Drive appDataFolder 권한을 요청하는 로그인 클라이언트. 호출 측은 `signInClient().signInIntent`를
+     * `StartActivityForResult`로 띄우고 결과를 [accountFromSignInResult]로 해석한다.
+     * 실제로 동작하려면 Cloud Console에 이 앱의 패키지+서명 SHA-1로 Android OAuth 클라이언트가 등록돼 있어야 한다(docs/RELEASE.md §0-4).
+     */
+    fun signInClient(): GoogleSignInClient {
+        val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .requestScopes(DRIVE_APPDATA_SCOPE)
+            .build()
+        return GoogleSignIn.getClient(context, options)
+    }
+
+    /** 로그인 액티비티 결과 인텐트 → 계정. 실패는 [describeSignInError]로 사용자 문구를 만든다. */
+    fun accountFromSignInResult(data: Intent?): Result<GoogleSignInAccount> = try {
+        val account = GoogleSignIn.getSignedInAccountFromIntent(data).getResult(ApiException::class.java)
+        if (GoogleSignIn.hasPermissions(account, DRIVE_APPDATA_SCOPE)) Result.success(account)
+        else Result.failure(IllegalStateException("Drive 권한이 거부되었습니다"))
+    } catch (e: Exception) {
+        Result.failure(e)
+    }
+
+    /** 로그인 실패 이유를 한 줄로. 개발자 설정 오류(코드 10)는 OAuth 클라이언트 미등록이라 따로 짚어 준다. */
+    fun describeSignInError(e: Throwable): String = when {
+        e is ApiException && e.statusCode == CommonStatusCodes.DEVELOPER_ERROR ->
+            "Google 로그인 설정 오류(코드 10): 이 앱의 OAuth 클라이언트가 등록되지 않았습니다"
+        e is ApiException && e.statusCode == GoogleSignInStatusCodes.SIGN_IN_CANCELLED -> "Google 로그인이 취소되었습니다"
+        e is ApiException && e.statusCode == CommonStatusCodes.NETWORK_ERROR -> "네트워크 오류로 Google 로그인에 실패했습니다"
+        e is ApiException -> "Google 로그인 실패(코드 ${e.statusCode})"
+        else -> e.message ?: "Google 로그인에 실패했습니다"
     }
 
     fun scheduleAutoBackup() {

@@ -3,6 +3,8 @@ package com.example.powerofhabit.widget
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -57,6 +59,8 @@ class WidgetConfigActivity : ComponentActivity() {
 
     private var appWidgetId: Int = AppWidgetManager.INVALID_APPWIDGET_ID
 
+    private companion object { const val TAG = "WidgetConfig" }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         appWidgetId = intent?.extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
@@ -84,13 +88,19 @@ class WidgetConfigActivity : ComponentActivity() {
 
     private fun onHabitPicked(habit: HabitEntity) {
         lifecycleScope.launch {
-            val glanceId = GlanceAppWidgetManager(this@WidgetConfigActivity).getGlanceIdBy(appWidgetId)
-            updateAppWidgetState(this@WidgetConfigActivity, glanceId) { prefs ->
-                prefs[HabitWidgets.HABIT_ID] = habit.habitId
+            try {
+                // getGlanceIdBy는 런처가 이미 지운 id면 IllegalArgumentException — 조용히 죽지 않고 안내 후 닫는다.
+                val glanceId = GlanceAppWidgetManager(this@WidgetConfigActivity).getGlanceIdBy(appWidgetId)
+                updateAppWidgetState(this@WidgetConfigActivity, glanceId) { prefs ->
+                    prefs[HabitWidgets.HABIT_ID] = habit.habitId
+                }
+                // 방금 추가된 위젯은 Glance 내부 매핑에 아직 없을 수 있으므로 provider 기준으로 이 인스턴스만 즉시 그린다.
+                HabitWidgets.updateOne(this@WidgetConfigActivity, appWidgetId)
+                setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId))
+            } catch (e: Exception) {
+                Log.w(TAG, "widget configure failed id=$appWidgetId", e)
+                Toast.makeText(this@WidgetConfigActivity, "위젯을 설정할 수 없습니다. 위젯을 지우고 다시 추가해 주세요.", Toast.LENGTH_LONG).show()
             }
-            // 방금 추가된 위젯은 Glance 내부 매핑에 아직 없을 수 있으므로 provider 기준으로 이 인스턴스만 즉시 그린다.
-            HabitWidgets.updateOne(this@WidgetConfigActivity, appWidgetId)
-            setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId))
             finish()
         }
     }

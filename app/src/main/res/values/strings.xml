@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Power of Habit</string>
+    <string name="app_name">습관의 힘</string>
     <string name="widget_check_label">습관 체크</string>
     <string name="widget_check_description">오늘의 습관을 한 번에 체크하는 1x1 위젯</string>
     <string name="widget_calendar_label">습관 캘린더</string>

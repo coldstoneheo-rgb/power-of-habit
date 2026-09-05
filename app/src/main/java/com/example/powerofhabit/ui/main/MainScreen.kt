@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -172,6 +174,100 @@ internal fun MainScreenContent(
     val importLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri -> if (uri != null) onImportFrom(uri) }
+
+    // Google Drive 백업/복원. 로그인돼 있지 않으면 버튼을 누른 시점에 Google 인증을 요청하고, 성공하면 보류한 동작을 이어서 실행한다.
+    // (예전에는 로그인 화면이 없어 두 버튼이 항상 "실패"로 끝났다 — 실기기 피드백 2026-09-05)
+    var isBackingUp by remember { mutableStateOf(false) }
+    var isRestoring by remember { mutableStateOf(false) }
+    var driveEmail by remember { mutableStateOf(backupManager.signedInEmail()) }
+    var pendingDriveAction by rememberSaveable { mutableStateOf<String?>(null) } // "BACKUP" | "RESTORE"
+    var showRestoreConfirm by remember { mutableStateOf(false) }
+
+    fun runBackup() {
+        isBackingUp = true
+        scope.launch {
+            val success = backupManager.backupDatabase()
+            isBackingUp = false
+            Toast.makeText(
+                context,
+                if (success) "백업이 완료되었습니다." else "백업에 실패했습니다.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    fun runRestore() {
+        isRestoring = true
+        scope.launch {
+            // 성공하면 restoreDatabase가 프로세스를 재시작하므로 아래 코드는 실패 경로에서만 실행된다.
+            val success = backupManager.restoreDatabase()
+            isRestoring = false
+            if (success) {
+                showBackupSettings = false
+            } else {
+                Toast.makeText(context, "복원에 실패했습니다. 백업 파일을 확인해 주세요.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    fun runDrive(action: String) = if (action == "RESTORE") runRestore() else runBackup()
+
+    val signInLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val action = pendingDriveAction
+        pendingDriveAction = null
+        backupManager.accountFromSignInResult(result.data).fold(
+            onSuccess = { account ->
+                driveEmail = account.email
+                Toast.makeText(context, "Google 계정 연결: ${account.email ?: ""}", Toast.LENGTH_SHORT).show()
+                if (action != null) runDrive(action)
+            },
+            onFailure = { e ->
+                Toast.makeText(context, backupManager.describeSignInError(e), Toast.LENGTH_LONG).show()
+            }
+        )
+    }
+
+    fun requestDrive(action: String) {
+        if (backupManager.isGoogleSignedIn()) {
+            runDrive(action)
+            return
+        }
+        pendingDriveAction = action
+        Toast.makeText(
+            context,
+            if (action == "RESTORE") "복원하려면 Google 계정 인증이 필요합니다." else "백업하려면 Google 계정 인증이 필요합니다.",
+            Toast.LENGTH_SHORT
+        ).show()
+        signInLauncher.launch(backupManager.signInClient().signInIntent)
+    }
+
+    if (showRestoreConfirm) {
+        AlertDialog(
+            onDismissRequest = { showRestoreConfirm = false },
+            title = { Text("백업에서 복원할까요?", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+            text = {
+                Text(
+                    text = "현재 기기의 습관·기록이 Google Drive 백업 시점의 내용으로 통째로 바뀌고 앱이 다시 시작됩니다. 현재 데이터를 남기려면 먼저 '파일로 내보내기'를 해 두세요.",
+                    color = HabitTheme.colors.textSecondary,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showRestoreConfirm = false; requestDrive("RESTORE") }) {
+                    Text("복원", color = HabitOrange, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRestoreConfirm = false }) {
+                    Text("취소", color = HabitTheme.colors.textSecondary)
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
 
     if (showAddTypeModal) {
         AlertDialog(
@@ -438,9 +534,6 @@ internal fun MainScreenContent(
 
     // Google Drive Backup & Restore Settings Dialog
     if (showBackupSettings) {
-        var isBackingUp by remember { mutableStateOf(false) }
-        var isRestoring by remember { mutableStateOf(false) }
-
         AlertDialog(
             onDismissRequest = { 
                 if (!isBackingUp && !isRestoring && !isTransferring) showBackupSettings = false
@@ -503,11 +596,16 @@ internal fun MainScreenContent(
                     Divider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp)
 
                     Text(
-                        text = "구글 드라이브를 통해 안전하게 습관 데이터를 동기화하고 복구할 수 있습니다.",
+                        text = "구글 드라이브의 앱 전용 폴더에 데이터베이스를 백업·복원합니다. Google 계정 인증이 필요하며, 복원은 현재 데이터를 백업 내용으로 교체합니다.",
                         color = HabitTheme.colors.textSecondary,
                         fontSize = 13.sp,
                         lineHeight = 18.sp,
                         letterSpacing = -0.5.sp
+                    )
+                    Text(
+                        text = driveEmail?.let { "연결된 계정: $it" } ?: "연결된 Google 계정 없음 — 백업/복원 버튼을 누르면 로그인을 요청합니다.",
+                        color = HabitTheme.colors.textSecondary,
+                        style = MaterialTheme.typography.labelSmall
                     )
 
                     if (isBackingUp || isRestoring) {
@@ -544,7 +642,7 @@ internal fun MainScreenContent(
                             contentPadding = PaddingValues(horizontal = Space.s2, vertical = Space.s2),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("파일로 내보내기 (JSON)", style = MaterialTheme.typography.labelMedium, maxLines = 1)
+                            Text("파일로 내보내기", style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                         }
                         OutlinedButton(
                             onClick = { importLauncher.launch(arrayOf("application/json", "*/*")) },
@@ -554,11 +652,11 @@ internal fun MainScreenContent(
                             contentPadding = PaddingValues(horizontal = Space.s2, vertical = Space.s2),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("파일에서 가져오기 (JSON)", style = MaterialTheme.typography.labelMedium, maxLines = 1)
+                            Text("파일에서 가져오기", style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                         }
                     }
                     Text(
-                        text = if (isTransferring) "파일 처리 중..." else "가져오기는 현재 데이터를 지우지 않고 병합합니다. 같은 습관·같은 날짜의 기록은 기존 것을 유지합니다.",
+                        text = if (isTransferring) "파일 처리 중..." else "JSON 파일로 저장·불러오기 (로그인 불필요). 가져오기는 현재 데이터를 지우지 않고 병합하며, 같은 습관·같은 날짜의 기록은 기존 것을 유지합니다.",
                         color = HabitTheme.colors.textSecondary,
                         style = MaterialTheme.typography.labelSmall
                     )
@@ -570,18 +668,7 @@ internal fun MainScreenContent(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Button(
-                        onClick = {
-                            isBackingUp = true
-                            scope.launch {
-                                val success = backupManager.backupDatabase()
-                                isBackingUp = false
-                                if (success) {
-                                    Toast.makeText(context, "백업이 완료되었습니다.", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(context, "백업에 실패했습니다.", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        },
+                        onClick = { requestDrive("BACKUP") },
                         enabled = !isBackingUp && !isRestoring && !isTransferring,
                         colors = ButtonDefaults.buttonColors(containerColor = HabitOrange),
                         modifier = Modifier.weight(1f)
@@ -590,19 +677,7 @@ internal fun MainScreenContent(
                     }
 
                     Button(
-                        onClick = {
-                            isRestoring = true
-                            scope.launch {
-                                val success = backupManager.restoreDatabase()
-                                isRestoring = false
-                                if (success) {
-                                    Toast.makeText(context, "복원이 완료되었습니다.", Toast.LENGTH_SHORT).show()
-                                    showBackupSettings = false
-                                } else {
-                                    Toast.makeText(context, "복원에 실패했습니다. 백업 파일을 확인해 주세요.", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        },
+                        onClick = { showRestoreConfirm = true },
                         enabled = !isBackingUp && !isRestoring && !isTransferring,
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
                         modifier = Modifier.weight(1f).border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large)
@@ -689,8 +764,8 @@ private fun HabitRow(
         }
     }
     
-    // 기록이 전혀 없는 습관은 시작 진행도 0.2로 표시, 그 외는 점수(0~100)를 0.1~1.0으로 매핑
-    val emaScore = if (score == null) 0.2f else (score / 100f).coerceIn(0.1f, 1f)
+    // 점수(0~100) 그대로 0~1로. 기록 없는 새 습관은 0 → 트랙만 보인다(RingProgress.kt).
+    val emaScore = scoreToRingProgress(score)
     
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(

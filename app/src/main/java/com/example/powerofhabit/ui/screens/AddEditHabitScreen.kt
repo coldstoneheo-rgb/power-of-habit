@@ -63,7 +63,8 @@ fun AddEditHabitScreen(
     var memo by remember { mutableStateOf("") }
     var reminderTime by remember { mutableStateOf<String?>(null) }
     var isReminderEnabled by remember { mutableStateOf(false) }
-    var selectedThemeHex by remember { mutableStateOf("#42A5F5") } // Default light blue matte
+    // 새 습관은 팔레트에서 무작위 색으로 시작(수정 화면은 아래 LaunchedEffect가 저장된 색으로 덮는다)
+    var selectedThemeHex by remember { mutableStateOf(randomHabitColorHex()) }
     var habitType by remember { mutableStateOf(defaultHabitType) }
     var unit by remember { mutableStateOf("") }
     var targetValueString by remember { mutableStateOf("") }
@@ -324,16 +325,34 @@ fun AddEditHabitScreen(
                     singleLine = true
                 )
 
-                // 색상 선택 버튼
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("색", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(modifier = Modifier.height(2.dp))
+                // 색 필드: 제목과 같은 outlined 필드 모양(테두리 위 라벨)에 라운드 스퀘어 스와치. 탭하면 팔레트.
+                Box(modifier = Modifier.width(84.dp)) {
+                    OutlinedTextField(
+                        value = " ", // 비어 있지 않아야 라벨 "색"이 제목 필드처럼 테두리 위로 떠오른다(보이지 않는 공백)
+                        onValueChange = {},
+                        readOnly = true,
+                        singleLine = true,
+                        label = { Text("색") },
+                        leadingIcon = {
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(themeColor)
+                                    .border(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
+                            )
+                        },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    // 텍스트 필드 위를 덮는 투명 탭 영역 — 필드가 포커스·키보드를 받지 않게 한다
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(themeColor)
-                            .border(1.5.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                            .matchParentSize()
+                            .clip(MaterialTheme.shapes.extraSmall)
                             .clickable { showColorPickerDialog = true }
                     )
                 }
