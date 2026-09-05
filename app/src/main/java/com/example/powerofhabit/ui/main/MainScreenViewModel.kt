@@ -187,15 +187,8 @@ class MainScreenViewModel @Inject constructor(
     _driveEmail.value = backupManager.signedInEmail()
   }
 
-  /** Google 계정 연결 해제. 백업/복원·이전이 진행 중이면 무시한다. 성공하면 계정 표시가 비고 다음 버튼이 다시 로그인을 요청한다. */
-  fun disconnectDrive() {
-    if (_driveBusy.value != null || _transferBusy.value) return
-    viewModelScope.launch {
-      val ok = backupManager.signOut()
-      refreshDriveAccount()
-      _transferMessages.emit(if (ok) "Google 계정 연결을 해제했습니다. Drive의 백업 파일은 그대로 남아 있습니다." else "연결 해제에 실패했습니다.")
-    }
-  }
+  /** Google 계정 연결 해제. 백업/복원과 같은 busy 상태를 점유해 그 사이 백업·복원·이전이 시작되지 않는다. */
+  fun disconnectDrive() = runDrive(DriveAction.SIGN_OUT)
 
   /** Drive appDataFolder로 DB 백업. 로그인이 없거나 권한이 회수됐으면 [driveSignInRequests]로 알린다. */
   fun backup() = runDrive(DriveAction.BACKUP)
@@ -207,13 +200,26 @@ class MainScreenViewModel @Inject constructor(
     if (_transferBusy.value) return
     if (!_driveBusy.compareAndSet(expect = null, update = action)) return // 동시 실행 방지
     viewModelScope.launch {
-      val outcome = try {
+      var outcome: DriveOutcome? = null
+      var signOutError: Throwable? = null
+      try {
         when (action) {
-          DriveAction.BACKUP -> backupManager.backupDatabase()
-          DriveAction.RESTORE -> backupManager.restoreDatabase()
+          DriveAction.BACKUP -> outcome = backupManager.backupDatabase()
+          DriveAction.RESTORE -> outcome = backupManager.restoreDatabase()
+          DriveAction.SIGN_OUT -> {
+            signOutError = backupManager.signOut().exceptionOrNull()
+            refreshDriveAccount()
+          }
         }
       } finally {
         _driveBusy.value = null
+      }
+      if (action == DriveAction.SIGN_OUT) {
+        _transferMessages.emit(
+          signOutError?.let { "연결 해제에 실패했습니다: ${backupManager.describeSignInError(it)}" }
+            ?: "Google 계정 연결을 해제했습니다. Drive의 백업 파일은 그대로 남아 있습니다."
+        )
+        return@launch
       }
       when (outcome) {
         DriveOutcome.SUCCESS -> if (action == DriveAction.BACKUP) _transferMessages.emit("백업이 완료되었습니다.")
@@ -222,6 +228,7 @@ class MainScreenViewModel @Inject constructor(
           if (action == DriveAction.BACKUP) "백업에 실패했습니다." else "복원에 실패했습니다. Drive에 올바른 백업 파일이 없습니다."
         )
         DriveOutcome.BACKUP_TOO_NEW -> _transferMessages.emit("백업이 더 새 버전의 앱에서 만들어졌습니다. 앱을 업데이트한 뒤 복원해 주세요.")
+        null -> Unit
       }
     }
   }

@@ -38,7 +38,7 @@ import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 /** 사용자가 고른 Drive 동작. 화면·ViewModel이 "무엇을 하려다 로그인이 필요해졌는지" 기억하는 데 쓴다. */
-enum class DriveAction { BACKUP, RESTORE }
+enum class DriveAction { BACKUP, RESTORE, /** Google 계정 연결 해제 */ SIGN_OUT }
 
 /** 백업/복원 결과. [NEEDS_SIGN_IN]이면 호출 측이 Google 로그인을 띄우고 성공 후 같은 동작을 다시 부른다. */
 enum class DriveOutcome { SUCCESS, NEEDS_SIGN_IN, FAILED, /** 백업 DB가 이 앱보다 새 스키마 — 앱 업데이트 필요 */ BACKUP_TOO_NEW }
@@ -110,15 +110,30 @@ class GoogleDriveBackupManager(private val context: Context) {
      * Google 계정 연결 해제(signOut). Drive의 백업 파일은 그대로 남고, 다음 백업/복원 버튼이 다시 로그인을 요청한다.
      * 권한이 서버에서 회수됐거나 다른 계정으로 바꾸고 싶을 때의 유일한 탈출구(#32 자체 리뷰 #3).
      */
-    suspend fun signOut(): Boolean = withContext(Dispatchers.IO) {
+    suspend fun signOut(): Result<Unit> = ioMutex.withLock { // 진행 중인 백업/복원·자동 백업이 끝난 뒤에 끊는다
         try {
-            com.google.android.gms.tasks.Tasks.await(signInClient().signOut())
-            true
+            signInClient().signOut().await()
+            Result.success(Unit)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             Log.w(TAG, "Google sign-out failed", e)
-            false
+            Result.failure(e)
         }
     }
+
+    /** GMS Task → 코루틴. 취소 가능하고 스레드를 막지 않는다(Tasks.await는 블로킹·비취소). */
+    private suspend fun <T> com.google.android.gms.tasks.Task<T>.await(): T =
+        kotlinx.coroutines.suspendCancellableCoroutine { cont ->
+            addOnCompleteListener { task ->
+                val e = task.exception
+                when {
+                    e != null -> cont.resumeWith(Result.failure(e))
+                    task.isCanceled -> cont.cancel()
+                    else -> cont.resumeWith(Result.success(task.result))
+                }
+            }
+        }
 
     /** 로그인 액티비티 결과 인텐트 → 계정. 실패는 [describeSignInError]로 사용자 문구를 만든다. */
     fun accountFromSignInResult(data: Intent?): Result<GoogleSignInAccount> = try {

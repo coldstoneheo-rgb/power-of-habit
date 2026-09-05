@@ -92,7 +92,7 @@ fun MainScreen(
                 when (action) {
                     DriveAction.BACKUP -> viewModel.backup()
                     DriveAction.RESTORE -> viewModel.restore() // 로그인 직전에 확인 다이얼로그를 이미 통과했다
-                    null -> Unit
+                    DriveAction.SIGN_OUT, null -> Unit
                 }
             },
             onFailure = { e ->
@@ -609,6 +609,8 @@ internal fun MainScreenContent(
                             text = driveEmail?.let { "연결된 계정: $it" } ?: "연결된 Google 계정 없음 — 백업/복원 버튼을 누르면 로그인을 요청합니다.",
                             color = HabitTheme.colors.textSecondary,
                             style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f)
                         )
                         if (driveEmail != null) {
@@ -631,6 +633,7 @@ internal fun MainScreenContent(
                                 text = when {
                                     signingIn -> "Google 로그인 중..."
                                     driveBusy == DriveAction.BACKUP -> "데이터 백업 중..."
+                                    driveBusy == DriveAction.SIGN_OUT -> "Google 계정 연결 해제 중..."
                                     else -> "데이터 복원 중..."
                                 },
                                 color = MaterialTheme.colorScheme.onSurface,
