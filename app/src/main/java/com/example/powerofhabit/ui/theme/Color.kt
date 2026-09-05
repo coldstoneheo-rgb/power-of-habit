@@ -78,11 +78,6 @@ val PremiumMatteColors = listOf(
 /**
  * 새 습관의 기본 색을 팔레트에서 무작위로 고른다(hex). 매번 같은 파란색으로 시작하면 습관들이 구분되지 않아
  * (실기기 피드백 2026-09-05) 등록 화면이 열릴 때 한 번 뽑고, 사용자는 색 필드에서 바꿀 수 있다.
- * [exclude]에 이미 쓰는 색을 넘기면 가능한 한 그 색은 피한다(팔레트가 다 쓰였으면 무시).
  */
-fun randomHabitColorHex(exclude: Collection<String> = emptyList(), random: kotlin.random.Random = kotlin.random.Random.Default): String {
-    val used = exclude.map { it.uppercase() }.toSet()
-    val candidates = PremiumMatteColors.map { it.first }.filter { it.uppercase() !in used }
-        .ifEmpty { PremiumMatteColors.map { it.first } }
-    return candidates[random.nextInt(candidates.size)]
-}
+fun randomHabitColorHex(random: kotlin.random.Random = kotlin.random.Random.Default): String =
+    PremiumMatteColors[random.nextInt(PremiumMatteColors.size)].first

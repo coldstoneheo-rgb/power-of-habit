@@ -27,13 +27,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.widget.Toast
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.powerofhabit.backup.DriveAction
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
 import com.example.powerofhabit.domain.RecordOutcome
@@ -60,13 +60,57 @@ fun MainScreen(
     val isDarkMode by viewModel.isDarkMode.collectAsStateWithLifecycle()
     val isDateDescending by viewModel.isDateDescending.collectAsStateWithLifecycle()
     val transferBusy by viewModel.transferBusy.collectAsStateWithLifecycle()
-    val scope = rememberCoroutineScope()
+    val driveBusy by viewModel.driveBusy.collectAsStateWithLifecycle()
+    val driveEmail by viewModel.driveEmail.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val backupManager = remember { com.example.powerofhabit.backup.GoogleDriveBackupManager(context) }
-    // 파일 이전 결과는 ViewModel 이벤트로 받아 현재(살아 있는) 액티비티 컨텍스트로 Toast를 띄운다.
+    // 파일 이전·Drive 결과는 ViewModel 이벤트로 받아 현재(살아 있는) 액티비티 컨텍스트로 Toast를 띄운다.
     LaunchedEffect(viewModel) {
         viewModel.transferMessages.collect { message ->
             Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // Google 로그인: ViewModel이 "로그인이 필요하다"고 알리면 여기서 띄우고, 성공하면 멈춘 동작을 다시 부른다.
+    // pendingDriveAction·signingIn은 로그인 화면 뒤에서 프로세스가 죽어도 살아 있어야 결과를 이어받는다.
+    var pendingDriveAction by rememberSaveable { mutableStateOf<String?>(null) }
+    var signingIn by rememberSaveable { mutableStateOf(false) }
+    val signInLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        signingIn = false
+        val action = pendingDriveAction?.let { name -> DriveAction.entries.firstOrNull { it.name == name } }
+        pendingDriveAction = null
+        if (result.resultCode == android.app.Activity.RESULT_CANCELED && result.data == null) {
+            Toast.makeText(context, "Google 로그인이 취소되었습니다", Toast.LENGTH_SHORT).show()
+            return@rememberLauncherForActivityResult
+        }
+        backupManager.accountFromSignInResult(result.data).fold(
+            onSuccess = { account ->
+                viewModel.refreshDriveAccount()
+                Toast.makeText(context, "Google 계정 연결: ${account.email ?: ""}", Toast.LENGTH_SHORT).show()
+                when (action) {
+                    DriveAction.BACKUP -> viewModel.backup()
+                    DriveAction.RESTORE -> viewModel.restore() // 로그인 직전에 확인 다이얼로그를 이미 통과했다
+                    null -> Unit
+                }
+            },
+            onFailure = { e ->
+                Toast.makeText(context, backupManager.describeSignInError(e), Toast.LENGTH_LONG).show()
+            }
+        )
+    }
+    LaunchedEffect(viewModel) {
+        viewModel.driveSignInRequests.collect { action ->
+            if (signingIn) return@collect
+            signingIn = true
+            pendingDriveAction = action.name
+            Toast.makeText(
+                context,
+                if (action == DriveAction.RESTORE) "복원하려면 Google 계정 인증이 필요합니다." else "백업하려면 Google 계정 인증이 필요합니다.",
+                Toast.LENGTH_SHORT
+            ).show()
+            signInLauncher.launch(backupManager.signInClient().signInIntent)
         }
     }
 
@@ -107,6 +151,11 @@ fun MainScreen(
                     isTransferring = transferBusy,
                     onExportTo = { uri -> viewModel.exportTo(uri) },
                     onImportFrom = { uri -> viewModel.importFrom(uri) },
+                    driveBusy = driveBusy,
+                    driveEmail = driveEmail,
+                    signingIn = signingIn,
+                    onBackup = { viewModel.backup() },
+                    onRestore = { viewModel.restore() },
                     modifier = modifier
                 )
             }
@@ -144,6 +193,14 @@ internal fun MainScreenContent(
     onExportTo: (Uri) -> Unit = {},
     /** JSON 가져오기(병합): 원본 Uri. */
     onImportFrom: (Uri) -> Unit = {},
+    /** 진행 중인 Drive 동작(ViewModel 상태). null이면 없음. */
+    driveBusy: DriveAction? = null,
+    /** 연결된 Google 계정 이메일(표시용). */
+    driveEmail: String? = null,
+    /** Google 로그인 화면이 떠 있는 동안 true — 버튼 중복 탭 방지. */
+    signingIn: Boolean = false,
+    onBackup: () -> Unit = {},
+    onRestore: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val today = remember { LocalDate.now() }
@@ -160,11 +217,10 @@ internal fun MainScreenContent(
     var showValueDialogForHabit by remember { mutableStateOf<Pair<HabitEntity, LocalDate>?>(null) }
     // 성공 폭죽을 재생할 셀 (habitId, "YYYY-MM-DD"). 애니메이션이 끝나면 null.
     var burstCell by remember { mutableStateOf<Pair<Int, String>?>(null) }
-    var showBackupSettings by remember { mutableStateOf(false) }
+    // 설정 다이얼로그는 Google 로그인 화면 뒤에서 프로세스가 죽었다 돌아와도 열려 있어야 진행 표시가 보인다.
+    var showBackupSettings by rememberSaveable { mutableStateOf(false) }
     var showAddTypeModal by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val backupManager = remember { com.example.powerofhabit.backup.GoogleDriveBackupManager(context) }
 
     // 파일 이전(JSON). 런처는 다이얼로그 밖(항상 컴포지션에 있는 곳)에 둬야 액티비티 재생성 뒤에도 결과를 받는다.
     // 진행 상태·결과 메시지는 ViewModel이 든다(회전 시 유실 방지).
@@ -175,73 +231,9 @@ internal fun MainScreenContent(
         ActivityResultContracts.OpenDocument()
     ) { uri -> if (uri != null) onImportFrom(uri) }
 
-    // Google Drive 백업/복원. 로그인돼 있지 않으면 버튼을 누른 시점에 Google 인증을 요청하고, 성공하면 보류한 동작을 이어서 실행한다.
-    // (예전에는 로그인 화면이 없어 두 버튼이 항상 "실패"로 끝났다 — 실기기 피드백 2026-09-05)
-    var isBackingUp by remember { mutableStateOf(false) }
-    var isRestoring by remember { mutableStateOf(false) }
-    var driveEmail by remember { mutableStateOf(backupManager.signedInEmail()) }
-    var pendingDriveAction by rememberSaveable { mutableStateOf<String?>(null) } // "BACKUP" | "RESTORE"
+    // Google Drive 백업/복원(실행·진행 상태는 ViewModel, 로그인 요청은 MainScreen). 예전에는 로그인 화면이 없어 두 버튼이 항상 실패했다.
+    val driveLocked = driveBusy != null || signingIn || isTransferring
     var showRestoreConfirm by remember { mutableStateOf(false) }
-
-    fun runBackup() {
-        isBackingUp = true
-        scope.launch {
-            val success = backupManager.backupDatabase()
-            isBackingUp = false
-            Toast.makeText(
-                context,
-                if (success) "백업이 완료되었습니다." else "백업에 실패했습니다.",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
-
-    fun runRestore() {
-        isRestoring = true
-        scope.launch {
-            // 성공하면 restoreDatabase가 프로세스를 재시작하므로 아래 코드는 실패 경로에서만 실행된다.
-            val success = backupManager.restoreDatabase()
-            isRestoring = false
-            if (success) {
-                showBackupSettings = false
-            } else {
-                Toast.makeText(context, "복원에 실패했습니다. 백업 파일을 확인해 주세요.", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    fun runDrive(action: String) = if (action == "RESTORE") runRestore() else runBackup()
-
-    val signInLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        val action = pendingDriveAction
-        pendingDriveAction = null
-        backupManager.accountFromSignInResult(result.data).fold(
-            onSuccess = { account ->
-                driveEmail = account.email
-                Toast.makeText(context, "Google 계정 연결: ${account.email ?: ""}", Toast.LENGTH_SHORT).show()
-                if (action != null) runDrive(action)
-            },
-            onFailure = { e ->
-                Toast.makeText(context, backupManager.describeSignInError(e), Toast.LENGTH_LONG).show()
-            }
-        )
-    }
-
-    fun requestDrive(action: String) {
-        if (backupManager.isGoogleSignedIn()) {
-            runDrive(action)
-            return
-        }
-        pendingDriveAction = action
-        Toast.makeText(
-            context,
-            if (action == "RESTORE") "복원하려면 Google 계정 인증이 필요합니다." else "백업하려면 Google 계정 인증이 필요합니다.",
-            Toast.LENGTH_SHORT
-        ).show()
-        signInLauncher.launch(backupManager.signInClient().signInIntent)
-    }
 
     if (showRestoreConfirm) {
         AlertDialog(
@@ -256,7 +248,7 @@ internal fun MainScreenContent(
                 )
             },
             confirmButton = {
-                TextButton(onClick = { showRestoreConfirm = false; requestDrive("RESTORE") }) {
+                TextButton(onClick = { showRestoreConfirm = false; onRestore() }) {
                     Text("복원", color = HabitOrange, fontWeight = FontWeight.Bold)
                 }
             },
@@ -536,7 +528,7 @@ internal fun MainScreenContent(
     if (showBackupSettings) {
         AlertDialog(
             onDismissRequest = { 
-                if (!isBackingUp && !isRestoring && !isTransferring) showBackupSettings = false
+                if (!driveLocked) showBackupSettings = false
             },
             title = {
                 Text(
@@ -608,7 +600,7 @@ internal fun MainScreenContent(
                         style = MaterialTheme.typography.labelSmall
                     )
 
-                    if (isBackingUp || isRestoring) {
+                    if (driveBusy != null || signingIn) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Center,
@@ -617,7 +609,11 @@ internal fun MainScreenContent(
                             CircularProgressIndicator(color = HabitOrange, modifier = Modifier.size(24.dp))
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = if (isBackingUp) "데이터 백업 중..." else "데이터 복원 중...",
+                                text = when {
+                                    signingIn -> "Google 로그인 중..."
+                                    driveBusy == DriveAction.BACKUP -> "데이터 백업 중..."
+                                    else -> "데이터 복원 중..."
+                                },
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontSize = 14.sp
                             )
@@ -636,23 +632,23 @@ internal fun MainScreenContent(
                                 val stamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
                                 exportLauncher.launch("power-of-habit-$stamp.json")
                             },
-                            enabled = !isBackingUp && !isRestoring && !isTransferring,
+                            enabled = !driveLocked,
                             border = BorderStroke(1.dp, HabitTheme.colors.lineStrong),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = HabitTheme.colors.textPrimary),
                             contentPadding = PaddingValues(horizontal = Space.s2, vertical = Space.s2),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("파일로 내보내기", style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                            Text("파일로 내보내기", style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                         OutlinedButton(
                             onClick = { importLauncher.launch(arrayOf("application/json", "*/*")) },
-                            enabled = !isBackingUp && !isRestoring && !isTransferring,
+                            enabled = !driveLocked,
                             border = BorderStroke(1.dp, HabitTheme.colors.lineStrong),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = HabitTheme.colors.textPrimary),
                             contentPadding = PaddingValues(horizontal = Space.s2, vertical = Space.s2),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("파일에서 가져오기", style = MaterialTheme.typography.labelMedium, maxLines = 1, softWrap = false, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                            Text("파일에서 가져오기", style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                     Text(
@@ -668,8 +664,8 @@ internal fun MainScreenContent(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Button(
-                        onClick = { requestDrive("BACKUP") },
-                        enabled = !isBackingUp && !isRestoring && !isTransferring,
+                        onClick = onBackup,
+                        enabled = !driveLocked,
                         colors = ButtonDefaults.buttonColors(containerColor = HabitOrange),
                         modifier = Modifier.weight(1f)
                     ) {
@@ -678,7 +674,7 @@ internal fun MainScreenContent(
 
                     Button(
                         onClick = { showRestoreConfirm = true },
-                        enabled = !isBackingUp && !isRestoring && !isTransferring,
+                        enabled = !driveLocked,
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
                         modifier = Modifier.weight(1f).border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large)
                     ) {
@@ -689,7 +685,7 @@ internal fun MainScreenContent(
             dismissButton = {
                 TextButton(
                     onClick = { showBackupSettings = false },
-                    enabled = !isBackingUp && !isRestoring && !isTransferring
+                    enabled = !driveLocked
                 ) {
                     Text("닫기", color = HabitTheme.colors.textSecondary)
                 }

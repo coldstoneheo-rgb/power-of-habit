@@ -44,6 +44,7 @@ import com.example.powerofhabit.ui.theme.HabitTheme
 import com.example.powerofhabit.ui.theme.PowerOfHabitTheme
 import com.example.powerofhabit.ui.theme.Space
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -97,6 +98,8 @@ class WidgetConfigActivity : ComponentActivity() {
                 // 방금 추가된 위젯은 Glance 내부 매핑에 아직 없을 수 있으므로 provider 기준으로 이 인스턴스만 즉시 그린다.
                 HabitWidgets.updateOne(this@WidgetConfigActivity, appWidgetId)
                 setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId))
+            } catch (e: CancellationException) {
+                throw e // 액티비티가 먼저 닫힌 것 — 실패가 아니다
             } catch (e: Exception) {
                 Log.w(TAG, "widget configure failed id=$appWidgetId", e)
                 Toast.makeText(this@WidgetConfigActivity, "위젯을 설정할 수 없습니다. 위젯을 지우고 다시 추가해 주세요.", Toast.LENGTH_LONG).show()

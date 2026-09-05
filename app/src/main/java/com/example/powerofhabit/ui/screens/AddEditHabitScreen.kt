@@ -16,8 +16,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -130,7 +135,7 @@ fun AddEditHabitScreen(
         try {
             Color(android.graphics.Color.parseColor(selectedThemeHex))
         } catch (e: Exception) {
-            Color(0xFF42A5F5)
+            PremiumMatteColors.first().second
         }
     }
     
@@ -325,13 +330,32 @@ fun AddEditHabitScreen(
                     singleLine = true
                 )
 
-                // 색 필드: 제목과 같은 outlined 필드 모양(테두리 위 라벨)에 라운드 스퀘어 스와치. 탭하면 팔레트.
-                Box(modifier = Modifier.width(84.dp)) {
-                    OutlinedTextField(
-                        value = " ", // 비어 있지 않아야 라벨 "색"이 제목 필드처럼 테두리 위로 떠오른다(보이지 않는 공백)
-                        onValueChange = {},
-                        readOnly = true,
+                // 색 필드: 제목과 같은 outlined 필드 장식(테두리 위 라벨 "색")만 빌려 쓰고 안에는 스와치 하나.
+                // 실제 텍스트 입력이 없으므로 접근성에는 "색 선택" 버튼 하나로만 보인다.
+                val colorFieldInteraction = remember { MutableInteractionSource() }
+                val colorFieldColors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                )
+                Box(
+                    modifier = Modifier
+                        .width(84.dp)
+                        .clip(OutlinedTextFieldDefaults.shape)
+                        .clickable(
+                            interactionSource = colorFieldInteraction,
+                            indication = null,
+                            role = Role.Button,
+                            onClickLabel = "색 선택"
+                        ) { showColorPickerDialog = true }
+                        .semantics(mergeDescendants = true) { contentDescription = "색 $selectedThemeHex" }
+                ) {
+                    OutlinedTextFieldDefaults.DecorationBox(
+                        value = " ", // 비어 있지 않아야 라벨이 테두리 위로 떠오른다
+                        innerTextField = {},
+                        enabled = true,
                         singleLine = true,
+                        visualTransformation = VisualTransformation.None,
+                        interactionSource = colorFieldInteraction,
                         label = { Text("색") },
                         leadingIcon = {
                             Box(
@@ -342,18 +366,15 @@ fun AddEditHabitScreen(
                                     .border(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
                             )
                         },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    // 텍스트 필드 위를 덮는 투명 탭 영역 — 필드가 포커스·키보드를 받지 않게 한다
-                    Box(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .clip(MaterialTheme.shapes.extraSmall)
-                            .clickable { showColorPickerDialog = true }
+                        colors = colorFieldColors,
+                        container = {
+                            OutlinedTextFieldDefaults.Container(
+                                enabled = true,
+                                isError = false,
+                                interactionSource = colorFieldInteraction,
+                                colors = colorFieldColors
+                            )
+                        }
                     )
                 }
             }
