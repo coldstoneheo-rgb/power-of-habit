@@ -144,6 +144,8 @@ class DefaultDataRepositoryTest {
             return id.toLong()
         }
 
+        override suspend fun insertRecords(records: List<HabitRecordEntity>): List<Long> = records.map { insertRecord(it) }
+
         override suspend fun updateRecordStatus(recordId: Int, status: String) {
             val current = recordsFlow.value.toMutableList()
             val index = current.indexOfFirst { it.recordId == recordId }

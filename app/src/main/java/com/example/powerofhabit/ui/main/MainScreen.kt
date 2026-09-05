@@ -1,5 +1,8 @@
 package com.example.powerofhabit.ui.main
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -36,7 +39,9 @@ import com.example.powerofhabit.domain.RecordOutcomes
 import com.example.powerofhabit.ui.components.widgets.CheckWidget
 import com.example.powerofhabit.ui.theme.HabitOrange
 import com.example.powerofhabit.ui.theme.HabitTheme
+import com.example.powerofhabit.ui.theme.Space
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -89,6 +94,8 @@ fun MainScreen(
                     isDateDescending = isDateDescending,
                     onToggleDarkMode = { viewModel.toggleDarkMode() },
                     onToggleDateDescending = { viewModel.toggleDateDescending() },
+                    onExportTo = { uri, onResult -> viewModel.exportTo(uri, onResult) },
+                    onImportFrom = { uri, onResult -> viewModel.importFrom(uri, onResult) },
                     modifier = modifier
                 )
             }
@@ -120,6 +127,10 @@ internal fun MainScreenContent(
     isDateDescending: Boolean,
     onToggleDarkMode: () -> Unit,
     onToggleDateDescending: () -> Unit,
+    /** JSON 내보내기: (대상 Uri, 결과 메시지 콜백). */
+    onExportTo: (Uri, (String) -> Unit) -> Unit = { _, _ -> },
+    /** JSON 가져오기(병합): (원본 Uri, 결과 메시지 콜백). */
+    onImportFrom: (Uri, (String) -> Unit) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier
 ) {
     val today = remember { LocalDate.now() }
@@ -139,6 +150,29 @@ internal fun MainScreenContent(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val backupManager = remember { com.example.powerofhabit.backup.GoogleDriveBackupManager(context) }
+
+    // 파일 이전(JSON). 런처는 다이얼로그 밖(항상 컴포지션에 있는 곳)에 둬야 액티비티 재생성 뒤에도 결과를 받는다.
+    var isTransferring by remember { mutableStateOf(false) }
+    val onTransferResult: (String) -> Unit = { message ->
+        isTransferring = false
+        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+    }
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri != null) {
+            isTransferring = true
+            onExportTo(uri, onTransferResult)
+        }
+    }
+    val importLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            isTransferring = true
+            onImportFrom(uri, onTransferResult)
+        }
+    }
 
     if (showAddTypeModal) {
         AlertDialog(
@@ -532,6 +566,43 @@ internal fun MainScreenContent(
                             )
                         }
                     }
+
+                    Divider(color = HabitTheme.colors.lineHair, thickness = 1.dp)
+
+                    // 로컬 파일 이전(JSON) — 기기 교체·백업용. 가져오기는 덮어쓰지 않는 병합(data/transfer/HabitTransfer).
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(Space.s2)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                val stamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
+                                exportLauncher.launch("power-of-habit-$stamp.json")
+                            },
+                            enabled = !isBackingUp && !isRestoring && !isTransferring,
+                            border = BorderStroke(1.dp, HabitTheme.colors.lineStrong),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = HabitTheme.colors.textPrimary),
+                            contentPadding = PaddingValues(horizontal = Space.s2, vertical = Space.s2),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("파일로 내보내기 (JSON)", style = MaterialTheme.typography.labelMedium, maxLines = 1)
+                        }
+                        OutlinedButton(
+                            onClick = { importLauncher.launch(arrayOf("application/json", "*/*")) },
+                            enabled = !isBackingUp && !isRestoring && !isTransferring,
+                            border = BorderStroke(1.dp, HabitTheme.colors.lineStrong),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = HabitTheme.colors.textPrimary),
+                            contentPadding = PaddingValues(horizontal = Space.s2, vertical = Space.s2),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("파일에서 가져오기 (JSON)", style = MaterialTheme.typography.labelMedium, maxLines = 1)
+                        }
+                    }
+                    Text(
+                        text = if (isTransferring) "파일 처리 중..." else "가져오기는 현재 데이터를 지우지 않고 병합합니다. 같은 습관·같은 날짜의 기록은 기존 것을 유지합니다.",
+                        color = HabitTheme.colors.textSecondary,
+                        style = MaterialTheme.typography.labelSmall
+                    )
                 }
             },
             confirmButton = {

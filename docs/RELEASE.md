@@ -58,14 +58,37 @@ applicationId와 서명 키가 바뀌었으므로 Drive API용 Android OAuth 클
 - 가장 빠른 경로: `adb install -r app/build/outputs/apk/debug/app-debug.apk` (USB 또는 무선 디버깅).
 - Google Drive 복사는 옵트인: `local.properties`에 `google.drive.apk.dir=<경로>`를 넣은 머신에서만 동작한다.
 
-## 4. 기존 설치 데이터 이전
-applicationId가 바뀌었으므로 `com.example.powerofhabit`로 설치된 기존 앱과는 **별개 앱**이다.
-**현재는 이전 수단이 없다.** Google Drive 백업/복원은 로그인 흐름이 없어 동작하지 않고(§0-4), CSV 내보내기만 있고 가져오기가 없다.
-따라서 **예전 앱을 지우지 말 것.** 후속 과제로 (a) 로컬 파일 내보내기/가져오기(ZIP) 또는 (b) Google 로그인 + Drive 백업 복구 중 하나를 먼저 넣고 이전한다.
+## 4. 데이터 이전·백업
+applicationId가 바뀌었으므로 `com.example.powerofhabit`로 설치된 기존(옛) 앱과는 **별개 앱**이다. Google Drive 백업/복원은 로그인 흐름이 없어 동작하지 않는다(§0-4).
+
+### 4-1. JSON 내보내기/가져오기 — 새 앱 ↔ 새 앱 (기기 교체·수동 백업용) ✅ 구현됨
+설정 다이얼로그(홈 우상단 톱니) 하단의 **"파일로 내보내기 (JSON)" / "파일에서 가져오기 (JSON)"**. 시스템 파일 선택기(SAF)로 위치를 고르므로 권한이 필요 없다.
+- 내보내기: 습관·기록·뱃지 전부를 `power-of-habit-<yyyyMMdd>.json`(formatVersion 1)으로 쓴다. 코드: `data/transfer/HabitTransfer.kt`(순수 Kotlin, JVM 테스트) + `TransferManager.kt`(SAF I/O).
+- 가져오기는 **덮어쓰지 않는 병합**이다.
+  - 습관: `(title, createdAt)`이 같으면 기존 습관으로 보고 id를 재사용, 아니면 새 습관으로 추가(id 재매핑).
+  - 기록: `(habitId, date)` 기준. 파일 안 중복은 recordId가 큰 것을 택하고, **기존 DB에 같은 날 기록이 있으면 기존 것을 유지**한다. status 문자열은 해석 없이 그대로 옮긴다.
+  - 뱃지: badgeId가 없는 것만 추가. 가져온 뒤 뱃지 재판정·Drive 자동 백업은 실행하지 않는다(다음 체크 때 정상 경로로 처리).
+  - 트랜잭션이 아니므로 중간 실패 시 일부만 들어갈 수 있으나, 규칙이 멱등이라 같은 파일을 다시 가져오면 나머지만 채워진다.
+- 파일의 `formatVersion`이 앱이 아는 값보다 크면 거부한다(앱 업데이트 후 재시도).
+- 기기 교체 절차: 옛 기기 새 앱에서 내보내기 → 파일 전달(Drive·메신저 등) → 새 기기 새 앱에서 가져오기.
+
+### 4-2. 옛 앱(`com.example.powerofhabit`) → 새 앱 — **미구현, 후속**
+옛 앱에는 §4-1의 JSON 내보내기가 없고, 옛 앱을 재빌드·재배포하지 않는다(서명 키가 다르면 갱신 불가 = 데이터 소실 경로. 결정 기록: `docs/decisions/2026-09-05-value-3state-widget-tap-migration.md` 결정 3 — widget-fixes 브랜치에서 들어오는 문서).
+- 옛 앱이 **debug 빌드**면 DB 파일을 뽑을 수는 있다:
+  ```
+  adb shell am force-stop com.example.powerofhabit
+  adb shell run-as com.example.powerofhabit ls databases        # 목록이 보이면 debug 빌드
+  adb exec-out run-as com.example.powerofhabit cat databases/power_of_habit.db     > old.db
+  adb exec-out run-as com.example.powerofhabit cat databases/power_of_habit.db-wal > old.db-wal   # 있을 때만
+  adb exec-out run-as com.example.powerofhabit cat databases/power_of_habit.db-shm > old.db-shm   # 있을 때만
+  ```
+  (`exec-out`은 바이너리를 그대로 전달한다 — `adb shell ... >`는 Windows에서 줄바꿈 변환으로 DB가 깨질 수 있다. DB 파일명 `power_of_habit.db`는 `di/DatabaseModule.kt` 기준. release 빌드면 `run-as`가 거부되며 루팅 없이는 꺼낼 수 없다.)
+- 그러나 이 파일은 SQLite이고 **새 앱은 DB 파일 가져오기를 지원하지 않는다**(JSON만). 따라서 지금은 "뽑아 보관"까지만 가능하다.
+- 후속 과제(택1): (a) 새 앱에 **DB 파일 가져오기**(SQLite 헤더·`user_version ≤ 현재`·`integrity_check` 통과 시에만, 기존 DB는 `pre_restore_<ts>.db`로 보존, 경고 다이얼로그) 추가, 또는 (b) PC에서 `old.db`를 §4-1 JSON 형식으로 변환하는 스크립트. 둘 중 하나가 들어가기 전까지 **옛 앱을 지우지 말 것.**
 
 ## 5. 체크리스트 (첫 내부 테스트 전)
 - [ ] `release.jks` + `keystore.properties` 준비, 백업 완료
 - [ ] `./gradlew.bat bundleRelease` 성공, 서명 확인(`apksigner verify` 또는 Play 업로드 통과)
-- [ ] 릴리스 빌드 실기기 설치 후 스모크: 습관 추가·체크·상세·위젯 배치·CSV 내보내기 (백업/복원은 §0-4 해결 전까지 제외)
+- [ ] 릴리스 빌드 실기기 설치 후 스모크: 습관 추가·체크·상세·위젯 배치·CSV 내보내기·JSON 내보내기/가져오기(§4-1) (백업/복원은 §0-4 해결 전까지 제외)
 - [ ] Play Console 앱 생성·내부 테스터 등록
 - [ ] 첫 AAB 수동 업로드 → 이후 `publishReleaseBundle`

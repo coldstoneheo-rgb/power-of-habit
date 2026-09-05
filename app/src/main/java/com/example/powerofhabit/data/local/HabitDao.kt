@@ -43,6 +43,10 @@ interface HabitDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertRecord(record: HabitRecordEntity): Long
 
+    /** 가져오기(병합) 전용 일괄 삽입. 중복 여부는 호출 측(HabitTransfer.plan)이 (habitId,date)로 미리 걸러낸다. */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertRecords(records: List<HabitRecordEntity>): List<Long>
+
     @Query("UPDATE HabitRecords SET status = :status WHERE recordId = :recordId")
     suspend fun updateRecordStatus(recordId: Int, status: String)
 
