@@ -31,6 +31,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
+import com.example.powerofhabit.domain.RecordOutcomes
 import com.example.powerofhabit.domain.stats.HabitFrequency
 import com.example.powerofhabit.domain.stats.HabitStatsCalculator
 import com.example.powerofhabit.ui.components.widgets.*
@@ -80,15 +81,27 @@ fun HabitDetailScreen(
                 )
             }
             is HabitDetailUiState.Error -> {
+                // 위젯 딥링크로 삭제된 습관에 들어온 경우가 대부분이다. 짧게 알리고 자동으로 돌아간다.
+                LaunchedEffect(Unit) {
+                    kotlinx.coroutines.delay(1500)
+                    onBack()
+                }
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "Error: ${(state as HabitDetailUiState.Error).throwable.localizedMessage}",
-                            color = Color.Red
+                            text = "삭제되었거나 찾을 수 없는 습관입니다",
+                            color = HabitTheme.colors.textPrimary,
+                            style = MaterialTheme.typography.titleMedium
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(Space.s2))
+                        Text(
+                            text = "목록으로 돌아갑니다",
+                            color = HabitTheme.colors.textSecondary,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(Space.s4))
                         Button(onClick = onBack, colors = ButtonDefaults.buttonColors(containerColor = HabitTheme.colors.bgLayer3)) {
-                            Text("Back", color = HabitTheme.colors.textPrimary)
+                            Text("돌아가기", color = HabitTheme.colors.textPrimary)
                         }
                     }
                 }
@@ -140,15 +153,15 @@ private fun HabitDetailContent(
     val maxStreak = stats.maxStreak
     val progress = stats.monthProgress
 
-    // 4) Calendar records map
-    val calendarRecords = remember(records) {
-        records.associate {
+    // 4) Calendar records map — 표시 상태(RecordOutcome 이름). 기록이 있는데 NONE이면 캘린더는 "실패"로 그린다.
+    val calendarRecords = remember(records, habit.habitType, habit.targetValue) {
+        records.mapNotNull { r ->
             try {
-                LocalDate.parse(it.date) to it.status
+                LocalDate.parse(r.date) to RecordOutcomes.of(habit.habitType, r.status, r.inputValue, habit.targetValue).name
             } catch (e: Exception) {
-                LocalDate.now() to "NONE"
+                null
             }
-        }
+        }.toMap()
     }
     
     // 5) Heatmap calculation
@@ -605,13 +618,9 @@ private fun HabitDetailContent(
                 TextButton(
                     onClick = {
                         val value = inputValue.toFloatOrNull()
+                        // 수치형은 값이 곧 상태다(RecordOutcomes.statusForValue). 삭제/건너뜀 선택만 그대로 둔다.
                         val computedStatus = if (habit.habitType == "VALUE" && status != "NONE" && status != "SKIPPED") {
-                            val targetVal = habit.targetValue
-                            if (targetVal != null) {
-                                if (value != null && value >= targetVal) "COMPLETED" else "FAILED"
-                            } else {
-                                status
-                            }
+                            RecordOutcomes.statusForValue(value, habit.targetValue)
                         } else {
                             status
                         }

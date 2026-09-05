@@ -92,6 +92,7 @@
 | `accent.habit` | 습관별 36색(기존 `PremiumMatteColors`) | 이름·완료 마크·차트·섹션 제목 |
 | `accent.habit.dim` | accent @ 45% | 바 트랙 위 비강조 구간, 이력 막대 |
 | `accent.habit.glow` | accent @ 12% | 선택 셀 배경, 캘린더 오늘 |
+| `accent.habit.partial` | `lerp(accent, text.secondary, 0.6)` + AA 보정 | 수치형 "수행했지만 기준 미달" — 성공(accent)·미수행(text.disabled)과 3상태 구분. 위젯은 다크 값 고정 |
 | `status.success` | accent.habit | 별도 초록 쓰지 않음(색 = 습관) |
 | `status.skip` | `#9A9AA3` | 건너뜀 `–` |
 | `status.fail` | `#D26A6A` | 사용자가 "실패"로 표시한 날(캘린더). 저채도 적색, 시스템 오류색과 구분 |

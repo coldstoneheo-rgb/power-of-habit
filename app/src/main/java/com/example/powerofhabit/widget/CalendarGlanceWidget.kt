@@ -39,6 +39,7 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.example.powerofhabit.R
 import com.example.powerofhabit.data.local.HabitEntity
+import com.example.powerofhabit.domain.RecordOutcomes
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 import java.time.YearMonth
@@ -62,7 +63,7 @@ class CalendarGlanceWidget : GlanceAppWidget() {
         val statusByDate = habit?.let { h ->
             WidgetCalendarModel.statusByDate(
                 repo.getRecordsForHabitBetween(h.habitId, month.atDay(1).toString(), month.atEndOfMonth().toString())
-                    .first().map { it.date to it.status }
+                    .first().map { it.date to RecordOutcomes.of(h.habitType, it.status, it.inputValue, h.targetValue).name }
             )
         }.orEmpty()
         val grid = WidgetCalendarModel.monthGrid(month, statusByDate)
@@ -119,7 +120,7 @@ private fun CalendarContent(habit: HabitEntity?, month: YearMonth, grid: List<Li
                         if (cell != null) {
                             val isToday = month.atDay(cell.day) == today
                             val (color, dotSize) = dotStyle(cell.status, accent)
-                            val ring = isToday && cell.status != "COMPLETED"
+                            val ring = isToday && cell.status != "SUCCESS"
                             Image(
                                 provider = ImageProvider(if (ring) R.drawable.widget_ring else R.drawable.widget_dot),
                                 contentDescription = null,
@@ -134,9 +135,11 @@ private fun CalendarContent(habit: HabitEntity?, month: YearMonth, grid: List<Li
     }
 }
 
+/** status = RecordOutcome 이름. 성공 큰 습관색 / 기준미달 중간 어두운 습관색 / 미수행(기록 있음) 작은 적색 / 건너뜀 작은 회색 / 기록 없음 희미 */
 private fun dotStyle(status: String?, accent: Color): Pair<Color, Dp> = when (status) {
-    "COMPLETED" -> accent to 9.dp
-    "FAILED" -> HabitWidgets.Colors.fail to 5.dp
+    "SUCCESS" -> accent to 9.dp
+    "PARTIAL" -> HabitWidgets.Colors.partial(accent) to 7.dp
+    "NONE" -> HabitWidgets.Colors.fail to 5.dp
     "SKIPPED" -> HabitWidgets.Colors.skip to 5.dp
     else -> HabitWidgets.Colors.dotEmpty to 3.dp
 }

@@ -38,6 +38,8 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.example.powerofhabit.R
 import com.example.powerofhabit.data.RecordSideEffects
+import com.example.powerofhabit.domain.RecordOutcome
+import com.example.powerofhabit.domain.RecordOutcomes
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
 import kotlinx.coroutines.flow.first
@@ -90,8 +92,9 @@ private fun CheckContent(habit: HabitEntity?, record: HabitRecordEntity?, render
     }
 
     val accent = HabitWidgets.parseThemeColor(habit.themeColor)
-    val status = record?.status
-    val completed = status == "COMPLETED"
+    // 표시 상태는 값·목표로 판정(결정 기록 2026-09-05 결정 1). status는 캐시.
+    val outcome = RecordOutcomes.of(habit.habitType, record?.status, record?.inputValue, habit.targetValue)
+    val completed = outcome == RecordOutcome.SUCCESS
     val isValue = habit.habitType == "VALUE"
     val action = if (isValue) {
         actionStartActivity(HabitWidgets.openHabitIntent(context, habit.habitId))
@@ -110,10 +113,10 @@ private fun CheckContent(habit: HabitEntity?, record: HabitRecordEntity?, render
                     value % 1f == 0f -> value.toInt().toString()
                     else -> value.toString()
                 }
-                // 기록 없음은 비활성색으로 보여 "이미 0을 기록했다"와 구분한다.
-                val color = when {
-                    completed -> accent
-                    value != null -> HabitWidgets.Colors.ink
+                // 3상태: 성공 = 습관색 / 기준미달 = 어두운 습관색 / 미수행(0·없음) = 비활성
+                val color = when (outcome) {
+                    RecordOutcome.SUCCESS -> accent
+                    RecordOutcome.PARTIAL -> HabitWidgets.Colors.partial(accent)
                     else -> HabitWidgets.Colors.inkDisabled
                 }
                 Text(
@@ -121,7 +124,7 @@ private fun CheckContent(habit: HabitEntity?, record: HabitRecordEntity?, render
                     style = TextStyle(color = ColorProvider(color), fontSize = 16.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center),
                     maxLines = 1
                 )
-            } else if (status == "SKIPPED") {
+            } else if (outcome == RecordOutcome.SKIPPED) {
                 Text(
                     text = "–",
                     style = TextStyle(color = ColorProvider(HabitWidgets.Colors.skip), fontSize = 22.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center),
@@ -139,7 +142,13 @@ private fun CheckContent(habit: HabitEntity?, record: HabitRecordEntity?, render
             Text(
                 text = habit.title,
                 style = TextStyle(
-                    color = ColorProvider(if (completed) accent else HabitWidgets.Colors.inkMuted),
+                    color = ColorProvider(
+                        when (outcome) {
+                            RecordOutcome.SUCCESS -> accent
+                            RecordOutcome.PARTIAL -> HabitWidgets.Colors.partial(accent)
+                            else -> HabitWidgets.Colors.inkMuted
+                        }
+                    ),
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center

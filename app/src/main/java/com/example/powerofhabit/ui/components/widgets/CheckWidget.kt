@@ -20,6 +20,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.powerofhabit.domain.RecordOutcome
+import com.example.powerofhabit.domain.RecordOutcomes
 import com.example.powerofhabit.ui.theme.HabitTheme
 import kotlinx.coroutines.launch
 
@@ -31,11 +33,14 @@ fun CheckWidget(
     habitType: String = "CHECK",
     unit: String? = null,
     inputValue: Float? = null,
+    targetValue: Float? = null,
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
-    val isCompleted = status == "COMPLETED"
-    val isSkipped = status == "SKIPPED"
+    // 표시 상태는 값·목표로 판정한다(RecordOutcomes). status는 캐시.
+    val outcome = RecordOutcomes.of(habitType, status, inputValue, targetValue)
+    val isCompleted = outcome == RecordOutcome.SUCCESS
+    val isSkipped = outcome == RecordOutcome.SKIPPED
     
     // 선생님 시험지 채점 체크 애니메이션 State
     var triggerAnim by remember { mutableStateOf(false) }
@@ -84,19 +89,17 @@ fun CheckWidget(
             } else "0"
             val displayUnit = unit ?: ""
             
-            // 색상 규칙: 
-            // 1. 완료(COMPLETED) -> 습관 테마 색상 (themeColor)
-            // 2. 미달성 수치 입력(FAILED / 미달) -> text.primary
-            // 3. 미기록(NONE) -> 연한 회색 (0.25f alpha)
-            val textColor = when {
-                isCompleted -> themeColor
-                hasRecord -> HabitTheme.colors.textPrimary
+            // 3상태 색 규칙(결정 기록 2026-09-05): 성공 = 습관색 / 기준미달 = 어둡고 채도 낮은 습관색 / 미수행 = 비활성
+            val partial = HabitTheme.colors.partialAccent(themeColor)
+            val textColor = when (outcome) {
+                RecordOutcome.SUCCESS -> themeColor
+                RecordOutcome.PARTIAL -> partial
                 else -> HabitTheme.colors.textDisabled
             }
-            
-            val unitColor = when {
-                isCompleted -> themeColor.copy(alpha = 0.85f)
-                hasRecord -> HabitTheme.colors.textSecondary
+
+            val unitColor = when (outcome) {
+                RecordOutcome.SUCCESS -> themeColor.copy(alpha = 0.85f)
+                RecordOutcome.PARTIAL -> partial.copy(alpha = 0.85f)
                 else -> HabitTheme.colors.textDisabled
             }
             
@@ -107,7 +110,7 @@ fun CheckWidget(
                     text = displayValue,
                     color = textColor,
                     fontSize = 11.sp,
-                    fontWeight = if (isCompleted || hasRecord) FontWeight.Bold else FontWeight.Normal,
+                    fontWeight = if (outcome == RecordOutcome.SUCCESS || outcome == RecordOutcome.PARTIAL) FontWeight.Bold else FontWeight.Normal,
                     lineHeight = 11.sp,
                     letterSpacing = -0.5.sp
                 )

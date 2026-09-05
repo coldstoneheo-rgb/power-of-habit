@@ -82,9 +82,11 @@ fun HistoryCalendarWidget(
                                 .padding(4.dp)
                                 .clip(CircleShape)
                                 .background(
+                                    // status = RecordOutcome 이름(SUCCESS/PARTIAL/NONE/SKIPPED). NONE은 기록이 있는데 미수행 = 실패 표시.
                                     when (status) {
-                                        "COMPLETED" -> themeColor
-                                        "FAILED" -> HabitTheme.colors.statusFail.copy(alpha = 0.16f)
+                                        "SUCCESS" -> themeColor
+                                        "PARTIAL" -> HabitTheme.colors.partialAccent(themeColor).copy(alpha = 0.35f)
+                                        "NONE" -> HabitTheme.colors.statusFail.copy(alpha = 0.16f)
                                         "SKIPPED" -> HabitTheme.colors.lineHair
                                         else -> Color.Transparent
                                     }
@@ -100,13 +102,14 @@ fun HistoryCalendarWidget(
                             Text(
                                 text = day.toString(),
                                 color = when (status) {
-                                    "COMPLETED" -> HabitTheme.colors.onAccent(themeColor)
-                                    "FAILED" -> HabitTheme.colors.statusFail
+                                    "SUCCESS" -> HabitTheme.colors.onAccent(themeColor)
+                                    "PARTIAL" -> HabitTheme.colors.partialAccent(themeColor)
+                                    "NONE" -> HabitTheme.colors.statusFail
                                     "SKIPPED" -> HabitTheme.colors.textPrimary.copy(alpha = 0.9f)
                                     else -> HabitTheme.colors.textPrimary.copy(alpha = 0.7f)
                                 },
                                 fontSize = 13.sp,
-                                fontWeight = if (status == "COMPLETED" || status == "FAILED" || status == "SKIPPED") FontWeight.Bold else FontWeight.Normal
+                                fontWeight = if (status != null) FontWeight.Bold else FontWeight.Normal
                             )
                         }
                         day++

@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
+import com.example.powerofhabit.domain.RecordOutcomes
 import com.example.powerofhabit.ui.components.widgets.CheckWidget
 import com.example.powerofhabit.ui.theme.HabitOrange
 import com.example.powerofhabit.ui.theme.HabitTheme
@@ -411,7 +412,7 @@ internal fun MainScreenContent(
                             if (existingRecord != null) {
                                 onDeleteRecord(existingRecord)
                             }
-                            val status = if (habit.targetValue == null || value >= habit.targetValue) "COMPLETED" else "FAILED"
+                            val status = RecordOutcomes.statusForValue(value, habit.targetValue)
                             onInsertRecord(
                                 HabitRecordEntity(
                                     habitId = habit.habitId,
@@ -698,6 +699,7 @@ private fun HabitRow(
                         habitType = habit.habitType,
                         unit = habit.unit,
                         inputValue = record?.inputValue,
+                        targetValue = habit.targetValue,
                         onClick = { onCheckClick(date, record) },
                         onLongClick = { onCheckLongClick(date, record) }
                     )

@@ -84,13 +84,12 @@ class WidgetConfigActivity : ComponentActivity() {
 
     private fun onHabitPicked(habit: HabitEntity) {
         lifecycleScope.launch {
-            val manager = GlanceAppWidgetManager(this@WidgetConfigActivity)
-            val glanceId = manager.getGlanceIdBy(appWidgetId)
+            val glanceId = GlanceAppWidgetManager(this@WidgetConfigActivity).getGlanceIdBy(appWidgetId)
             updateAppWidgetState(this@WidgetConfigActivity, glanceId) { prefs ->
                 prefs[HabitWidgets.HABIT_ID] = habit.habitId
             }
-            // 어떤 provider의 위젯인지 Glance 쪽 매핑이 아직 없을 수 있어(첫 배치) 둘 다 갱신한다.
-            HabitWidgets.updateAll(this@WidgetConfigActivity)
+            // 방금 추가된 위젯은 Glance 내부 매핑에 아직 없을 수 있으므로 provider 기준으로 이 인스턴스만 즉시 그린다.
+            HabitWidgets.updateOne(this@WidgetConfigActivity, appWidgetId)
             setResult(RESULT_OK, Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId))
             finish()
         }
