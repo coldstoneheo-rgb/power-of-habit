@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.powerofhabit.domain.RecordOutcomes
 import com.example.powerofhabit.ui.theme.*
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -73,7 +74,8 @@ fun AddEditHabitScreen(
     var habitType by remember { mutableStateOf(defaultHabitType) }
     var unit by remember { mutableStateOf("") }
     var targetValueString by remember { mutableStateOf("") }
-    
+    var targetType by remember { mutableStateOf(RecordOutcomes.TARGET_AT_LEAST) } // 이상(기본) / 이하
+
     var showColorPickerDialog by remember { mutableStateOf(false) }
     
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -113,6 +115,7 @@ fun AddEditHabitScreen(
             habitType = habit.habitType
             unit = habit.unit ?: ""
             targetValueString = habit.targetValue?.toString() ?: ""
+            targetType = habit.targetType
         }
     }
     
@@ -166,6 +169,8 @@ fun AddEditHabitScreen(
         if (title.isBlank()) {
             Toast.makeText(context, "습관 이름을 입력해주세요.", Toast.LENGTH_SHORT).show()
         } else {
+            // 목표 수치는 한 번만 파싱하고 유한값만 인정한다("NaN"·"Infinity"·"1e40"은 toFloatOrNull을 통과한다)
+            val parsedTargetValue = targetValueString.replace(',', '.').toFloatOrNull()?.takeIf { it.isFinite() }
             val isFrequencyValid = when (frequencyType) {
                 "DAILY" -> true
                 "INTERVAL" -> intervalDays.toIntOrNull()?.let { it >= 1 } ?: false
@@ -183,8 +188,11 @@ fun AddEditHabitScreen(
                 Toast.makeText(context, "올바른 빈도 값을 입력해주세요.", Toast.LENGTH_SHORT).show()
             } else if (habitType == "VALUE" && unit.isBlank()) {
                 Toast.makeText(context, "단위(예: km, 쪽)를 입력해주세요.", Toast.LENGTH_SHORT).show()
-            } else if (habitType == "VALUE" && targetValueString.isNotBlank() && targetValueString.toFloatOrNull() == null) {
+            } else if (habitType == "VALUE" && targetValueString.isNotBlank() && parsedTargetValue == null) {
+                // "NaN"·"Infinity"·"1e40"도 toFloatOrNull은 통과하므로 유한값만 목표로 받는다
                 Toast.makeText(context, "올바른 목표 수치를 입력해주세요 (예: 15).", Toast.LENGTH_SHORT).show()
+            } else if (habitType == "VALUE" && RecordOutcomes.isAtMost(targetType) && (parsedTargetValue == null || parsedTargetValue <= 0f)) {
+                Toast.makeText(context, "'이하' 목표는 0보다 큰 목표 수치가 필요합니다 (예: 5).", Toast.LENGTH_SHORT).show()
             } else {
                 val computedFrequencyValue = when (frequencyType) {
                     "DAILY" -> ""
@@ -206,7 +214,8 @@ fun AddEditHabitScreen(
                     habitType = habitType,
                     unit = if (habitType == "VALUE") unit else null,
                     memo = if (memo.isBlank()) null else memo,
-                    targetValue = if (habitType == "VALUE") targetValueString.toFloatOrNull() else null
+                    targetValue = if (habitType == "VALUE") parsedTargetValue else null,
+                    targetType = if (habitType == "VALUE") targetType else RecordOutcomes.TARGET_AT_LEAST
                 )
             }
         }
@@ -431,7 +440,8 @@ fun AddEditHabitScreen(
                 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     OutlinedTextField(
                         value = targetValueString,
@@ -449,7 +459,24 @@ fun AddEditHabitScreen(
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
                     )
 
-                    // 목표 유형(적어도/최대)은 아직 저장되지 않아 UI를 숨긴다 — 결정 기록 2026-09-05 (AT_MOST 의미 설계 후 v5에서 부활)
+                    // 목표 방향(결정 기록 2026-09-06): 이상 = 값 ≥ 목표 성공 / 이하 = 값 ≤ 목표 성공(0도 성공, 미기록은 미수행)
+                    FilterChip(
+                        selected = !RecordOutcomes.isAtMost(targetType),
+                        onClick = { targetType = RecordOutcomes.TARGET_AT_LEAST },
+                        label = { Text("이상") }
+                    )
+                    FilterChip(
+                        selected = RecordOutcomes.isAtMost(targetType),
+                        onClick = { targetType = RecordOutcomes.TARGET_AT_MOST },
+                        label = { Text("이하") }
+                    )
+                }
+                if (RecordOutcomes.isAtMost(targetType)) {
+                    Text(
+                        text = "기록한 값이 목표 이하면 성공입니다(예: 담배 5개비 이하 → 0~5 성공). 기록하지 않은 날은 성공이 아니라 미수행으로 남으니 0도 적어 주세요.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
             

@@ -35,13 +35,14 @@ fun CheckWidget(
     unit: String? = null,
     inputValue: Float? = null,
     targetValue: Float? = null,
+    targetType: String = RecordOutcomes.TARGET_AT_LEAST,
     burst: Boolean = false, // 성공(목표 충족) 저장 직후 폭죽 재생
     onBurstDone: () -> Unit = {},
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
-    // 표시 상태는 값·목표로 판정한다(RecordOutcomes). status는 캐시.
-    val outcome = RecordOutcomes.of(habitType, status, inputValue, targetValue)
+    // 표시 상태는 값·목표·방향으로 판정한다(RecordOutcomes). status는 캐시.
+    val outcome = RecordOutcomes.of(habitType, status, inputValue, targetValue, targetType)
     val isCompleted = outcome == RecordOutcome.SUCCESS
     val isSkipped = outcome == RecordOutcome.SKIPPED
     
@@ -89,6 +90,8 @@ fun CheckWidget(
             val hasRecord = inputValue != null
             val displayValue = if (hasRecord) {
                 if (inputValue % 1f == 0f) "${inputValue!!.toInt()}" else "$inputValue"
+            } else if (RecordOutcomes.isAtMost(targetType)) {
+                "–" // 이하 목표는 "기록한 0(성공)"과 "안 적음(미수행)"이 달라야 하므로 미기록은 대시
             } else "0"
             val displayUnit = unit ?: ""
             

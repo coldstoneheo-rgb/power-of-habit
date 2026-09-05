@@ -181,10 +181,10 @@ private fun HabitDetailContent(
     val progress = stats.monthProgress
 
     // 4) Calendar records map — 표시 상태(RecordOutcome 이름). 기록이 있는데 NONE이면 캘린더는 "실패"로 그린다.
-    val calendarRecords = remember(records, habit.habitType, habit.targetValue) {
+    val calendarRecords = remember(records, habit) { // habit 전체를 키로 — 방향만 바뀐 편집도 다시 판정
         records.mapNotNull { r ->
             try {
-                LocalDate.parse(r.date) to RecordOutcomes.of(habit.habitType, r.status, r.inputValue, habit.targetValue).name
+                LocalDate.parse(r.date) to RecordOutcomes.of(habit.habitType, r.status, r.inputValue, habit.targetValue, habit.targetType).name
             } catch (e: Exception) {
                 null
             }
@@ -192,7 +192,7 @@ private fun HabitDetailContent(
     }
     
     // 5) Heatmap calculation
-    val heatmapFrequencies = remember(records, habit.habitType, habit.targetValue) {
+    val heatmapFrequencies = remember(records, habit) {
         val today = LocalDate.now()
         val oneYearAgo = today.minusWeeks(51).with(java.time.DayOfWeek.SUNDAY)
         val matrix = List(7) { MutableList(52) { 0 } }
@@ -206,7 +206,7 @@ private fun HabitDetailContent(
                         val dayOfWeek = date.dayOfWeek.value % 7
                         if (week in 0..51 && dayOfWeek in 0..6) {
                             // 캘린더·위젯과 같은 판정(RecordOutcomes)을 쓴다: 성공 10 / 기준미달 6 / 건너뜀 3 / 미수행 0
-                            matrix[dayOfWeek][week] = when (RecordOutcomes.of(habit.habitType, record.status, record.inputValue, habit.targetValue)) {
+                            matrix[dayOfWeek][week] = when (RecordOutcomes.of(habit.habitType, record.status, record.inputValue, habit.targetValue, habit.targetType)) {
                                 com.example.powerofhabit.domain.RecordOutcome.SUCCESS -> 10
                                 com.example.powerofhabit.domain.RecordOutcome.PARTIAL -> 6
                                 com.example.powerofhabit.domain.RecordOutcome.SKIPPED -> 3
@@ -298,10 +298,7 @@ private fun HabitDetailContent(
             )
             
             val targetText = remember(habit) {
-                if (habit.habitType == "VALUE" && habit.targetValue != null) {
-                    val valStr = if (habit.targetValue % 1f == 0f) "${habit.targetValue.toInt()}" else "${habit.targetValue}"
-                    "$valStr ${habit.unit ?: ""}".trim()
-                } else null
+                if (habit.habitType == "VALUE") RecordOutcomes.targetLabel(habit.targetValue, habit.unit, habit.targetType) else null
             }
 
             val freqText = remember(frequency) { frequency.label }
@@ -631,6 +628,10 @@ private fun HabitDetailContent(
                             value = inputValue,
                             onValueChange = { inputValue = it },
                             label = { Text("수치 입력 (${habit.unit ?: ""})") },
+                            // 메인 입력 다이얼로그와 같은 목표 안내(이하 목표는 0도 성공이라는 힌트 포함)
+                            supportingText = RecordOutcomes.targetLabel(habit.targetValue, habit.unit, habit.targetType)?.let { label ->
+                                { Text(if (RecordOutcomes.isAtMost(habit.targetType)) "목표 $label (0도 기록하세요)" else "목표 $label", color = HabitTheme.colors.textSecondary) }
+                            },
                             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
                             singleLine = true,
                             colors = OutlinedTextFieldDefaults.colors(
@@ -653,7 +654,7 @@ private fun HabitDetailContent(
                     onClick = {
                         // 수치형은 값이 곧 상태다(RecordOutcomes.statusForValue). 삭제/건너뜀 선택만 그대로 둔다.
                         val computedStatus = if (isValueRecord) {
-                            RecordOutcomes.statusForValue(value, habit.targetValue)
+                            RecordOutcomes.statusForValue(value, habit.targetValue, habit.targetType)
                         } else {
                             status
                         }

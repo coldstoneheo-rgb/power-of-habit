@@ -18,5 +18,7 @@ data class HabitEntity(
     val isReminderEnabled: Boolean = false,
     val memo: String? = null,
     val targetValue: Float? = null,
+    /** 수치형 목표 방향: "AT_LEAST"(값 ≥ 목표 성공, 기본) / "AT_MOST"(값 ≤ 목표 성공). 판정은 domain/RecordOutcomes. */
+    val targetType: String = "AT_LEAST",
     val createdAt: Long = System.currentTimeMillis()
 )

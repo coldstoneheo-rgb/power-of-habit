@@ -140,7 +140,7 @@ class ValueInputActivity : ComponentActivity() {
                 repository.upsertValueRecord(
                     habitId = habit.habitId,
                     date = openedDate,
-                    status = RecordOutcomes.statusForValue(value, habit.targetValue),
+                    status = RecordOutcomes.statusForValue(value, habit.targetValue, habit.targetType),
                     inputValue = value
                 )
                 RecordSideEffects.afterRecordChange(applicationContext, repository, habit.habitId)

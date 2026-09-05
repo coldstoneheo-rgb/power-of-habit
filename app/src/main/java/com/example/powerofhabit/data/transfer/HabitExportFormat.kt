@@ -6,7 +6,7 @@ import com.example.powerofhabit.data.local.HabitRecordEntity
 import kotlinx.serialization.Serializable
 
 /**
- * 로컬 JSON 내보내기/가져오기 파일 형식 (formatVersion 1).
+ * 로컬 JSON 내보내기/가져오기 파일 형식 (formatVersion 1·2).
  *
  * DTO는 Room 엔티티의 필드를 그대로 담는다(nullable 유지). 엔티티에 필드가 추가되면 DTO에도 기본값을 가진 필드로
  * 추가하고, 의미가 바뀌는 변경일 때만 formatVersion을 올린다. 읽기 쪽은 ignoreUnknownKeys = true라
@@ -23,7 +23,11 @@ data class HabitExport(
     val badges: List<BadgeDto> = emptyList()
 ) {
     companion object {
-        const val CURRENT_FORMAT_VERSION = 1
+        /** 이 앱이 읽을 수 있는 최대 버전. 1 = 원형, 2 = 이하 목표(targetType=AT_MOST)가 든 파일. */
+        const val CURRENT_FORMAT_VERSION = 2
+        /** 파일에 담을 최소 버전. 옛 앱이 뜻을 뒤집어 읽을 내용(AT_MOST 습관)이 있을 때만 2로 올려 "업데이트하라"를 받게 한다. */
+        fun versionFor(habits: List<HabitDto>): Int =
+            if (habits.any { it.targetType == "AT_MOST" }) 2 else 1
     }
 }
 
@@ -41,6 +45,8 @@ data class HabitDto(
     val isReminderEnabled: Boolean = false,
     val memo: String? = null,
     val targetValue: Float? = null,
+    /** 목표 방향(AT_LEAST/AT_MOST). 필드가 없는 옛 파일은 AT_LEAST — formatVersion은 그대로 1. */
+    val targetType: String = "AT_LEAST",
     val createdAt: Long
 )
 
@@ -76,6 +82,7 @@ fun HabitEntity.toDto(): HabitDto = HabitDto(
     isReminderEnabled = isReminderEnabled,
     memo = memo,
     targetValue = targetValue,
+    targetType = targetType,
     createdAt = createdAt
 )
 
@@ -93,6 +100,7 @@ fun HabitDto.toEntity(habitId: Int = 0): HabitEntity = HabitEntity(
     isReminderEnabled = isReminderEnabled,
     memo = memo,
     targetValue = targetValue,
+    targetType = targetType,
     createdAt = createdAt
 )
 

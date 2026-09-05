@@ -63,7 +63,7 @@ class CalendarGlanceWidget : GlanceAppWidget() {
         val statusByDate = habit?.let { h ->
             WidgetCalendarModel.statusByDate(
                 repo.getRecordsForHabitBetween(h.habitId, month.atDay(1).toString(), month.atEndOfMonth().toString())
-                    .first().map { it.date to RecordOutcomes.of(h.habitType, it.status, it.inputValue, h.targetValue).name }
+                    .first().map { it.date to RecordOutcomes.of(h.habitType, it.status, it.inputValue, h.targetValue, h.targetType).name }
             )
         }.orEmpty()
         val grid = WidgetCalendarModel.monthGrid(month, statusByDate)

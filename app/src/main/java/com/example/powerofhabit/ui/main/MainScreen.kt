@@ -475,7 +475,7 @@ internal fun MainScreenContent(
                                 // 건너뜀 해제: 수치형은 값이 상태를 결정하므로 statusForValue로 되돌린다(표시와 통계가 어긋나지 않게)
                                 val nextStatus = when {
                                     record.status != "SKIPPED" -> "SKIPPED"
-                                    habit.habitType == "VALUE" -> RecordOutcomes.statusForValue(record.inputValue, habit.targetValue)
+                                    habit.habitType == "VALUE" -> RecordOutcomes.statusForValue(record.inputValue, habit.targetValue, habit.targetType)
                                     else -> "FAILED"
                                 }
                                 onUpdateRecordStatus(record.recordId, nextStatus, habit.habitId)
@@ -513,7 +513,7 @@ internal fun MainScreenContent(
                     HabitRecordEntity(
                         habitId = habit.habitId,
                         date = date.toString(),
-                        status = RecordOutcomes.statusForValue(value, habit.targetValue),
+                        status = RecordOutcomes.statusForValue(value, habit.targetValue, habit.targetType),
                         inputValue = value
                     )
                 )
@@ -808,6 +808,7 @@ private fun HabitRow(
                         unit = habit.unit,
                         inputValue = record?.inputValue,
                         targetValue = habit.targetValue,
+                        targetType = habit.targetType,
                         burst = burstDate == date.toString(),
                         onBurstDone = onBurstDone,
                         onClick = { onCheckClick(date, record) },

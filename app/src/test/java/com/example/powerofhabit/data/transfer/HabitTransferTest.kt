@@ -87,10 +87,10 @@ class HabitTransferTest {
 
     @Test
     fun decode_rejectsNewerFormatVersion() {
-        val json = """{"formatVersion": 2, "exportedAt": "2026-09-05T00:00:00Z"}"""
+        val json = """{"formatVersion": 3, "exportedAt": "2026-09-05T00:00:00Z"}"""
         try {
             HabitTransfer.decode(json)
-            fail("formatVersion 2 must be rejected")
+            fail("formatVersion 3 must be rejected")
         } catch (e: IllegalArgumentException) {
             assertTrue(e.message!!.contains("지원하지 않는 형식 버전"))
         }
@@ -167,8 +167,8 @@ class HabitTransferTest {
 
     @Test
     fun decode_newerVersionWithDifferentShape_saysUpdateNotWrongFormat() {
-        // 미래 형식: formatVersion 2 + 우리가 모르는 구조(records가 객체). 버전을 먼저 읽어 "업데이트" 안내를 해야 한다
-        val text = """{"formatVersion":2,"exportedAt":"x","habits":[],"records":{"v2":true},"badges":[]}"""
+        // 미래 형식: formatVersion 3(현재 지원 최대 2) + 우리가 모르는 구조(records가 객체). 버전을 먼저 읽어 "업데이트" 안내를 해야 한다
+        val text = """{"formatVersion":3,"exportedAt":"x","habits":[],"records":{"v3":true},"badges":[]}"""
         try {
             HabitTransfer.decode(text)
             fail("expected IllegalArgumentException")
@@ -293,5 +293,64 @@ class HabitTransferTest {
         assertEquals(1, plan.summary.recordsAdded)
         assertEquals(1, plan.summary.recordsSkipped)
         assertEquals(1, plan.resolveRecords(mapOf(1 to 1)).size)
+    }
+
+    @Test
+    fun targetType_roundTrips_andDefaultsToAtLeastForOldFiles() {
+        val limit = habit(1, "담배", 100L, type = "VALUE").copy(targetValue = 5f, targetType = "AT_MOST")
+        val decoded = HabitTransfer.decode(HabitTransfer.encode(export(habits = listOf(limit))))
+        assertEquals("AT_MOST", decoded.habits.single().targetType)
+
+        // targetType 필드가 없는 formatVersion 1 파일(이 PR 이전 앱이 내보낸 것)은 이상 목표로 읽힌다
+        val old = """
+            {"formatVersion": 1, "exportedAt": "2026-09-05T00:00:00Z",
+             "habits": [{"habitId": 1, "title": "물", "question": "q", "frequencyType": "DAILY", "frequencyValue": "",
+                         "themeColor": "#000000", "habitType": "VALUE", "unit": "잔", "targetValue": 8.0, "createdAt": 5}],
+             "records": [], "badges": []}
+        """.trimIndent()
+        assertEquals("AT_LEAST", HabitTransfer.decode(old).habits.single().targetType)
+    }
+
+    @Test
+    fun formatVersion_isTwoOnlyWhenFileContainsAtMostHabit() {
+        // 옛 앱(1만 읽음)이 이하 습관을 "이상"으로 뒤집어 읽지 않고 "업데이트하라"를 보게 하려는 장치
+        val plain = export(habits = listOf(habit(1, "물", 100L, type = "VALUE")))
+        assertEquals(1, plain.formatVersion)
+        val limit = habit(2, "담배", 200L, type = "VALUE").copy(targetValue = 5f, targetType = "AT_MOST")
+        val withLimit = export(habits = listOf(habit(1, "물", 100L), limit))
+        assertEquals(2, withLimit.formatVersion)
+        assertEquals("AT_MOST", HabitTransfer.decode(HabitTransfer.encode(withLimit)).habits[1].targetType)
+    }
+
+    @Test
+    fun plan_rewritesImportedValueStatus_toLocalHabitDirection() {
+        // 파일 쪽 습관은 이하 5(0→COMPLETED, 7→FAILED), 기존 DB의 같은 습관(createdAt 일치)은 이상 5
+        val local = habit(10, "담배", 100L, type = "VALUE").copy(targetValue = 5f, targetType = "AT_LEAST")
+        val remote = habit(1, "담배", 100L, type = "VALUE").copy(targetValue = 5f, targetType = "AT_MOST")
+        val file = export(
+            habits = listOf(remote),
+            records = listOf(
+                record(1, 1, "2026-09-01", "COMPLETED", 0f),
+                record(2, 1, "2026-09-02", "FAILED", 7f),
+                record(3, 1, "2026-09-03", "SKIPPED", 9f),
+                record(4, 1, "2026-09-04", "COMPLETED", null)
+            )
+        )
+        val plan = HabitTransfer.plan(listOf(local), emptyList(), emptyList(), HabitTransfer.decode(HabitTransfer.encode(file)))
+        val byDate = plan.recordsToInsert.associate { it.record.date to it.record.status }
+        assertEquals("FAILED", byDate["2026-09-01"])    // 0은 이상 목표에서 미수행
+        assertEquals("COMPLETED", byDate["2026-09-02"]) // 7 ≥ 5
+        assertEquals("SKIPPED", byDate["2026-09-03"])   // 건너뜀은 그대로
+        assertEquals("COMPLETED", byDate["2026-09-04"]) // 값 없는 명시적 성공은 그대로
+        assertEquals(mapOf(1 to 10), plan.matchedHabitIds)
+    }
+
+    @Test
+    fun plan_keepsStatusForNewHabits_whoseOwnDirectionTravelsWithThem() {
+        val remote = habit(1, "담배", 100L, type = "VALUE").copy(targetValue = 5f, targetType = "AT_MOST")
+        val file = export(habits = listOf(remote), records = listOf(record(1, 1, "2026-09-01", "COMPLETED", 0f)))
+        val plan = HabitTransfer.plan(emptyList(), emptyList(), emptyList(), file)
+        assertEquals("AT_MOST", plan.habitsToInsert.single().habit.targetType)
+        assertEquals("COMPLETED", plan.recordsToInsert.single().record.status)
     }
 }
