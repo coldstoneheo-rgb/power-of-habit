@@ -64,7 +64,7 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideDataRepository(habitDao: HabitDao): DataRepository {
-        return DefaultDataRepository(habitDao)
+    fun provideDataRepository(habitDao: HabitDao, database: AppDatabase): DataRepository {
+        return DefaultDataRepository(habitDao, database)
     }
 }

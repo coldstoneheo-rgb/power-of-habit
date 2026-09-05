@@ -57,10 +57,17 @@ fun MainScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val isDarkMode by viewModel.isDarkMode.collectAsStateWithLifecycle()
     val isDateDescending by viewModel.isDateDescending.collectAsStateWithLifecycle()
+    val transferBusy by viewModel.transferBusy.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val backupManager = remember { com.example.powerofhabit.backup.GoogleDriveBackupManager(context) }
-    
+    // 파일 이전 결과는 ViewModel 이벤트로 받아 현재(살아 있는) 액티비티 컨텍스트로 Toast를 띄운다.
+    LaunchedEffect(viewModel) {
+        viewModel.transferMessages.collect { message ->
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -95,8 +102,9 @@ fun MainScreen(
                     isDateDescending = isDateDescending,
                     onToggleDarkMode = { viewModel.toggleDarkMode() },
                     onToggleDateDescending = { viewModel.toggleDateDescending() },
-                    onExportTo = { uri, onResult -> viewModel.exportTo(uri, onResult) },
-                    onImportFrom = { uri, onResult -> viewModel.importFrom(uri, onResult) },
+                    isTransferring = transferBusy,
+                    onExportTo = { uri -> viewModel.exportTo(uri) },
+                    onImportFrom = { uri -> viewModel.importFrom(uri) },
                     modifier = modifier
                 )
             }
@@ -128,10 +136,12 @@ internal fun MainScreenContent(
     isDateDescending: Boolean,
     onToggleDarkMode: () -> Unit,
     onToggleDateDescending: () -> Unit,
-    /** JSON 내보내기: (대상 Uri, 결과 메시지 콜백). */
-    onExportTo: (Uri, (String) -> Unit) -> Unit = { _, _ -> },
-    /** JSON 가져오기(병합): (원본 Uri, 결과 메시지 콜백). */
-    onImportFrom: (Uri, (String) -> Unit) -> Unit = { _, _ -> },
+    /** 파일 이전 진행 중 여부(ViewModel 상태). 진행 중에는 백업·복원·닫기도 잠근다. */
+    isTransferring: Boolean = false,
+    /** JSON 내보내기: 대상 Uri. */
+    onExportTo: (Uri) -> Unit = {},
+    /** JSON 가져오기(병합): 원본 Uri. */
+    onImportFrom: (Uri) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val today = remember { LocalDate.now() }
@@ -155,27 +165,13 @@ internal fun MainScreenContent(
     val backupManager = remember { com.example.powerofhabit.backup.GoogleDriveBackupManager(context) }
 
     // 파일 이전(JSON). 런처는 다이얼로그 밖(항상 컴포지션에 있는 곳)에 둬야 액티비티 재생성 뒤에도 결과를 받는다.
-    var isTransferring by remember { mutableStateOf(false) }
-    val onTransferResult: (String) -> Unit = { message ->
-        isTransferring = false
-        Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-    }
+    // 진행 상태·결과 메시지는 ViewModel이 든다(회전 시 유실 방지).
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
-    ) { uri ->
-        if (uri != null) {
-            isTransferring = true
-            onExportTo(uri, onTransferResult)
-        }
-    }
+    ) { uri -> if (uri != null) onExportTo(uri) }
     val importLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        if (uri != null) {
-            isTransferring = true
-            onImportFrom(uri, onTransferResult)
-        }
-    }
+    ) { uri -> if (uri != null) onImportFrom(uri) }
 
     if (showAddTypeModal) {
         AlertDialog(
@@ -447,7 +443,7 @@ internal fun MainScreenContent(
 
         AlertDialog(
             onDismissRequest = { 
-                if (!isBackingUp && !isRestoring) showBackupSettings = false 
+                if (!isBackingUp && !isRestoring && !isTransferring) showBackupSettings = false
             },
             title = {
                 Text(
@@ -586,7 +582,7 @@ internal fun MainScreenContent(
                                 }
                             }
                         },
-                        enabled = !isBackingUp && !isRestoring,
+                        enabled = !isBackingUp && !isRestoring && !isTransferring,
                         colors = ButtonDefaults.buttonColors(containerColor = HabitOrange),
                         modifier = Modifier.weight(1f)
                     ) {
@@ -607,7 +603,7 @@ internal fun MainScreenContent(
                                 }
                             }
                         },
-                        enabled = !isBackingUp && !isRestoring,
+                        enabled = !isBackingUp && !isRestoring && !isTransferring,
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
                         modifier = Modifier.weight(1f).border(1.dp, MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.large)
                     ) {
@@ -618,7 +614,7 @@ internal fun MainScreenContent(
             dismissButton = {
                 TextButton(
                     onClick = { showBackupSettings = false },
-                    enabled = !isBackingUp && !isRestoring
+                    enabled = !isBackingUp && !isRestoring && !isTransferring
                 ) {
                     Text("닫기", color = HabitTheme.colors.textSecondary)
                 }

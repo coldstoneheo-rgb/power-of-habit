@@ -4,6 +4,7 @@ import com.example.powerofhabit.data.local.BadgeEntity
 import com.example.powerofhabit.data.local.HabitDao
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
+import androidx.room.withTransaction
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -36,12 +37,19 @@ interface DataRepository {
     // Badges
     fun getAllBadges(): Flow<List<BadgeEntity>>
     suspend fun insertBadge(badge: BadgeEntity): Long
+
+    /** 여러 쓰기를 하나의 DB 트랜잭션으로 묶는다(가져오기 등). 실패하면 전부 롤백. */
+    suspend fun <T> inTransaction(block: suspend () -> T): T
 }
 
 @Singleton
 class DefaultDataRepository @Inject constructor(
-    private val habitDao: HabitDao
+    private val habitDao: HabitDao,
+    private val database: androidx.room.RoomDatabase? = null
 ) : DataRepository {
+
+    override suspend fun <T> inTransaction(block: suspend () -> T): T =
+        database?.withTransaction { block() } ?: block()
 
     override fun getAllHabits(): Flow<List<HabitEntity>> = habitDao.getAllHabits()
 
