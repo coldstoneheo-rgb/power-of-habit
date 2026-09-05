@@ -54,7 +54,10 @@ class TransferManager(private val repository: DataRepository) {
 
     /** 옛 앱의 SQLite 파일(.db + 선택 -wal/-shm, §4-2)을 읽어 JSON 가져오기와 같은 규칙으로 병합한다. */
     suspend fun importLegacyDb(context: Context, uris: List<Uri>): Result<ImportSummary> = withContext(Dispatchers.IO) {
-        runCatching { importExport(context, LegacyDbImporter(context).readExport(uris)) }
+        runCatching {
+            val read = LegacyDbImporter(context).read(uris)
+            importExport(context, read.export).let { it.copy(warnings = it.warnings + read.warnings) }
+        }
     }
 
     /** 병합 본체. JSON·옛 DB 두 입구가 같은 계획·트랜잭션·알림 예약을 탄다. */

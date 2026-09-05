@@ -1,5 +1,8 @@
 package com.example.powerofhabit.data.transfer
 
+import com.example.powerofhabit.data.local.HabitEntity
+import com.example.powerofhabit.domain.RecordOutcomes
+import com.example.powerofhabit.domain.stats.HabitFrequency
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -39,18 +42,21 @@ class LegacyDbRowsTest {
     }
 
     @Test
-    fun habit_missingRequired_orBlankTitle_isSkipped() {
-        assertNull(LegacyDbRows.habit(mapOf("title" to "x")))
-        assertNull(LegacyDbRows.habit(mapOf("habitId" to 1L, "title" to "   ")))
+    fun habit_missingRequired_isSkipped() {
+        assertNull(LegacyDbRows.habit(mapOf("title" to "x", "createdAt" to 1L)))                   // habitId 없음
+        assertNull(LegacyDbRows.habit(mapOf("habitId" to 1L, "title" to "   ", "createdAt" to 1L)))  // 제목 공백
+        assertNull(LegacyDbRows.habit(mapOf("habitId" to 1L, "title" to "t")))                      // createdAt(매칭 키) 없음 → 0 대체 금지
+        assertNull(LegacyDbRows.habit(mapOf("habitId" to 4_294_967_297L, "title" to "t", "createdAt" to 1L))) // Int 범위 밖 → 감싸지 않고 버림
     }
 
     @Test
     fun habit_nonFiniteTarget_andBlankColor_fallBack() {
-        val dto = LegacyDbRows.habit(mapOf("habitId" to 1L, "title" to "t", "targetValue" to Double.NaN, "themeColor" to ""))!!
+        val dto = LegacyDbRows.habit(mapOf("habitId" to 1L, "title" to "t", "targetValue" to Double.NaN, "themeColor" to "", "createdAt" to 7L))!!
         assertNull(dto.targetValue)
-        assertEquals("#FF9800", dto.themeColor)
-        assertEquals("CHECK", dto.habitType)
-        assertEquals(0L, dto.createdAt)
+        assertEquals(HabitEntity.DEFAULT_THEME_COLOR_HEX, dto.themeColor)
+        assertEquals(RecordOutcomes.TYPE_CHECK, dto.habitType)
+        assertEquals(HabitFrequency.TYPE_DAILY, dto.frequencyType)
+        assertEquals(RecordOutcomes.TARGET_AT_LEAST, dto.targetType)
     }
 
     @Test
@@ -61,6 +67,7 @@ class LegacyDbRowsTest {
         assertEquals(2.5f, dto.inputValue!!, 0f)
         assertNull(LegacyDbRows.record(mapOf("habitId" to 3L, "date" to "2026-09-01")))          // status 없음
         assertNull(LegacyDbRows.record(mapOf("habitId" to 3L, "status" to "COMPLETED")))          // date 없음
+        assertNull(LegacyDbRows.record(mapOf("habitId" to 4_294_967_297L, "date" to "d", "status" to "s"))) // habitId Int 범위 밖
         assertNull(LegacyDbRows.record(mapOf("habitId" to 1L, "date" to "d", "status" to "s"))!!.inputValue) // inputValue 없음 → null
     }
 
