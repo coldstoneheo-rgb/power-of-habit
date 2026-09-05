@@ -66,6 +66,16 @@ interface HabitDao {
         }
     }
 
+    /**
+     * 수치형 값 저장의 단일 정의: 같은 (habitId, date) 기존 행을 지우고 새 값으로 넣는다.
+     * 트랜잭션이라 위젯 입력 액티비티가 도중에 종료되거나 동시 쓰기가 있어도 행이 두 개가 되거나 삭제만 남지 않는다.
+     */
+    @Transaction
+    suspend fun upsertValueRecord(habitId: Int, date: String, status: String, inputValue: Float): Long {
+        getRecord(habitId, date)?.let { deleteRecord(it) }
+        return insertRecord(HabitRecordEntity(habitId = habitId, date = date, status = status, inputValue = inputValue))
+    }
+
     // Badges
     @Query("SELECT * FROM Badges ORDER BY earnedAt DESC")
     fun getAllBadges(): Flow<List<BadgeEntity>>

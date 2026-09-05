@@ -125,5 +125,8 @@ object HabitWidgets {
 
         /** 기준미달 수행: 앱과 완전히 같은 함수(다크 토큰, 위젯 배경 ≈ bg.base 기준 AA 보정). */
         fun partial(accent: Color): Color = DarkTokens.partialAccent(accent)
+
+        /** 습관색으로 채운 타일 위의 잉크(성공 타일). */
+        fun onAccent(accent: Color): Color = DarkTokens.onAccent(accent)
     }
 }

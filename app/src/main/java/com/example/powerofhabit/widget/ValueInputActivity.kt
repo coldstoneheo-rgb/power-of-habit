@@ -2,6 +2,7 @@ package com.example.powerofhabit.widget
 
 import android.appwidget.AppWidgetManager
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -29,8 +30,10 @@ import com.example.powerofhabit.ui.components.SuccessBurst
 import com.example.powerofhabit.ui.components.ValueInputDialog
 import com.example.powerofhabit.ui.theme.PowerOfHabitTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -89,7 +92,7 @@ class ValueInputActivity : ComponentActivity() {
                 }
             }
 
-            PowerOfHabitTheme(darkTheme = darkTheme) {
+            PowerOfHabitTheme(darkTheme = darkTheme, applyWindowChrome = false) {
                 val h = habit
                 val accent = burstAccent
                 if (accent != null) {
@@ -105,7 +108,13 @@ class ValueInputActivity : ComponentActivity() {
                         onDismiss = { finish() },
                         onSave = { value, outcome ->
                             lifecycleScope.launch {
-                                save(h, existing, value)
+                                val saved = save(h, value, today)
+                                if (!saved) {
+                                    Toast.makeText(this@ValueInputActivity, "날짜가 바뀌어 저장하지 않았습니다. 다시 눌러 주세요.", Toast.LENGTH_SHORT).show()
+                                    refreshWidget(appWidgetId)
+                                    finish()
+                                    return@launch
+                                }
                                 refreshWidget(appWidgetId)
                                 if (outcome == RecordOutcome.SUCCESS) {
                                     burstAccent = HabitWidgets.parseThemeColor(h.themeColor)
@@ -120,18 +129,28 @@ class ValueInputActivity : ComponentActivity() {
         }
     }
 
-    private suspend fun save(habit: HabitEntity, existing: HabitRecordEntity?, value: Float) {
-        val today = LocalDate.now().toString()
-        if (existing != null) repository.deleteRecord(existing)
-        repository.insertRecord(
-            HabitRecordEntity(
-                habitId = habit.habitId,
-                date = today,
-                status = RecordOutcomes.statusForValue(value, habit.targetValue),
-                inputValue = value
-            )
-        )
-        RecordSideEffects.afterRecordChange(this, repository, habit.habitId)
+    /**
+     * 화면을 연 날짜([openedDate])에 저장한다. 쓰기 직전에 날짜가 바뀌었으면 저장하지 않고 false.
+     * 쓰기는 NonCancellable + DAO 트랜잭션이라 액티비티가 도중에 종료되어도 삭제만 남거나 행이 둘이 되지 않는다.
+     */
+    private suspend fun save(habit: HabitEntity, value: Float, openedDate: String): Boolean {
+        if (LocalDate.now().toString() != openedDate) return false
+        return try {
+            withContext(NonCancellable) {
+                repository.upsertValueRecord(
+                    habitId = habit.habitId,
+                    date = openedDate,
+                    status = RecordOutcomes.statusForValue(value, habit.targetValue),
+                    inputValue = value
+                )
+                RecordSideEffects.afterRecordChange(applicationContext, repository, habit.habitId)
+            }
+            true
+        } catch (e: Exception) {
+            Log.e("ValueInputActivity", "save failed", e)
+            Toast.makeText(this, "저장에 실패했습니다", Toast.LENGTH_SHORT).show()
+            false
+        }
     }
 
     private suspend fun refreshWidget(appWidgetId: Int) {

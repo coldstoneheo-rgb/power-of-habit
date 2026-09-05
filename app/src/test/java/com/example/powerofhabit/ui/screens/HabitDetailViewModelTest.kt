@@ -94,6 +94,7 @@ class HabitDetailViewModelTest {
         override suspend fun getRecord(habitId: Int, date: String): HabitRecordEntity? = null
         override fun getRecordsForHabitBetween(habitId: Int, startDate: String, endDate: String): Flow<List<HabitRecordEntity>> = flow { emit(emptyList()) }
         override suspend fun toggleCompletion(habitId: Int, date: String): String = "COMPLETED"
+        override suspend fun upsertValueRecord(habitId: Int, date: String, status: String, inputValue: Float): Long = 0L
         override fun getRecordsBetween(startDate: String, endDate: String): Flow<List<HabitRecordEntity>> = flow { emit(emptyList()) }
         override suspend fun insertRecord(record: HabitRecordEntity): Long = 0L
         override suspend fun updateRecordStatus(recordId: Int, status: String) {}

@@ -48,9 +48,8 @@ fun ValueInputDialog(
         mutableStateOf(initialValue?.let { if (it % 1f == 0f) it.toInt().toString() else it.toString() } ?: "")
     }
     val focusRequester = remember { FocusRequester() }
-    if (autoFocus) {
-        LaunchedEffect(Unit) { focusRequester.requestFocus() }
-    }
+    // 저장 가능 여부는 버튼 활성화로 드러낸다(빈 값·NaN·Infinity는 저장 불가) — 무반응 탭을 없앤다.
+    val parsedValue = input.replace(',', '.').toFloatOrNull()?.takeIf { it.isFinite() }
     val targetText = habit.targetValue?.let { t ->
         val v = if (t % 1f == 0f) t.toInt().toString() else t.toString()
         "목표 $v ${habit.unit ?: ""}".trim()
@@ -87,17 +86,21 @@ fun ValueInputDialog(
                         .fillMaxWidth()
                         .focusRequester(focusRequester)
                 )
+                // 다이얼로그는 별도 창(컴포지션)이라 포커스 요청은 텍스트 필드와 같은 슬롯 안에서 해야 노드가 붙은 뒤 실행된다
+                if (autoFocus) {
+                    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+                }
             }
         },
         confirmButton = {
             TextButton(
+                enabled = parsedValue != null,
                 onClick = {
-                    // NaN·Infinity·빈 값은 저장하지 않는다(RecordOutcomes와 같은 유효성 기준)
-                    val value = input.replace(',', '.').toFloatOrNull()?.takeIf { it.isFinite() } ?: return@TextButton
+                    val value = parsedValue ?: return@TextButton
                     onSave(value, RecordOutcomes.of(RecordOutcomes.TYPE_VALUE, null, value, habit.targetValue))
                 }
             ) {
-                Text("저장", color = accent, fontWeight = FontWeight.Bold)
+                Text("저장", color = if (parsedValue != null) accent else HabitTheme.colors.textDisabled, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
