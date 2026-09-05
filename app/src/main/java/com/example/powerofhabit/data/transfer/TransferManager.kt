@@ -42,13 +42,23 @@ class TransferManager(private val repository: DataRepository) {
         }
     }
 
+    /** JSON 파일(§4-1)을 병합한다. */
     suspend fun importFrom(context: Context, uri: Uri): Result<ImportSummary> = withContext(Dispatchers.IO) {
         runCatching {
             val text = context.contentResolver.openInputStream(uri)
                 ?.use { it.readBytes().toString(Charsets.UTF_8) }
                 ?: throw IllegalStateException("파일을 열 수 없습니다")
-            val export = HabitTransfer.decode(text)
+            importExport(context, HabitTransfer.decode(text))
+        }
+    }
 
+    /** 옛 앱의 SQLite 파일(.db + 선택 -wal/-shm, §4-2)을 읽어 JSON 가져오기와 같은 규칙으로 병합한다. */
+    suspend fun importLegacyDb(context: Context, uris: List<Uri>): Result<ImportSummary> = withContext(Dispatchers.IO) {
+        runCatching { importExport(context, LegacyDbImporter(context).readExport(uris)) }
+    }
+
+    /** 병합 본체. JSON·옛 DB 두 입구가 같은 계획·트랜잭션·알림 예약을 탄다. */
+    private suspend fun importExport(context: Context, export: HabitExport): ImportSummary {
             val plan = HabitTransfer.plan(
                 existingHabits = repository.getAllHabits().first(),
                 existingRecords = repository.getAllRecords().first(),
@@ -96,8 +106,7 @@ class TransferManager(private val repository: DataRepository) {
                 }
             }
 
-            plan.summary.copy(recordsAdded = recordsAdded, recordsSkipped = recordsSkipped, badgesAdded = badgesAdded)
-        }
+            return plan.summary.copy(recordsAdded = recordsAdded, recordsSkipped = recordsSkipped, badgesAdded = badgesAdded)
     }
 
     private fun appVersionName(context: Context): String? = runCatching {

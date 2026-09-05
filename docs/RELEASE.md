@@ -75,8 +75,12 @@ applicationId가 바뀌었으므로 `com.example.powerofhabit`로 설치된 기�
 - 파일의 `formatVersion`이 앱이 아는 값보다 크면 거부한다(앱 업데이트 후 재시도).
 - 기기 교체 절차: 옛 기기 새 앱에서 내보내기 → 파일 전달(Drive·메신저 등) → 새 기기 새 앱에서 가져오기.
 
-### 4-2. 옛 앱(`com.example.powerofhabit`) → 새 앱 — **미구현, 후속**
-옛 앱에는 §4-1의 JSON 내보내기가 없고, 옛 앱을 재빌드·재배포하지 않는다(서명 키가 다르면 갱신 불가 = 데이터 소실 경로. 결정 기록: `docs/decisions/2026-09-05-value-3state-widget-tap-migration.md` 결정 3 — widget-fixes 브랜치에서 들어오는 문서).
+### 4-2. 옛 앱(`com.example.powerofhabit`) → 새 앱 — ✅ DB 파일 가져오기 구현됨 (2026-09-06)
+옛 앱에는 §4-1의 JSON 내보내기가 없고, 옛 앱을 재빌드·재배포하지 않는다(서명 키가 다르면 갱신 불가 = 데이터 소실 경로. 결정 기록: `docs/decisions/2026-09-05-value-3state-widget-tap-migration.md` 결정 3).
+새 앱 설정 다이얼로그의 **"옛 앱 DB 파일 가져오기"** 버튼이 SQLite 파일을 직접 읽어 §4-1과 **같은 병합 규칙**으로 넣는다(덮어쓰기·재시작 없음, 현재 데이터 보존).
+- 파일 선택기에서 `power_of_habit.db`를 고르고, 같은 폴더에 `-wal`·`-shm`이 있으면 **세 파일을 함께 선택**한다(-wal 없이는 마지막 체크포인트 이후 기록이 빠진다).
+- 안전장치: SQLite 헤더 → `user_version ≤ 현재 스키마(5)` → 캐시 사본에서 `PRAGMA integrity_check` → 통과 시에만 읽는다. 스키마 v1~v5 어느 것이든 없는 컬럼은 기본값(`data/transfer/LegacyDbRows.kt`, JVM 테스트).
+- 코드: `LegacyDbImporter.kt`(파일 → HabitExport) → `TransferManager.importExport`(JSON과 공용).
 - 옛 앱이 **debug 빌드**면 DB 파일을 뽑을 수는 있다:
   ```
   adb shell am force-stop com.example.powerofhabit
@@ -86,8 +90,9 @@ applicationId가 바뀌었으므로 `com.example.powerofhabit`로 설치된 기�
   adb exec-out run-as com.example.powerofhabit cat databases/power_of_habit.db-shm > old.db-shm   # 있을 때만
   ```
   (`exec-out`은 바이너리를 그대로 전달한다 — `adb shell ... >`는 Windows에서 줄바꿈 변환으로 DB가 깨질 수 있다. DB 파일명 `power_of_habit.db`는 `di/DatabaseModule.kt` 기준. release 빌드면 `run-as`가 거부되며 루팅 없이는 꺼낼 수 없다.)
-- 그러나 이 파일은 SQLite이고 **새 앱은 DB 파일 가져오기를 지원하지 않는다**(JSON만). 따라서 지금은 "뽑아 보관"까지만 가능하다.
-- 후속 과제(택1): (a) 새 앱에 **DB 파일 가져오기**(SQLite 헤더·`user_version ≤ 현재`·`integrity_check` 통과 시에만, 기존 DB는 `pre_restore_<ts>.db`로 보존, 경고 다이얼로그) 추가, 또는 (b) PC에서 `old.db`를 §4-1 JSON 형식으로 변환하는 스크립트. 둘 중 하나가 들어가기 전까지 **옛 앱을 지우지 말 것.**
+- 뽑은 `old.db`(+`old.db-wal`/`old.db-shm`)를 폰의 다운로드 폴더 등으로 옮긴 뒤 새 앱에서 **"옛 앱 DB 파일 가져오기"**로 세 파일을 함께 고른다. 파일 이름은 `xxx.db`, `xxx.db-wal`, `xxx.db-shm` 규칙만 지키면 된다.
+- 가져오기 요약 토스트(습관·기록·뱃지 건수)를 확인하고, 홈·상세에서 기록이 보이면 그때 옛 앱을 지운다. **그 전까지 옛 앱을 지우지 말 것.**
+- release 빌드라 `run-as`가 거부되면 루팅 없이 꺼낼 방법이 없다 — 이 경우는 옛 앱을 유지한 채 새 앱을 새로 시작하는 것이 유일한 선택이다.
 
 ## 5. 체크리스트 (첫 내부 테스트 전)
 - [ ] `release.jks` + `keystore.properties` 준비, 백업 완료
