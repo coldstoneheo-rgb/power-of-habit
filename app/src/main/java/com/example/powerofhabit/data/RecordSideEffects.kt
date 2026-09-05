@@ -12,7 +12,10 @@ import kotlinx.coroutines.flow.first
  */
 object RecordSideEffects {
     suspend fun afterRecordChange(context: Context, repository: DataRepository, habitId: Int) {
-        BadgeManager(repository, context).checkAndAwardBadges(repository.getRecordsForHabit(habitId).first())
+        // 뱃지 스트릭은 습관의 빈도(주기)를 알아야 판정한다 — 습관이 이미 지워졌으면 뱃지는 건너뛴다.
+        repository.getHabitById(habitId).first()?.let { habit ->
+            BadgeManager(repository, context).checkAndAwardBadges(habit, repository.getRecordsForHabit(habitId).first())
+        }
         GoogleDriveBackupManager(context).scheduleAutoBackup()
     }
 }
