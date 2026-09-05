@@ -187,6 +187,16 @@ class MainScreenViewModel @Inject constructor(
     _driveEmail.value = backupManager.signedInEmail()
   }
 
+  /** Google 계정 연결 해제. 백업/복원·이전이 진행 중이면 무시한다. 성공하면 계정 표시가 비고 다음 버튼이 다시 로그인을 요청한다. */
+  fun disconnectDrive() {
+    if (_driveBusy.value != null || _transferBusy.value) return
+    viewModelScope.launch {
+      val ok = backupManager.signOut()
+      refreshDriveAccount()
+      _transferMessages.emit(if (ok) "Google 계정 연결을 해제했습니다. Drive의 백업 파일은 그대로 남아 있습니다." else "연결 해제에 실패했습니다.")
+    }
+  }
+
   /** Drive appDataFolder로 DB 백업. 로그인이 없거나 권한이 회수됐으면 [driveSignInRequests]로 알린다. */
   fun backup() = runDrive(DriveAction.BACKUP)
 

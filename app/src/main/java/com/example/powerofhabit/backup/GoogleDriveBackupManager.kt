@@ -106,6 +106,20 @@ class GoogleDriveBackupManager(private val context: Context) {
         return GoogleSignIn.getClient(context, options)
     }
 
+    /**
+     * Google 계정 연결 해제(signOut). Drive의 백업 파일은 그대로 남고, 다음 백업/복원 버튼이 다시 로그인을 요청한다.
+     * 권한이 서버에서 회수됐거나 다른 계정으로 바꾸고 싶을 때의 유일한 탈출구(#32 자체 리뷰 #3).
+     */
+    suspend fun signOut(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            com.google.android.gms.tasks.Tasks.await(signInClient().signOut())
+            true
+        } catch (e: Exception) {
+            Log.w(TAG, "Google sign-out failed", e)
+            false
+        }
+    }
+
     /** 로그인 액티비티 결과 인텐트 → 계정. 실패는 [describeSignInError]로 사용자 문구를 만든다. */
     fun accountFromSignInResult(data: Intent?): Result<GoogleSignInAccount> = try {
         val account = GoogleSignIn.getSignedInAccountFromIntent(data).getResult(ApiException::class.java)

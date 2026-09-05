@@ -157,6 +157,7 @@ fun MainScreen(
                     signingIn = signingIn,
                     onBackup = { viewModel.backup() },
                     onRestore = { viewModel.restore() },
+                    onDisconnectDrive = { viewModel.disconnectDrive() },
                     modifier = modifier
                 )
             }
@@ -204,6 +205,8 @@ internal fun MainScreenContent(
     signingIn: Boolean = false,
     onBackup: () -> Unit = {},
     onRestore: () -> Unit = {},
+    /** Google 계정 연결 해제(signOut). */
+    onDisconnectDrive: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val today = remember { LocalDate.now() }
@@ -601,11 +604,20 @@ internal fun MainScreenContent(
                         lineHeight = 18.sp,
                         letterSpacing = -0.5.sp
                     )
-                    Text(
-                        text = driveEmail?.let { "연결된 계정: $it" } ?: "연결된 Google 계정 없음 — 백업/복원 버튼을 누르면 로그인을 요청합니다.",
-                        color = HabitTheme.colors.textSecondary,
-                        style = MaterialTheme.typography.labelSmall
-                    )
+                    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = driveEmail?.let { "연결된 계정: $it" } ?: "연결된 Google 계정 없음 — 백업/복원 버튼을 누르면 로그인을 요청합니다.",
+                            color = HabitTheme.colors.textSecondary,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (driveEmail != null) {
+                            // 권한 회수·계정 변경 시 재로그인으로 가는 유일한 길. 백업 파일은 Drive에 남는다.
+                            TextButton(onClick = onDisconnectDrive, enabled = !driveLocked, contentPadding = PaddingValues(horizontal = Space.s2)) {
+                                Text("연결 해제", style = MaterialTheme.typography.labelMedium, color = HabitTheme.colors.textSecondary)
+                            }
+                        }
+                    }
 
                     if (driveBusy != null || signingIn) {
                         Row(
