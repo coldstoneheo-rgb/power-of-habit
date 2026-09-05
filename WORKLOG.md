@@ -12,6 +12,27 @@
 date: 2026-09-05
 project: power-of-habit
 agent: claude-code (harness-loop-engine)
+summary: 출시 준비 — applicationId com.woodpeckerai.powerofhabit 확정, 릴리스 서명 설정, versionCode 자동 증가, R8 minify, Play 내부 테스트 업로드(GPP) 배선, RELEASE.md
+status: on_track
+progress: "Play 내부 테스트 업로드 직전 단계 (근거: #27, testDebugUnitTest 통과, bundleRelease R8 빌드 성공). 키스토어 생성·Play Console 앱 생성은 사용자 작업으로 남음"
+changes: ["#27 chore(release): 출시 준비 — applicationId·서명·versionCode·R8·Play 업로드 배선"]
+next: 사용자가 release.jks 생성 + Play Console 앱/내부 테스터 등록 → 첫 AAB 수동 업로드 → 이후 하네스가 publishReleaseBundle로 자동화
+blockers: 키스토어 비밀번호·Play Console 설정은 사용자 직접 수행(docs/RELEASE.md §0)
+synergy: 릴리스 파이프라인(서명·버전·R8·GPP)은 baby-naming 등 다른 앱에 그대로 이식 가능 — L2C "Play 내부 테스트 자동화" 콘텐츠 원재료
+monetization: 아직 0원. 내부 테스트 → 프로덕션 → 결제 모델은 이후 결정
+```
+## 의미
+"드라이브에 APK 던지기"에서 "Play 내부 테스트로 올리기"로 배포 경로를 바꾸는 전제 작업이다. applicationId는 되돌릴 수 없는
+결정이라 브랜드(WoodpeckerAI) 역도메인으로 확정했고, 코드 패키지는 그대로 둬 diff를 최소화했다. versionCode를 커밋 수로 자동화해
+업로드마다 손으로 올리는 실수를 없앴고, R8을 켜 출시 빌드에서만 터지는 문제를 지금부터 매 빌드에서 잡는다.
+Drive 복사는 옵트인으로 낮췄다. 남은 것은 비밀(키스토어·서비스 계정)을 쥔 사용자 손에서만 끝나는 단계다.
+
+---
+
+```yaml
+date: 2026-09-05
+project: power-of-habit
+agent: claude-code (harness-loop-engine)
 summary: 홈 화면 위젯 2종(1x1 체크·2x2 캘린더 글랜스, Jetpack Glance) + DB 관찰 기반 위젯 자동 갱신 + 체크 토글 트랜잭션 단일화
 status: on_track
 progress: "PRD §1.1.4·§4-1 홈 위젯 구현 완료 (근거: #26, testDebugUnitTest 48/48, assembleDebug 성공, 자체리뷰 10건 반영). 실기기 배치·탭은 미검증"

@@ -85,20 +85,15 @@ SQLite / Room DB 스키마 구조는 다음과 같이 긴밀하게 설계되었�
 
 ---
 
-## 📦 빌드 및 디버깅 자동화 가이드
+## 📦 빌드 · 배포 가이드
 
-본 프로젝트에는 디버그 APK 빌드가 완료되는 즉시 구글 드라이브로 파일을 저장하고 정돈해 주는 커스텀 빌드 태스크가 탑재되어 있습니다.
+| 목적 | 명령 |
+|---|---|
+| 단위 테스트 | `./gradlew.bat testDebugUnitTest` |
+| 디버그 APK (실기기는 `adb install -r`) | `./gradlew.bat assembleDebug` |
+| 서명된 릴리스 AAB (R8 minify) | `./gradlew.bat bundleRelease` |
+| Play 내부 테스트 업로드 | `./gradlew.bat publishReleaseBundle` |
 
-### Google Drive 자동 복사 활성화 방법
-1. 프로젝트 루트 디렉토리의 `local.properties` 파일을 엽니다.
-2. 아래와 같이 APK 파일이 최종적으로 복사될 로컬 Google Drive 동기화 디렉토리 경로를 추가합니다:
-   ```properties
-   google.drive.apk.dir=G:/내 드라이브/AI-outputs/Android Studio/powerofhabit/apk
-   ```
-3. Gradle 빌드를 실행합니다:
-   ```bash
-   ./gradlew.bat assembleDebug
-   ```
-4. 빌드가 완료되면 `app/build/outputs/apk/` 하위에 위치한 디버그 APK가 설정된 디렉토리에 **타임스탬프와 빌드 코드(VersionCode)를 조합한 파일명**으로 안전하게 자동 복제됩니다.
-   * 복제 예시: `power-of-habit-v1.0_c1_20260619_2147-debug.apk`
-   * *만약 `local.properties` 경로가 비어있고 디폴트 구글 드라이브 마운트 경로도 탐색할 수 없다면, 빌드가 에러로 중단되지 않고 복사 단계를 건너뛴 후 정상 완료됩니다.*
+* applicationId는 `com.woodpeckerai.powerofhabit`, `versionCode`는 main 커밋 수로 자동 증가합니다.
+* 서명 키·Play 서비스 계정 준비와 배포 절차는 [`docs/RELEASE.md`](docs/RELEASE.md)를 따릅니다.
+* Google Drive 복사는 **옵트인**입니다. `local.properties`에 `google.drive.apk.dir=<동기화 폴더>`를 넣은 머신에서만 `assembleDebug`/`assembleRelease` 뒤에 타임스탬프 파일명(`power-of-habit-v1.0_c<code>_<시각>-debug.apk`)으로 복사됩니다.

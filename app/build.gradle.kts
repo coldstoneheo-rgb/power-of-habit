@@ -11,23 +11,64 @@ plugins {
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.hilt.android)
   alias(libs.plugins.ksp)
+  alias(libs.plugins.play.publisher)
 }
 
+// ---------------------------------------------------------------------------
+// 버전: versionCode는 main의 커밋 수(단조 증가)이며 -PversionCode=N 으로 덮어쓸 수 있다.
+// 배포마다 손으로 올리지 않아도 Play가 요구하는 "항상 증가"를 만족한다.
+// ---------------------------------------------------------------------------
+val baseVersionName = "1.0"
+val computedVersionCode: Int = (findProperty("versionCode") as String?)?.toIntOrNull()
+    ?: runCatching {
+        providers.exec { commandLine("git", "rev-list", "--count", "HEAD") }
+            .standardOutput.asText.get().trim().toInt()
+    }.getOrDefault(1)
+
+// ---------------------------------------------------------------------------
+// 릴리스 서명: 루트의 keystore.properties(gitignore) 또는 환경변수. 없으면 서명 없이 빌드된다(내부 테스트 업로드는 불가).
+// 생성 절차는 docs/RELEASE.md 참조.
+// ---------------------------------------------------------------------------
+val keystoreProps = Properties().apply {
+    val f = rootProject.file("keystore.properties")
+    if (f.exists()) FileInputStream(f).use { load(it) }
+}
+fun signing(key: String, env: String): String? = keystoreProps.getProperty(key)?.takeIf { it.isNotBlank() } ?: System.getenv(env)
+val releaseStoreFile = signing("storeFile", "POH_STORE_FILE")
+val releaseStorePassword = signing("storePassword", "POH_STORE_PASSWORD")
+val releaseKeyAlias = signing("keyAlias", "POH_KEY_ALIAS")
+val releaseKeyPassword = signing("keyPassword", "POH_KEY_PASSWORD")
+val hasReleaseSigning = listOf(releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword).all { it != null }
+
 android {
+    // namespace(R 클래스·코드 패키지)는 그대로 두고 applicationId(스토어 식별자)만 브랜드로 바꿨다.
     namespace = "com.example.powerofhabit"
     compileSdk = 37
     defaultConfig {
-        applicationId = "com.example.powerofhabit"
+        applicationId = "com.woodpeckerai.powerofhabit"
         minSdk = 24
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = computedVersionCode
+        versionName = "$baseVersionName.$computedVersionCode"
+    }
+
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = rootProject.file(releaseStoreFile!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (hasReleaseSigning) signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -57,6 +98,18 @@ android {
 
 kotlin {
     jvmToolchain(17)
+}
+
+// ---------------------------------------------------------------------------
+// Play 내부 테스트 업로드 (Gradle Play Publisher). 서비스 계정 JSON은 루트 play-service-account.json(gitignore).
+//   ./gradlew.bat publishReleaseBundle   → 내부 테스트 트랙에 AAB 업로드
+// 파일이 없으면 publish 태스크만 실패하고 일반 빌드는 영향 없다.
+// ---------------------------------------------------------------------------
+play {
+    val credentials = rootProject.file("play-service-account.json")
+    if (credentials.exists()) serviceAccountCredentials.set(credentials)
+    track.set("internal")
+    defaultToAppBundles.set(true)
 }
 
 dependencies {
@@ -124,10 +177,15 @@ dependencies {
   }
 }
 
+// ---------------------------------------------------------------------------
+// (옵트인) 빌드 산출물을 Google Drive 동기화 폴더로 복사. local.properties에
+//   google.drive.apk.dir=<경로>
+// 가 있을 때만 동작한다. 실기기 확인은 adb install 또는 Play 내부 테스트를 우선한다.
+// ---------------------------------------------------------------------------
 tasks.register("copyApkToGoogleDrive") {
     val buildDir = layout.buildDirectory
-    val versionName = android.defaultConfig.versionName ?: "1.0"
-    val versionCode = android.defaultConfig.versionCode ?: 1
+    val versionName = android.defaultConfig.versionName ?: baseVersionName
+    val versionCode = android.defaultConfig.versionCode ?: computedVersionCode
     val localPropertiesFile = rootProject.file("local.properties")
     doLast {
         val localProperties = Properties()
@@ -137,20 +195,10 @@ tasks.register("copyApkToGoogleDrive") {
             }
         }
         val customPath = localProperties.getProperty("google.drive.apk.dir") as? String
-        val destDir = if (!customPath.isNullOrBlank()) {
-            File(customPath)
-        } else {
-            val fallback = File("G:/내 드라이브/AI-outputs/Android Studio/powerofhabit/apk")
-            if (fallback.exists()) {
-                fallback
-            } else {
-                null
-            }
+        if (customPath.isNullOrBlank()) {
+            return@doLast // 옵트인 아님 — 조용히 건너뜀
         }
-        if (destDir == null) {
-            println("Google Drive APK directory is not configured in local.properties and fallback path does not exist. Skipping copy.")
-            return@doLast
-        }
+        val destDir = File(customPath)
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmm", Locale.US).apply {
             timeZone = TimeZone.getTimeZone("Asia/Seoul")
         }.format(Date())
@@ -162,7 +210,7 @@ tasks.register("copyApkToGoogleDrive") {
                     apkFile.copyTo(File(destDir, targetName), overwrite = true)
                     println("APK copied to Google Drive: ${destDir.absolutePath}/$targetName")
                 }
-                val releaseApk = buildDir.file("outputs/apk/release/app-release-unsigned.apk").get().asFile
+                val releaseApk = buildDir.file("outputs/apk/release/app-release.apk").get().asFile
                 if (releaseApk.exists()) {
                     val targetName = "power-of-habit-v${versionName}_c${versionCode}_${timestamp}-release.apk"
                     releaseApk.copyTo(File(destDir, targetName), overwrite = true)

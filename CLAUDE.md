@@ -29,7 +29,8 @@
 |---|---|
 | 컴파일 + 단위 테스트 | `./gradlew.bat testDebugUnitTest` (`compileDebugKotlin`을 포함) |
 | 디버그 APK | `./gradlew.bat assembleDebug` |
-| 릴리스 서명 빌드 | 키스토어 비밀번호 필요 → 사용자가 `!`로 직접 실행 |
+| 릴리스 AAB(R8) | `./gradlew.bat bundleRelease` — `keystore.properties` 없으면 미서명 빌드(R8 검증용으로는 충분) |
+| Play 내부 테스트 업로드 | `./gradlew.bat publishReleaseBundle` — 서명·서비스 계정 필요, 사용자가 `!`로 직접 실행 (`docs/RELEASE.md`) |
 - **worktree 선행 조건**: `local.properties`는 gitignore라 새 worktree에 없다. Gradle 실행 전 메인 체크아웃의 `local.properties`를 worktree 루트로 복사한다(또는 `ANDROID_HOME` 설정). 없으면 "SDK location not found"로 실패한다.
 - PR 전 최소 기준: 단위 테스트 통과 + `git diff --check`. 결과는 실제로 실행한 위치(worktree/메인)를 명시해 보고한다.
 - JDK 17 toolchain(`jvmToolchain(17)`), Gradle 9.4.1 wrapper, compileSdk 37 / minSdk 24. `--offline`은 aapt2 미캐시로 실패할 수 있다.

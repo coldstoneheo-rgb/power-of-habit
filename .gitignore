@@ -14,3 +14,9 @@ props.txt
 # Claude Code 로컬 전용(머신 고유 훅 경로·격리 작업공간)
 .claude/settings.local.json
 .claude/worktrees/
+
+# 릴리스 서명·Play 업로드 비밀 (docs/RELEASE.md)
+/keystore.properties
+*.jks
+*.keystore
+/play-service-account.json
