@@ -3,14 +3,8 @@
 # 여기에는 리플렉션/직렬화로 클래스 이름이나 멤버가 살아 있어야 하는 것만 적는다.
 # ---------------------------------------------------------------------------
 
-# --- kotlinx.serialization (Navigation3 NavKey 직렬화) ---
--keepattributes *Annotation*, InnerClasses
--dontnote kotlinx.serialization.AnnotationsKt
--keepclassmembers class kotlinx.serialization.json.** { *** Companion; }
--keepclasseswithmembers class kotlinx.serialization.json.** { kotlinx.serialization.KSerializer serializer(...); }
--keep,includedescriptorclasses class com.example.powerofhabit.**$$serializer { *; }
--keepclassmembers class com.example.powerofhabit.** { *** Companion; }
--keepclasseswithmembers class com.example.powerofhabit.** { kotlinx.serialization.KSerializer serializer(...); }
+# --- Navigation3 NavKey ---
+# kotlinx.serialization 규칙은 라이브러리 consumer 규칙(-if @Serializable 가드)으로 충분하므로 여기 복사하지 않는다.
 # NavKey는 클래스 이름으로 다형 직렬화되어 saved state에 들어간다 — 이름 유지
 -keepnames class * implements androidx.navigation3.runtime.NavKey
 

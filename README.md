@@ -91,9 +91,10 @@ SQLite / Room DB 스키마 구조는 다음과 같이 긴밀하게 설계되었�
 |---|---|
 | 단위 테스트 | `./gradlew.bat testDebugUnitTest` |
 | 디버그 APK (실기기는 `adb install -r`) | `./gradlew.bat assembleDebug` |
-| 서명된 릴리스 AAB (R8 minify) | `./gradlew.bat bundleRelease` |
+| 릴리스 AAB (R8 minify, 서명은 keystore.properties 있을 때) | `./gradlew.bat bundleRelease` |
 | Play 내부 테스트 업로드 | `./gradlew.bat publishReleaseBundle` |
 
 * applicationId는 `com.woodpeckerai.powerofhabit`, `versionCode`는 main 커밋 수로 자동 증가합니다.
 * 서명 키·Play 서비스 계정 준비와 배포 절차는 [`docs/RELEASE.md`](docs/RELEASE.md)를 따릅니다.
-* Google Drive 복사는 **옵트인**입니다. `local.properties`에 `google.drive.apk.dir=<동기화 폴더>`를 넣은 머신에서만 `assembleDebug`/`assembleRelease` 뒤에 타임스탬프 파일명(`power-of-habit-v1.0_c<code>_<시각>-debug.apk`)으로 복사됩니다.
+* Google Drive 복사는 **옵트인**입니다. `local.properties`에 `google.drive.apk.dir=<동기화 폴더>`를 넣은 머신에서만 `assembleDebug`/`assembleRelease` 뒤에 `power-of-habit-v<버전>_<시각>-debug.apk` 이름으로 복사됩니다.
+* 명령·조건의 정본은 `docs/RELEASE.md` §2 입니다. 이 표는 요약이며 어긋나면 RELEASE.md를 따릅니다.

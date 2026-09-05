@@ -16,8 +16,8 @@ summary: 출시 준비 — applicationId com.woodpeckerai.powerofhabit 확정, �
 status: on_track
 progress: "Play 내부 테스트 업로드 직전 단계 (근거: #27, testDebugUnitTest 통과, bundleRelease R8 빌드 성공). 키스토어 생성·Play Console 앱 생성은 사용자 작업으로 남음"
 changes: ["#27 chore(release): 출시 준비 — applicationId·서명·versionCode·R8·Play 업로드 배선"]
-next: 사용자가 release.jks 생성 + Play Console 앱/내부 테스터 등록 → 첫 AAB 수동 업로드 → 이후 하네스가 publishReleaseBundle로 자동화
-blockers: 키스토어 비밀번호·Play Console 설정은 사용자 직접 수행(docs/RELEASE.md §0)
+next: 사용자가 release.jks 생성 + Play Console 앱/내부 테스터 등록 → 첫 AAB 수동 업로드. 병행 후속: Google 로그인 흐름 부재로 백업/복원이 동작하지 않음(자체 리뷰 발견) → 로컬 ZIP 내보내기/가져오기 또는 로그인 UI
+blockers: 키스토어 비밀번호·Play Console 설정은 사용자 직접 수행(docs/RELEASE.md §0). 기존 com.example 앱 데이터 이전 수단 없음 — 예전 앱 삭제 금지
 synergy: 릴리스 파이프라인(서명·버전·R8·GPP)은 baby-naming 등 다른 앱에 그대로 이식 가능 — L2C "Play 내부 테스트 자동화" 콘텐츠 원재료
 monetization: 아직 0원. 내부 테스트 → 프로덕션 → 결제 모델은 이후 결정
 ```

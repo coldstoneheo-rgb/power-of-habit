@@ -73,3 +73,4 @@
 ## 7. Claude Code 하네스 병행 (2026-09-04 추가)
 - **이중 하네스**: Antigravity는 이 파일, Claude Code는 루트 `CLAUDE.md`를 읽는다. 공통 규약(§3~§6)은 여기가 SSOT이며 `CLAUDE.md`는 Claude Code 고유 델타(권한·검증 커맨드·코드 그래프 사용법)만 담는다.
 - **codebase-memory-mcp**: 저장소가 `power-of-habit` 이름으로 인덱싱돼 있다. 구조 탐색(심볼·호출관계·영향분석)은 grep보다 그래프 도구를 우선한다(사용법은 `CLAUDE.md` §2).
+- **출시·버전 규칙**: applicationId `com.woodpeckerai.powerofhabit`, versionCode = origin/main 커밋 수, 서명·Play 업로드 절차는 `docs/RELEASE.md`가 정본. 스토어 업로드(`publishReleaseBundle`)는 사용자만 실행한다.

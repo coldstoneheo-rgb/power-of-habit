@@ -13,7 +13,7 @@
 - **완료 = 머지 + 로컬 main 동기화.** PR 생성에서 멈추지 않는다.
   단, `gh pr merge`는 사용자 전역 설정(auto 모드 soft_deny)의 **1회 확인 게이트**를 통과한다 — 이 프로젝트 설정으로 우회하지 않는다.
 - worktree 안에서는 `gh pr merge --delete-branch`를 쓰지 않는다(로컬 정리가 "main is already checked out"으로 실패). 머지 후 메인에서 수동 정리.
-- 멈춰서 묻는 예외(1회로 묶어서): 서명 빌드(키스토어 비밀번호, 사용자가 `!`로 직접), 승인 근거 없는 비가역 행위, 방향이 갈리는 진짜 모호한 결정.
+- 멈춰서 묻는 예외(1회로 묶어서): 스토어 업로드 등 외부 효과(`publishReleaseBundle`, 사용자가 `!`로 직접), 승인 근거 없는 비가역 행위, 방향이 갈리는 진짜 모호한 결정.
 - 1 PR = 1 관심사(`WORKFLOW.md` §3). 브랜치명 `feature/…`, `fix/…`, `chore/…`.
 
 ## 2. 코드 탐색 — codebase-memory-mcp 그래프 우선
@@ -29,8 +29,8 @@
 |---|---|
 | 컴파일 + 단위 테스트 | `./gradlew.bat testDebugUnitTest` (`compileDebugKotlin`을 포함) |
 | 디버그 APK | `./gradlew.bat assembleDebug` |
-| 릴리스 AAB(R8) | `./gradlew.bat bundleRelease` — `keystore.properties` 없으면 미서명 빌드(R8 검증용으로는 충분) |
-| Play 내부 테스트 업로드 | `./gradlew.bat publishReleaseBundle` — 서명·서비스 계정 필요, 사용자가 `!`로 직접 실행 (`docs/RELEASE.md`) |
+| 릴리스 AAB(R8) | `./gradlew.bat bundleRelease` — 하네스가 실행 가능. `keystore.properties`가 있으면 서명, 없으면 미서명(R8 검증용). 정본: `docs/RELEASE.md` §2 |
+| Play 내부 테스트 업로드 | `./gradlew.bat publishReleaseBundle` — **외부 효과(스토어 업로드)** 이므로 사용자가 `!`로 직접 실행. 하네스는 호출하지 않는다 |
 - **worktree 선행 조건**: `local.properties`는 gitignore라 새 worktree에 없다. Gradle 실행 전 메인 체크아웃의 `local.properties`를 worktree 루트로 복사한다(또는 `ANDROID_HOME` 설정). 없으면 "SDK location not found"로 실패한다.
 - PR 전 최소 기준: 단위 테스트 통과 + `git diff --check`. 결과는 실제로 실행한 위치(worktree/메인)를 명시해 보고한다.
 - JDK 17 toolchain(`jvmToolchain(17)`), Gradle 9.4.1 wrapper, compileSdk 37 / minSdk 24. `--offline`은 aapt2 미캐시로 실패할 수 있다.
