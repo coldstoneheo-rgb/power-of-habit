@@ -28,7 +28,10 @@ applicationId와 서명 키가 바뀌었으므로 Drive API용 Android OAuth 클
 1. `keytool -list -v -keystore release.jks -alias powerofhabit` 로 업로드 키 SHA-1 확인. Play Console → 앱 무결성에서 **Play 앱 서명 키 SHA-1**도 확인.
 2. Cloud Console → 사용자 인증 정보 → OAuth 클라이언트 ID(Android) → 패키지 `com.woodpeckerai.powerofhabit` + 두 SHA-1 각각 등록(디버그 키 SHA-1도 개발용으로 추가).
 3. 다른 Cloud 프로젝트에 만들면 `appDataFolder`가 분리돼 예전 백업 파일이 보이지 않는다.
-> **현재 상태(2026-09-05)**: 앱에 Google 로그인 흐름이 없어 `GoogleSignIn.getLastSignedInAccount()`가 항상 null → 백업·복원이 모두 `false`로 끝난다. 로그인 UI 추가가 선행돼야 한다(후속 과제).
+4. 디버그 빌드로 테스트하려면 디버그 키 SHA-1도 등록한다:
+   `keytool -list -v -keystore %USERPROFILE%\.android\debug.keystore -alias androiddebugkey -storepass android -keypass android`
+5. Cloud Console → API 및 서비스 → **Google Drive API 사용 설정**. OAuth 동의 화면은 "테스트" 상태여도 되며(`drive.appdata`는 비민감 범위), 테스트 사용자에 본인 계정을 넣는다.
+> **현재 상태(2026-09-05, 이 PR 이후)**: 설정 → 백업하기/복원하기를 누르면 앱이 Google 로그인을 요청하고(`drive.appdata` 범위), 성공하면 바로 이어서 백업/복원한다. OAuth 클라이언트가 등록돼 있지 않으면 로그인 결과가 **코드 10(DEVELOPER_ERROR)** 로 실패하며 앱이 그 사실을 토스트로 알린다 — 위 1~5를 끝내면 코드 없이 해결된다.
 
 ## 1. 빌드 규칙
 | 항목 | 규칙 |
@@ -59,10 +62,10 @@ applicationId와 서명 키가 바뀌었으므로 Drive API용 Android OAuth 클
 - Google Drive 복사는 옵트인: `local.properties`에 `google.drive.apk.dir=<경로>`를 넣은 머신에서만 동작한다.
 
 ## 4. 데이터 이전·백업
-applicationId가 바뀌었으므로 `com.example.powerofhabit`로 설치된 기존(옛) 앱과는 **별개 앱**이다. Google Drive 백업/복원은 로그인 흐름이 없어 동작하지 않는다(§0-4).
+applicationId가 바뀌었으므로 `com.example.powerofhabit`로 설치된 기존(옛) 앱과는 **별개 앱**이다. Google Drive 백업/복원은 버튼을 누를 때 Google 로그인을 요청하며, §0-4의 OAuth 클라이언트 등록이 선행돼야 실제로 동작한다(미등록이면 코드 10으로 실패).
 
 ### 4-1. JSON 내보내기/가져오기 — 새 앱 ↔ 새 앱 (기기 교체·수동 백업용) ✅ 구현됨
-설정 다이얼로그(홈 우상단 톱니) 하단의 **"파일로 내보내기 (JSON)" / "파일에서 가져오기 (JSON)"**. 시스템 파일 선택기(SAF)로 위치를 고르므로 권한이 필요 없다.
+설정 다이얼로그(홈 우상단 톱니) 하단의 **"파일로 내보내기" / "파일에서 가져오기"**(JSON). 시스템 파일 선택기(SAF)로 위치를 고르므로 권한이 필요 없다.
 - 내보내기: 습관·기록·뱃지 전부를 `power-of-habit-<yyyyMMdd>.json`(formatVersion 1)으로 쓴다. 코드: `data/transfer/HabitTransfer.kt`(순수 Kotlin, JVM 테스트) + `TransferManager.kt`(SAF I/O).
 - 가져오기는 **덮어쓰지 않는 병합**이다.
   - 습관: `(title, createdAt)`이 같으면 기존 습관으로 보고 id를 재사용, 아니면 새 습관으로 추가(id 재매핑).
@@ -89,6 +92,6 @@ applicationId가 바뀌었으므로 `com.example.powerofhabit`로 설치된 기�
 ## 5. 체크리스트 (첫 내부 테스트 전)
 - [ ] `release.jks` + `keystore.properties` 준비, 백업 완료
 - [ ] `./gradlew.bat bundleRelease` 성공, 서명 확인(`apksigner verify` 또는 Play 업로드 통과)
-- [ ] 릴리스 빌드 실기기 설치 후 스모크: 습관 추가·체크·상세·위젯 배치·CSV 내보내기·JSON 내보내기/가져오기(§4-1) (백업/복원은 §0-4 해결 전까지 제외)
+- [ ] 릴리스 빌드 실기기 설치 후 스모크: 습관 추가·체크·상세·위젯 배치·CSV 내보내기·JSON 내보내기/가져오기(§4-1)·Drive 백업/복원(§0-4 OAuth 클라이언트 등록 후 — 로그인 요청 → 백업 → 복원 확인 다이얼로그 → 재시작)
 - [ ] Play Console 앱 생성·내부 테스터 등록
 - [ ] 첫 AAB 수동 업로드 → 이후 `publishReleaseBundle`

@@ -9,5 +9,6 @@
     android:widgetCategory="home_screen"
     android:widgetFeatures="reconfigurable"
     android:configure="com.example.powerofhabit.widget.WidgetConfigActivity"
+    android:previewImage="@drawable/widget_preview_calendar"
     android:initialLayout="@layout/glance_default_loading_layout"
     android:description="@string/widget_calendar_description" />

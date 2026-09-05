@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 위젯 선택기 미리보기(1x1 습관 체크): 다크 타일 + 습관색 점 + 체크. 실제 위젯은 Glance가 그린다. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="72dp"
+    android:height="72dp"
+    android:viewportWidth="72"
+    android:viewportHeight="72">
+    <path
+        android:pathData="M14,0 h44 a14,14 0 0 1 14,14 v44 a14,14 0 0 1 -14,14 h-44 a14,14 0 0 1 -14,-14 v-44 a14,14 0 0 1 14,-14 z"
+        android:fillColor="#D9101012" />
+    <path
+        android:pathData="M36,14 m-4,0 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0"
+        android:fillColor="#FFFF9800" />
+    <path
+        android:pathData="M24,40 L33,49 L50,31"
+        android:strokeColor="#FFFF9800"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M18,58 h36"
+        android:strokeColor="#66FFFFFF"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+</vector>

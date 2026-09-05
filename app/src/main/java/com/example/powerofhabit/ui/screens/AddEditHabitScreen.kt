@@ -16,8 +16,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -63,7 +68,8 @@ fun AddEditHabitScreen(
     var memo by remember { mutableStateOf("") }
     var reminderTime by remember { mutableStateOf<String?>(null) }
     var isReminderEnabled by remember { mutableStateOf(false) }
-    var selectedThemeHex by remember { mutableStateOf("#42A5F5") } // Default light blue matte
+    // 새 습관은 팔레트에서 무작위 색으로 시작(수정 화면은 아래 LaunchedEffect가 저장된 색으로 덮는다)
+    var selectedThemeHex by remember { mutableStateOf(randomHabitColorHex()) }
     var habitType by remember { mutableStateOf(defaultHabitType) }
     var unit by remember { mutableStateOf("") }
     var targetValueString by remember { mutableStateOf("") }
@@ -129,7 +135,7 @@ fun AddEditHabitScreen(
         try {
             Color(android.graphics.Color.parseColor(selectedThemeHex))
         } catch (e: Exception) {
-            Color(0xFF42A5F5)
+            PremiumMatteColors.first().second
         }
     }
     
@@ -324,17 +330,51 @@ fun AddEditHabitScreen(
                     singleLine = true
                 )
 
-                // 색상 선택 버튼
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("색", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(themeColor)
-                            .border(1.5.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                            .clickable { showColorPickerDialog = true }
+                // 색 필드: 제목과 같은 outlined 필드 장식(테두리 위 라벨 "색")만 빌려 쓰고 안에는 스와치 하나.
+                // 실제 텍스트 입력이 없으므로 접근성에는 "색 선택" 버튼 하나로만 보인다.
+                val colorFieldInteraction = remember { MutableInteractionSource() }
+                val colorFieldColors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                )
+                Box(
+                    modifier = Modifier
+                        .width(84.dp)
+                        .clip(OutlinedTextFieldDefaults.shape)
+                        .clickable(
+                            interactionSource = colorFieldInteraction,
+                            indication = null,
+                            role = Role.Button,
+                            onClickLabel = "색 선택"
+                        ) { showColorPickerDialog = true }
+                        .semantics(mergeDescendants = true) { contentDescription = "색 $selectedThemeHex" }
+                ) {
+                    OutlinedTextFieldDefaults.DecorationBox(
+                        value = " ", // 비어 있지 않아야 라벨이 테두리 위로 떠오른다
+                        innerTextField = {},
+                        enabled = true,
+                        singleLine = true,
+                        visualTransformation = VisualTransformation.None,
+                        interactionSource = colorFieldInteraction,
+                        label = { Text("색") },
+                        leadingIcon = {
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(themeColor)
+                                    .border(1.dp, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
+                            )
+                        },
+                        colors = colorFieldColors,
+                        container = {
+                            OutlinedTextFieldDefaults.Container(
+                                enabled = true,
+                                isError = false,
+                                interactionSource = colorFieldInteraction,
+                                colors = colorFieldColors
+                            )
+                        }
                     )
                 }
             }

@@ -19,6 +19,9 @@ import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import android.net.Uri
 import com.example.powerofhabit.data.transfer.TransferManager
+import com.example.powerofhabit.backup.DriveAction
+import com.example.powerofhabit.backup.DriveOutcome
+import com.example.powerofhabit.backup.GoogleDriveBackupManager
 
 sealed interface MainScreenUiState {
   object Loading : MainScreenUiState
@@ -38,6 +41,7 @@ class MainScreenViewModel @Inject constructor(
 ) : ViewModel() {
 
   private val transferManager = TransferManager(dataRepository)
+  private val backupManager = GoogleDriveBackupManager(context)
 
   val isDarkMode: StateFlow<Boolean> = settingsManager.isDarkMode
   val isDateDescending: StateFlow<Boolean> = settingsManager.isDateDescending
@@ -153,6 +157,54 @@ class MainScreenViewModel @Inject constructor(
         _transferBusy.value = false
       }
       _transferMessages.emit(message)
+    }
+  }
+
+  // Google Drive 백업/복원 상태도 ViewModel이 든다 — 업로드 중 회전해도 코루틴이 끊기지 않고 "진행 중"이 유지된다.
+  private val _driveBusy = MutableStateFlow<DriveAction?>(null)
+  /** 진행 중인 Drive 동작(null = 없음). */
+  val driveBusy: StateFlow<DriveAction?> = _driveBusy.asStateFlow()
+  private val _driveEmail = MutableStateFlow<String?>(null)
+  /** 연결된 Google 계정(표시용). 로그인 결과가 오면 [refreshDriveAccount]로 갱신한다. */
+  val driveEmail: StateFlow<String?> = _driveEmail.asStateFlow()
+
+  init {
+    // JVM 단위 테스트(가짜 Context)에서는 GMS 조회가 실패할 수 있으므로 생성은 절대 막지 않는다.
+    runCatching { refreshDriveAccount() }
+  }
+  private val _driveSignInRequests = MutableSharedFlow<DriveAction>(extraBufferCapacity = 1)
+  /** 로그인이 필요해 멈춘 동작. 화면이 수집해 Google 로그인을 띄우고, 성공하면 같은 동작을 다시 부른다. */
+  val driveSignInRequests: SharedFlow<DriveAction> = _driveSignInRequests.asSharedFlow()
+
+  fun refreshDriveAccount() {
+    _driveEmail.value = backupManager.signedInEmail()
+  }
+
+  /** Drive appDataFolder로 DB 백업. 로그인이 없거나 권한이 회수됐으면 [driveSignInRequests]로 알린다. */
+  fun backup() = runDrive(DriveAction.BACKUP)
+
+  /** Drive 백업으로 DB 교체 후 앱 재시작. 호출 전 화면에서 확인을 받는다(현재 데이터가 사라진다). */
+  fun restore() = runDrive(DriveAction.RESTORE)
+
+  private fun runDrive(action: DriveAction) {
+    if (_transferBusy.value) return
+    if (!_driveBusy.compareAndSet(expect = null, update = action)) return // 동시 실행 방지
+    viewModelScope.launch {
+      val outcome = try {
+        when (action) {
+          DriveAction.BACKUP -> backupManager.backupDatabase()
+          DriveAction.RESTORE -> backupManager.restoreDatabase()
+        }
+      } finally {
+        _driveBusy.value = null
+      }
+      when (outcome) {
+        DriveOutcome.SUCCESS -> if (action == DriveAction.BACKUP) _transferMessages.emit("백업이 완료되었습니다.")
+        DriveOutcome.NEEDS_SIGN_IN -> _driveSignInRequests.emit(action)
+        DriveOutcome.FAILED -> _transferMessages.emit(
+          if (action == DriveAction.BACKUP) "백업에 실패했습니다." else "복원에 실패했습니다. Drive에 올바른 백업 파일이 없습니다."
+        )
+      }
     }
   }
 
