@@ -151,6 +151,7 @@ fun MainScreen(
                     isTransferring = transferBusy,
                     onExportTo = { uri -> viewModel.exportTo(uri) },
                     onImportFrom = { uri -> viewModel.importFrom(uri) },
+                    onImportLegacyDb = { uris -> viewModel.importLegacyDb(uris) },
                     driveBusy = driveBusy,
                     driveEmail = driveEmail,
                     signingIn = signingIn,
@@ -193,6 +194,8 @@ internal fun MainScreenContent(
     onExportTo: (Uri) -> Unit = {},
     /** JSON 가져오기(병합): 원본 Uri. */
     onImportFrom: (Uri) -> Unit = {},
+    /** 옛 앱 SQLite 파일(.db + 선택 -wal/-shm) 가져오기(병합). */
+    onImportLegacyDb: (List<Uri>) -> Unit = {},
     /** 진행 중인 Drive 동작(ViewModel 상태). null이면 없음. */
     driveBusy: DriveAction? = null,
     /** 연결된 Google 계정 이메일(표시용). */
@@ -230,6 +233,10 @@ internal fun MainScreenContent(
     val importLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri -> if (uri != null) onImportFrom(uri) }
+    // 옛 앱 DB: .db와 -wal/-shm을 한 번에 여러 개 고를 수 있게 한다(-wal 없이는 마지막 체크포인트 이후 기록이 빠질 수 있다).
+    val legacyDbLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris -> if (uris.isNotEmpty()) onImportLegacyDb(uris) }
 
     // Google Drive 백업/복원(실행·진행 상태는 ViewModel, 로그인 요청은 MainScreen). 예전에는 로그인 화면이 없어 두 버튼이 항상 실패했다.
     val driveLocked = driveBusy != null || signingIn || isTransferring
@@ -653,6 +660,22 @@ internal fun MainScreenContent(
                     }
                     Text(
                         text = if (isTransferring) "파일 처리 중..." else "JSON 파일로 저장·불러오기 (로그인 불필요). 가져오기는 현재 데이터를 지우지 않고 병합하며, 같은 습관·같은 날짜의 기록은 기존 것을 유지합니다.",
+                        color = HabitTheme.colors.textSecondary,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                    // 옛 앱(com.example.powerofhabit)의 DB 파일 병합 — docs/RELEASE.md §4-2
+                    OutlinedButton(
+                        onClick = { legacyDbLauncher.launch(arrayOf("*/*")) },
+                        enabled = !driveLocked,
+                        border = BorderStroke(1.dp, HabitTheme.colors.lineStrong),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = HabitTheme.colors.textPrimary),
+                        contentPadding = PaddingValues(horizontal = Space.s2, vertical = Space.s2),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("옛 앱 DB 파일 가져오기", style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    Text(
+                        text = "예전 'Power of Habit' 앱에서 꺼낸 power_of_habit.db를 고르세요. 같은 폴더에 -wal·-shm 파일이 있으면 세 개를 함께 선택해야 마지막 기록까지 들어옵니다. 위와 같은 병합 규칙이며 현재 데이터는 지워지지 않습니다.",
                         color = HabitTheme.colors.textSecondary,
                         style = MaterialTheme.typography.labelSmall
                     )

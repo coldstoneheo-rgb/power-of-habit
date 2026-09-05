@@ -17,7 +17,9 @@ data class ImportSummary(
     val habitsMatched: Int,
     val recordsAdded: Int,
     val recordsSkipped: Int,
-    val badgesAdded: Int
+    val badgesAdded: Int,
+    /** 성공했지만 사용자가 알아야 할 것(예: 옛 DB를 -wal 없이 읽음). 화면이 요약 뒤에 덧붙인다. */
+    val warnings: List<String> = emptyList()
 )
 
 /** 새로 삽입할 습관. [sourceHabitId]는 파일 안의 id이며 삽입 후 실제 id로 재매핑된다. */

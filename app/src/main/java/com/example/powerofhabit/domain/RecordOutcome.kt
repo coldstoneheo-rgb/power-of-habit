@@ -16,6 +16,7 @@ enum class RecordOutcome { SUCCESS, PARTIAL, NONE, SKIPPED }
 object RecordOutcomes {
 
     const val TYPE_VALUE = "VALUE"
+    const val TYPE_CHECK = "CHECK"
 
     /** 목표 방향: 값이 목표 **이상**이면 성공(기본, 예: 달리기 5km). */
     const val TARGET_AT_LEAST = "AT_LEAST"

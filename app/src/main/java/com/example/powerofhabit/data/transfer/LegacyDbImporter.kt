@@ -1,0 +1,142 @@
+package com.example.powerofhabit.data.transfer
+
+import android.content.Context
+import android.database.Cursor
+import android.database.sqlite.SQLiteDatabase
+import android.net.Uri
+import android.provider.OpenableColumns
+import android.util.Log
+import com.example.powerofhabit.data.local.AppDatabase
+import com.example.powerofhabit.data.local.SqliteFileHeader
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+
+/** 읽은 결과와, 사용자에게 보여 줄 경고(-wal 없이 읽음·버린 행 등). */
+data class LegacyDbRead(val export: HabitExport, val warnings: List<String>)
+
+/**
+ * 옛 앱(`com.example.powerofhabit`)의 `power_of_habit.db`(+ 선택 `-wal`/`-shm`)를 읽어 [HabitExport]로 만든다.
+ * 그 뒤는 JSON 가져오기와 **같은 병합 경로**([HabitTransfer.plan] → [TransferManager.importExport])를 타므로
+ * 현재 데이터는 지워지지 않고, 앱 재시작도 없다 (결정 기록 2026-09-05 결정 3 ②의 "DB 파일 가져오기"를 덮어쓰기 대신 병합으로 구현).
+ *
+ * 안전장치: SQLite 헤더 → 캐시 사본을 열어 `PRAGMA integrity_check` → `PRAGMA user_version` ≤ 현재 스키마 → 그때서야 행을 읽는다.
+ * (user_version은 헤더가 아니라 열고 나서 읽는다 — 체크포인트 안 된 WAL에 더 새 값이 있을 수 있다.)
+ * 사본을 읽기·쓰기로 여는 이유: WAL 파일이 함께 왔을 때 SQLite가 체크포인트를 하려면 쓰기 권한이 필요하다(원본은 건드리지 않는다).
+ * 헤더가 WAL 모드인데 -wal을 함께 고르지 않았으면 실패시키지 않고 **경고**를 붙인다 — 옛 앱이 깨끗하게 닫혔다면 -wal이 없는 것이 정상이고,
+ * 병합은 멱등이라 나중에 -wal과 함께 다시 가져오면 빠진 기록만 채워진다.
+ */
+class LegacyDbImporter(private val context: Context) {
+
+    class LegacyDbException(message: String) : IllegalArgumentException(message)
+
+    suspend fun read(uris: List<Uri>): LegacyDbRead = withContext(Dispatchers.IO) {
+        if (uris.isEmpty()) throw LegacyDbException("파일을 고르지 않았습니다")
+        val named: List<Pair<Uri, String>> = uris.mapIndexed { i, uri -> uri to (displayName(uri) ?: "file$i") }
+        val files = LegacyDbRows.resolveFiles(named.map { it.second })
+            // 표시 이름을 못 받았어도 파일이 하나뿐이면 그것을 본체로 보고 아래 헤더 검사에 맡긴다
+            ?: if (uris.size == 1) LegacyDbFiles(named[0].second, null, null)
+            else throw LegacyDbException("'.db'로 끝나는 데이터베이스 파일을 하나만 골라 주세요 (예: power_of_habit.db)")
+        val unused = named.map { it.second }.filter { it !in files.all }
+        if (unused.isNotEmpty()) {
+            throw LegacyDbException("함께 고른 파일 중 DB와 짝이 맞지 않는 것이 있습니다: ${unused.joinToString()} — 이름이 '<db 이름>-wal', '<db 이름>-shm'이어야 합니다")
+        }
+
+        val dir = File(context.cacheDir, "legacy_import_${System.currentTimeMillis()}")
+        val warnings = ArrayList<String>()
+        try {
+            if (!dir.mkdirs()) throw LegacyDbException("임시 폴더를 만들 수 없습니다")
+            // 사본은 항상 같은 이름으로 — SQLite는 "<db>-wal"/"<db>-shm" 이름 규칙으로 짝을 찾는다.
+            val dbFile = File(dir, "legacy.db")
+            copy(named.first { it.second == files.db }.first, dbFile)
+            files.wal?.let { copy(named.first { n -> n.second == it }.first, File(dir, "legacy.db-wal")) }
+            files.shm?.let { copy(named.first { n -> n.second == it }.first, File(dir, "legacy.db-shm")) }
+
+            if (!SqliteFileHeader.isSqlite(dbFile)) throw LegacyDbException("SQLite 데이터베이스 파일이 아닙니다")
+            if (files.wal == null && SqliteFileHeader.isWalMode(dbFile)) {
+                warnings += "-wal 파일 없이 읽었습니다. 옛 앱 폴더에 power_of_habit.db-wal이 있었다면 세 파일을 함께 골라 다시 가져오세요(이미 들어온 기록은 건너뜁니다)."
+            }
+
+            val db = SQLiteDatabase.openDatabase(dbFile.path, null, SQLiteDatabase.OPEN_READWRITE or SQLiteDatabase.NO_LOCALIZED_COLLATORS)
+            try {
+                val integrity = db.rawQuery("PRAGMA integrity_check", null).use { c -> if (c.moveToFirst()) c.getString(0) else null }
+                if (integrity != "ok") throw LegacyDbException("데이터베이스가 손상되었습니다 (integrity_check: ${integrity ?: "없음"})")
+                val version = db.rawQuery("PRAGMA user_version", null).use { c -> if (c.moveToFirst()) c.getInt(0) else 0 }
+                if (version > AppDatabase.SCHEMA_VERSION) {
+                    throw LegacyDbException("이 파일은 더 새 버전의 앱(스키마 v$version)이 만든 것입니다. 앱을 업데이트해 주세요")
+                }
+                val tables = db.rawQuery("SELECT name FROM sqlite_master WHERE type = 'table'", null).use { c ->
+                    generateSequence { if (c.moveToNext()) c.getString(0) else null }.toSet()
+                }
+                if (LegacyDbRows.TABLE_HABITS !in tables) throw LegacyDbException("습관 테이블(Habits)이 없습니다. 이 앱의 데이터베이스가 아닙니다")
+
+                val habitRows = readRows(db, LegacyDbRows.TABLE_HABITS)
+                val recordRows = if (LegacyDbRows.TABLE_RECORDS in tables) readRows(db, LegacyDbRows.TABLE_RECORDS) else emptyList()
+                val badgeRows = if (LegacyDbRows.TABLE_BADGES in tables) readRows(db, LegacyDbRows.TABLE_BADGES) else emptyList()
+                val habits = habitRows.mapNotNull(LegacyDbRows::habit)
+                val records = recordRows.mapNotNull(LegacyDbRows::record)
+                val badges = badgeRows.mapNotNull(LegacyDbRows::badge)
+                val dropped = listOf(
+                    "습관" to habitRows.size - habits.size,
+                    "기록" to recordRows.size - records.size,
+                    "뱃지" to badgeRows.size - badges.size
+                ).filter { it.second > 0 }
+                if (dropped.isNotEmpty()) {
+                    warnings += "필수 값이 비어 건너뛴 행: " + dropped.joinToString { "${it.first} ${it.second}" }
+                }
+                Log.d(TAG, "legacy db v$version: habits=${habits.size} records=${records.size} badges=${badges.size} dropped=$dropped")
+                LegacyDbRead(
+                    export = HabitExport(
+                        formatVersion = HabitExport.versionFor(habits),
+                        exportedAt = java.time.Instant.now().toString(),
+                        appVersionName = "legacy-db-v$version",
+                        habits = habits,
+                        records = records,
+                        badges = badges
+                    ),
+                    warnings = warnings
+                )
+            } finally {
+                db.close()
+            }
+        } finally {
+            dir.deleteRecursively()
+        }
+    }
+
+    /** 테이블 전체를 컬럼명→값 맵으로. 타입은 커서가 말하는 대로(Long/Double/String/null), BLOB은 무시. */
+    private fun readRows(db: SQLiteDatabase, table: String): List<Map<String, Any?>> =
+        db.rawQuery("SELECT * FROM \"$table\"", null).use { c ->
+            val names = c.columnNames
+            val out = ArrayList<Map<String, Any?>>(c.count)
+            while (c.moveToNext()) {
+                val row = HashMap<String, Any?>(names.size)
+                for (i in names.indices) {
+                    row[names[i]] = when (c.getType(i)) {
+                        Cursor.FIELD_TYPE_INTEGER -> c.getLong(i)
+                        Cursor.FIELD_TYPE_FLOAT -> c.getDouble(i)
+                        Cursor.FIELD_TYPE_STRING -> c.getString(i)
+                        else -> null
+                    }
+                }
+                out += row
+            }
+            out
+        }
+
+    private fun displayName(uri: Uri): String? = try {
+        context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+            if (c.moveToFirst()) c.getString(0) else null
+        }
+    } catch (e: Exception) {
+        Log.w(TAG, "display name query failed for $uri", e)
+        null
+    }
+
+    private fun copy(uri: Uri, dest: File) {
+        context.contentResolver.openInputStream(uri)?.use { input -> dest.outputStream().use { input.copyTo(it) } }
+            ?: throw LegacyDbException("파일을 열 수 없습니다: ${dest.name}")
+    }
+
+    private companion object { const val TAG = "LegacyDbImporter" }
+}

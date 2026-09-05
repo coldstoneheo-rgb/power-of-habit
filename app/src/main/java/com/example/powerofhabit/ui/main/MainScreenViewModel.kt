@@ -18,6 +18,7 @@ import com.example.powerofhabit.data.local.SettingsManager
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import android.net.Uri
+import com.example.powerofhabit.data.transfer.ImportSummary
 import com.example.powerofhabit.data.transfer.TransferManager
 import com.example.powerofhabit.backup.DriveAction
 import com.example.powerofhabit.backup.DriveOutcome
@@ -141,23 +142,34 @@ class MainScreenViewModel @Inject constructor(
   /** 내보내기/가져오기 결과(한국어). 화면이 수집해 Toast로 보여준다. */
   val transferMessages: SharedFlow<String> = _transferMessages.asSharedFlow()
 
-  /** 습관·기록·뱃지를 JSON 파일로 내보낸다. */
-  fun exportTo(uri: Uri) {
-    if (!_transferBusy.compareAndSet(expect = false, update = true)) return // 동시 실행 방지
+  /**
+   * 파일 이전 공통 골격: 동시 실행 방지(이전끼리·Drive 복원과) → 실행 → 결과 문구 → Toast 이벤트.
+   * Drive 복원은 DB 파일을 통째로 바꾸므로 그 사이에 가져오기가 끼면 쓴 행이 사라진다 — driveBusy도 함께 잠근다.
+   */
+  private fun runTransfer(label: String, op: suspend () -> Result<String>) {
+    if (_driveBusy.value != null) return
+    if (!_transferBusy.compareAndSet(expect = false, update = true)) return
     viewModelScope.launch {
       val message = try {
-        transferManager.exportTo(context, uri).fold(
-          onSuccess = { count -> "습관 ${count}개를 파일로 내보냈습니다." },
-          onFailure = { e ->
-            android.util.Log.e("MainScreenViewModel", "Export failed", e)
-            "내보내기에 실패했습니다: ${e.message ?: e.javaClass.simpleName}"
-          }
-        )
+        op().getOrElse { e ->
+          android.util.Log.e("MainScreenViewModel", "$label failed", e)
+          "${label}에 실패했습니다: ${e.message ?: e.javaClass.simpleName}"
+        }
       } finally {
         _transferBusy.value = false
       }
       _transferMessages.emit(message)
     }
+  }
+
+  private fun ImportSummary.describe(prefix: String): String {
+    val base = "$prefix 완료 — 습관 +$habitsAdded(기존 일치 $habitsMatched), 기록 +$recordsAdded(건너뜀 $recordsSkipped), 뱃지 +$badgesAdded"
+    return if (warnings.isEmpty()) base else base + "\n" + warnings.joinToString("\n")
+  }
+
+  /** 습관·기록·뱃지를 JSON 파일로 내보낸다. */
+  fun exportTo(uri: Uri) = runTransfer("내보내기") {
+    transferManager.exportTo(context, uri).map { count -> "습관 ${count}개를 파일로 내보냈습니다." }
   }
 
   // Google Drive 백업/복원 상태도 ViewModel이 든다 — 업로드 중 회전해도 코루틴이 끊기지 않고 "진행 중"이 유지된다.
@@ -209,25 +221,16 @@ class MainScreenViewModel @Inject constructor(
     }
   }
 
-  /** JSON 파일을 현재 데이터에 병합한다(덮어쓰지 않음). 규칙은 data/transfer/HabitTransfer 참조. */
-  fun importFrom(uri: Uri) {
-    if (!_transferBusy.compareAndSet(expect = false, update = true)) return
-    viewModelScope.launch {
-      val message = try {
-        transferManager.importFrom(context, uri).fold(
-          onSuccess = { s ->
-            "가져오기 완료 — 습관 +${s.habitsAdded}(기존 일치 ${s.habitsMatched}), " +
-              "기록 +${s.recordsAdded}(건너뜀 ${s.recordsSkipped}), 뱃지 +${s.badgesAdded}"
-          },
-          onFailure = { e ->
-            android.util.Log.e("MainScreenViewModel", "Import failed", e)
-            "가져오기에 실패했습니다: ${e.message ?: e.javaClass.simpleName}"
-          }
-        )
-      } finally {
-        _transferBusy.value = false
-      }
-      _transferMessages.emit(message)
+  /** 옛 앱(com.example) SQLite 파일(.db + 선택 -wal/-shm)을 JSON 가져오기와 같은 규칙으로 병합한다. */
+  fun importLegacyDb(uris: List<Uri>) {
+    if (uris.isEmpty()) return
+    runTransfer("옛 앱 DB 가져오기") {
+      transferManager.importLegacyDb(context, uris).map { it.describe("옛 앱 DB 가져오기") }
     }
+  }
+
+  /** JSON 파일을 현재 데이터에 병합한다(덮어쓰지 않음). 규칙은 data/transfer/HabitTransfer 참조. */
+  fun importFrom(uri: Uri) = runTransfer("가져오기") {
+    transferManager.importFrom(context, uri).map { it.describe("가져오기") }
   }
 }
