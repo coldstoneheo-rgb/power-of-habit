@@ -3,6 +3,7 @@ package com.example.powerofhabit.data.transfer
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import com.example.powerofhabit.badges.BadgeManager
 import com.example.powerofhabit.data.DataRepository
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.reminder.HabitReminderManager
@@ -74,6 +75,7 @@ class TransferManager(private val repository: DataRepository) {
             var recordsSkipped = plan.summary.recordsSkipped
             var badgesAdded = 0
 
+            val affectedHabitIds = LinkedHashSet<Int>()
             repository.inTransaction {
                 val insertedIds = HashMap<Int, Int>()
                 for (pending in plan.habitsToInsert) {
@@ -90,6 +92,7 @@ class TransferManager(private val repository: DataRepository) {
                     if (repository.getRecord(habitId, pending.record.date) != null) { recordsSkipped++; continue }
                     repository.insertRecord(pending.record.copy(habitId = habitId))
                     recordsAdded++
+                    affectedHabitIds += habitId
                 }
                 val existingBadgeIds = repository.getAllBadges().first().mapTo(HashSet()) { it.badgeId }
                 for (badge in plan.badgesToInsert) {
@@ -98,6 +101,9 @@ class TransferManager(private val repository: DataRepository) {
                     badgesAdded++
                 }
             }
+
+            // 기록이 들어온 습관은 뱃지를 다시 판정한다(주기 습관의 스트릭 뱃지는 옛 앱이 줄 수 없었다). 트랜잭션 밖 — 실패해도 가져오기는 유지.
+            for (habitId in affectedHabitIds) BadgeManager(repository).checkAndAwardBadges(habitId)
 
             // 알림이 켜진 채 들어온 습관은 등록 화면과 같은 방식으로 알람을 예약한다.
             val reminderManager = HabitReminderManager(context)

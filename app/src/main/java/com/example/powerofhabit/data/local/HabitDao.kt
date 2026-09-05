@@ -84,6 +84,7 @@ interface HabitDao {
     @Query("SELECT * FROM Badges ORDER BY earnedAt DESC")
     fun getAllBadges(): Flow<List<BadgeEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    /** 같은 뱃지는 한 번만 — 겹친 수여가 첫 획득 시각을 덮어쓰지 않는다(BadgeManager 문서). */
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertBadge(badge: BadgeEntity): Long
 }

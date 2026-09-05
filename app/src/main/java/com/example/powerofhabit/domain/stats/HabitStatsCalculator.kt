@@ -1,5 +1,6 @@
 package com.example.powerofhabit.domain.stats
 
+import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
 import java.time.DayOfWeek
 import java.time.Instant
@@ -77,6 +78,18 @@ object HabitStatsCalculator {
     /** `HabitEntity.createdAt`(epoch millis) → 기준일. */
     fun anchorFromEpochMillis(createdAtMillis: Long, zone: ZoneId = ZoneId.systemDefault()): LocalDate =
         Instant.ofEpochMilli(createdAtMillis).atZone(zone).toLocalDate()
+
+    /**
+     * 습관 엔티티 기준 계산 — 빈도 파싱과 기준일(createdAt) 정책을 한 곳에 둔다.
+     * 홈 점수·상세 통계·뱃지 스트릭이 모두 이 오버로드를 써야 "같은 숫자"가 보장된다.
+     */
+    fun compute(habit: HabitEntity, records: List<HabitRecordEntity>, today: LocalDate = LocalDate.now()): HabitStats =
+        compute(
+            records = records,
+            frequency = HabitFrequency.parse(habit.frequencyType, habit.frequencyValue),
+            today = today,
+            anchorDate = anchorFromEpochMillis(habit.createdAt)
+        )
 
     fun compute(
         records: List<HabitRecordEntity>,
