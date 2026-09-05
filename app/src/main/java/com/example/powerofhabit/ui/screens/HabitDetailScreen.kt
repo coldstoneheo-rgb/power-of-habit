@@ -37,7 +37,7 @@ import com.example.powerofhabit.domain.stats.HabitStatsCalculator
 import com.example.powerofhabit.ui.components.ValueInput
 import com.example.powerofhabit.ui.components.ValueInputField
 import com.example.powerofhabit.ui.components.widgets.*
-import com.example.powerofhabit.ui.theme.HabitOrange
+import com.example.powerofhabit.ui.theme.habitAccent
 import com.example.powerofhabit.ui.theme.HabitTheme
 import com.example.powerofhabit.ui.theme.Space
 import java.time.LocalDate
@@ -64,7 +64,7 @@ fun HabitDetailScreen(
         when (state) {
             HabitDetailUiState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = HabitOrange)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
             is HabitDetailUiState.Success -> {
@@ -150,13 +150,7 @@ private fun HabitDetailContent(
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
-    val themeColor = remember(habit.themeColor) {
-        try {
-            Color(android.graphics.Color.parseColor(habit.themeColor))
-        } catch (e: Exception) {
-            HabitOrange
-        }
-    }
+    val themeColor = habitAccent(habit.themeColor)
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var selectedDateForEdit by remember { mutableStateOf<LocalDate?>(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }

@@ -40,7 +40,7 @@ import com.example.powerofhabit.domain.RecordOutcome
 import com.example.powerofhabit.domain.RecordOutcomes
 import com.example.powerofhabit.ui.components.ValueInputDialog
 import com.example.powerofhabit.ui.components.widgets.CheckWidget
-import com.example.powerofhabit.ui.theme.HabitOrange
+import com.example.powerofhabit.ui.theme.habitAccent
 import com.example.powerofhabit.ui.theme.HabitTheme
 import com.example.powerofhabit.ui.theme.Space
 import java.time.LocalDate
@@ -122,7 +122,7 @@ fun MainScreen(
         when (state) {
             MainScreenUiState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = HabitOrange)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
             is MainScreenUiState.Success -> {
@@ -259,7 +259,7 @@ internal fun MainScreenContent(
             },
             confirmButton = {
                 TextButton(onClick = { showRestoreConfirm = false; onRestore() }) {
-                    Text("복원", color = HabitOrange, fontWeight = FontWeight.Bold)
+                    Text("복원", color = HabitTheme.colors.accentForText(HabitTheme.colors.primary), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -449,7 +449,7 @@ internal fun MainScreenContent(
                             )
                             Text(
                                 text = date.dayOfMonth.toString(),
-                                color = if (date == today) HabitOrange else MaterialTheme.colorScheme.onBackground,
+                                color = if (date == today) HabitTheme.colors.accentForText(HabitTheme.colors.primary) else MaterialTheme.colorScheme.onBackground,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -509,9 +509,7 @@ internal fun MainScreenContent(
     // Value input dialog — 위젯(ValueInputActivity)과 같은 컴포저블·저장 규칙을 쓴다
     showValueDialogForHabit?.let { (habit, date) ->
         val existingRecord = records[habit.habitId]?.get(date.toString())
-        val habitThemeColor = remember(habit.themeColor) {
-            try { Color(android.graphics.Color.parseColor(habit.themeColor)) } catch (e: Exception) { HabitOrange }
-        }
+        val habitThemeColor = habitAccent(habit.themeColor)
         ValueInputDialog(
             habit = habit,
             initialValue = existingRecord?.inputValue,
@@ -567,8 +565,8 @@ internal fun MainScreenContent(
                             checked = isDarkMode,
                             onCheckedChange = { onToggleDarkMode() },
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = HabitOrange,
-                                checkedTrackColor = HabitOrange.copy(alpha = 0.5f)
+                                checkedThumbColor = HabitTheme.colors.primary,
+                                checkedTrackColor = HabitTheme.colors.primary.copy(alpha = 0.5f)
                             )
                         )
                     }
@@ -589,8 +587,8 @@ internal fun MainScreenContent(
                             checked = isDateDescending,
                             onCheckedChange = { onToggleDateDescending() },
                             colors = SwitchDefaults.colors(
-                                checkedThumbColor = HabitOrange,
-                                checkedTrackColor = HabitOrange.copy(alpha = 0.5f)
+                                checkedThumbColor = HabitTheme.colors.primary,
+                                checkedTrackColor = HabitTheme.colors.primary.copy(alpha = 0.5f)
                             )
                         )
                     }
@@ -627,7 +625,7 @@ internal fun MainScreenContent(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            CircularProgressIndicator(color = HabitOrange, modifier = Modifier.size(24.dp))
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
                                 text = when {
@@ -704,10 +702,10 @@ internal fun MainScreenContent(
                     Button(
                         onClick = onBackup,
                         enabled = !driveLocked,
-                        colors = ButtonDefaults.buttonColors(containerColor = HabitOrange),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("백업하기", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("백업하기", fontWeight = FontWeight.Bold) // 잉크는 M3 onPrimary(onAccent(primary))
                     }
 
                     Button(
@@ -790,13 +788,7 @@ private fun HabitRow(
     onCheckClick: (LocalDate, HabitRecordEntity?) -> Unit,
     onCheckLongClick: (LocalDate, HabitRecordEntity?) -> Unit
 ) {
-    val themeColor = remember(habit.themeColor) {
-        try {
-            Color(android.graphics.Color.parseColor(habit.themeColor))
-        } catch (e: Exception) {
-            HabitOrange
-        }
-    }
+    val themeColor = habitAccent(habit.themeColor)
     
     // 점수(0~100) 그대로 0~1로. 기록 없는 새 습관은 0 → 트랙만 보인다(RingProgress.kt).
     val emaScore = scoreToRingProgress(score)
