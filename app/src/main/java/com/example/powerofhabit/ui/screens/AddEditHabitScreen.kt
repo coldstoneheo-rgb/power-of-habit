@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.powerofhabit.domain.RecordOutcomes
+import com.example.powerofhabit.ui.components.ValueInput
 import com.example.powerofhabit.ui.theme.*
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -114,7 +115,7 @@ fun AddEditHabitScreen(
             selectedThemeHex = habit.themeColor
             habitType = habit.habitType
             unit = habit.unit ?: ""
-            targetValueString = habit.targetValue?.toString() ?: ""
+            targetValueString = ValueInput.format(habit.targetValue) // 기록 입력칸과 같은 표기("5.0" 대신 "5")
             targetType = habit.targetType
         }
     }
@@ -169,8 +170,8 @@ fun AddEditHabitScreen(
         if (title.isBlank()) {
             Toast.makeText(context, "습관 이름을 입력해주세요.", Toast.LENGTH_SHORT).show()
         } else {
-            // 목표 수치는 한 번만 파싱하고 유한값만 인정한다("NaN"·"Infinity"·"1e40"은 toFloatOrNull을 통과한다)
-            val parsedTargetValue = targetValueString.replace(',', '.').toFloatOrNull()?.takeIf { it.isFinite() }
+            // 목표 수치는 기록 입력과 같은 규칙(ValueInput.parse)으로 한 번만 파싱한다 — NaN·Infinity·1e40·"5f" 차단
+            val parsedTargetValue = ValueInput.parse(targetValueString)
             val isFrequencyValid = when (frequencyType) {
                 "DAILY" -> true
                 "INTERVAL" -> intervalDays.toIntOrNull()?.let { it >= 1 } ?: false

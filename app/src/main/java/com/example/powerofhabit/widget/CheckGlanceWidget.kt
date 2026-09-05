@@ -122,8 +122,7 @@ private fun CheckContent(habit: HabitEntity?, record: HabitRecordEntity?, render
                 val valueText = when {
                     // 이하 목표는 "기록한 0(성공)"과 "안 적음(미수행)"이 달라야 하므로 미기록은 대시
                     value == null -> if (RecordOutcomes.isAtMost(habit.targetType)) "–" else "0"
-                    value % 1f == 0f -> value.toInt().toString()
-                    else -> value.toString()
+                    else -> RecordOutcomes.formatNumber(value)
                 }
                 // 3상태: 성공 = 습관색(채운 타일에서는 onAccent) / 기준미달 = 어두운 습관색 / 미수행(0·없음) = 비활성
                 val color = when (outcome) {

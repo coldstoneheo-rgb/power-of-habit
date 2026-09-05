@@ -20,11 +20,23 @@ import com.example.powerofhabit.ui.theme.HabitTheme
  * (#33 자체 리뷰: 두 다이얼로그가 각자 필드·파싱·힌트를 갖고 있어 규칙이 한쪽에만 고쳐지던 문제.)
  */
 object ValueInput {
-    /** 쉼표 소수점 허용, 유한값만. 빈 문자열·NaN·Infinity는 null(저장 불가). */
-    fun parse(text: String): Float? = text.replace(',', '.').toFloatOrNull()?.takeIf { it.isFinite() }
+    private val NUMBER = Regex("[0-9]+(?:[.,][0-9]+)?")
 
-    /** 저장된 값 → 입력칸 초기 문자열. 정수는 소수점 없이("5.0" 대신 "5"). null은 빈 칸. */
-    fun format(value: Float?): String = value?.let { if (it % 1f == 0f) it.toInt().toString() else it.toString() } ?: ""
+    /**
+     * "12", "2.5", "2,5"(쉼표 소수점)만 받는다. 앞뒤 공백은 무시. "5f"·"0x1p3"·"+5"·"1e40"·"1,000,000"처럼 Kotlin의 toFloatOrNull은
+     * 통과하지만 사용자가 뜻한 수치가 아닌 것은 null(저장 불가). 유한값만.
+     */
+    fun parse(text: String): Float? {
+        val t = text.trim()
+        if (!NUMBER.matches(t)) return null
+        return t.replace(',', '.').toFloatOrNull()?.takeIf { it.isFinite() }
+    }
+
+    /** 저장된 값 → 입력칸 초기 문자열. 표기 규칙은 [RecordOutcomes.formatNumber] 한 곳(정수는 소수점 없이, 지수 표기 없음). null은 빈 칸. */
+    fun format(value: Float?): String = value?.let(RecordOutcomes::formatNumber) ?: ""
+
+    /** 필드 라벨: 단위가 있을 때만 괄호. "수치 ()"를 만들지 않는다. */
+    fun label(prefix: String, unit: String?): String = unit?.takeIf { it.isNotBlank() }?.let { "$prefix ($it)" } ?: prefix
 
     /** 필드 아래 목표 안내. 이하 목표는 0도 성공이라는 힌트를 덧붙인다. 목표가 없으면 null. */
     fun targetHint(habit: HabitEntity): String? =
@@ -44,7 +56,7 @@ fun ValueInputField(
     onInput: (String) -> Unit,
     accent: Color,
     modifier: Modifier = Modifier,
-    label: String = "수치 (${habit.unit ?: ""})",
+    labelPrefix: String = "수치",
     placeholder: String? = "예) 5.0",
     focusRequester: FocusRequester? = null
 ) {
@@ -52,10 +64,11 @@ fun ValueInputField(
     OutlinedTextField(
         value = input,
         onValueChange = onInput,
-        label = { Text(label) },
+        label = { Text(ValueInput.label(labelPrefix, habit.unit)) },
         placeholder = placeholder?.let { { Text(it) } },
         supportingText = hint?.let { { Text(it, color = HabitTheme.colors.textSecondary) } },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        // Decimal: 소수점 키가 없는 숫자 키보드(일부 삼성 IME)에서도 2.5를 넣을 수 있게
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
         singleLine = true,
         colors = OutlinedTextFieldDefaults.colors(
             focusedTextColor = HabitTheme.colors.textPrimary,

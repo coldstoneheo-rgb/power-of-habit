@@ -563,8 +563,9 @@ private fun HabitDetailContent(
     // Edit Record Dialog
     selectedDateForEdit?.let { date ->
         val record = records.find { it.date == date.toString() }
-        var status by remember { mutableStateOf(record?.status ?: "NONE") }
-        var inputValue by remember { mutableStateOf(ValueInput.format(record?.inputValue)) }
+        // record를 키로 — 다이얼로그가 열린 채 위젯 등에서 같은 날 기록이 바뀌면 초기값도 따라간다(옛 값으로 덮어쓰지 않게)
+        var status by remember(record) { mutableStateOf(record?.status ?: "NONE") }
+        var inputValue by remember(record) { mutableStateOf(ValueInput.format(record?.inputValue)) }
         
         AlertDialog(
             onDismissRequest = { selectedDateForEdit = null },
@@ -627,7 +628,7 @@ private fun HabitDetailContent(
                             input = inputValue,
                             onInput = { inputValue = it },
                             accent = themeColor,
-                            label = "수치 입력 (${habit.unit ?: ""})",
+                            labelPrefix = "수치 입력",
                             placeholder = null
                         )
                     }
@@ -650,7 +651,8 @@ private fun HabitDetailContent(
                         selectedDateForEdit = null
                     }
                 ) {
-                    Text("저장", color = themeColor, fontWeight = FontWeight.Bold)
+                    // 비활성(값 없음)일 때도 습관색으로 그리면 "무반응 탭"이 된다 — ValueInputDialog와 같은 규칙
+                    Text("저장", color = if (!isValueRecord || value != null) themeColor else HabitTheme.colors.textDisabled, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {

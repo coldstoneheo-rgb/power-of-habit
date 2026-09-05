@@ -22,6 +22,27 @@ class ValueInputTest {
         assertNull(ValueInput.parse("NaN"))
         assertNull(ValueInput.parse("Infinity"))
         assertNull(ValueInput.parse("1e40"))
+        // Kotlin toFloatOrNull은 받지만 사용자가 뜻한 수치가 아닌 것들
+        assertNull(ValueInput.parse("5f"))
+        assertNull(ValueInput.parse("+5"))
+        assertNull(ValueInput.parse("0x1p3"))
+        assertNull(ValueInput.parse("1,000,000"))
+        assertEquals(5f, ValueInput.parse(" 5 ")!!, 0f)
+    }
+
+    @Test
+    fun format_neverUsesScientificNotation_andKeepsLargeWholeNumbers() {
+        assertEquals("0.0005", ValueInput.format(0.0005f))
+        assertEquals("10000000", ValueInput.format(1e7f))
+        assertEquals("3000000000", ValueInput.format(3_000_000_000f)) // Float.toInt()는 2147483647로 잘렸다
+        for (v in listOf(0.0005f, 1e7f, 3_000_000_000f, 12.75f)) assertEquals(v, ValueInput.parse(ValueInput.format(v))!!, 0f)
+    }
+
+    @Test
+    fun label_omitsParenthesesWithoutUnit() {
+        assertEquals("수치 (km)", ValueInput.label("수치", "km"))
+        assertEquals("수치", ValueInput.label("수치", null))
+        assertEquals("수치 입력", ValueInput.label("수치 입력", "  "))
     }
 
     @Test
