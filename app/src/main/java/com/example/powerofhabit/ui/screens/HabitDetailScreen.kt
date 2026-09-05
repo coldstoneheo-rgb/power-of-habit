@@ -34,6 +34,8 @@ import com.example.powerofhabit.data.local.HabitRecordEntity
 import com.example.powerofhabit.domain.RecordOutcomes
 import com.example.powerofhabit.domain.stats.HabitFrequency
 import com.example.powerofhabit.domain.stats.HabitStatsCalculator
+import com.example.powerofhabit.ui.components.ValueInput
+import com.example.powerofhabit.ui.components.ValueInputField
 import com.example.powerofhabit.ui.components.widgets.*
 import com.example.powerofhabit.ui.theme.HabitOrange
 import com.example.powerofhabit.ui.theme.HabitTheme
@@ -562,7 +564,7 @@ private fun HabitDetailContent(
     selectedDateForEdit?.let { date ->
         val record = records.find { it.date == date.toString() }
         var status by remember { mutableStateOf(record?.status ?: "NONE") }
-        var inputValue by remember { mutableStateOf(record?.inputValue?.toString() ?: "") }
+        var inputValue by remember { mutableStateOf(ValueInput.format(record?.inputValue)) }
         
         AlertDialog(
             onDismissRequest = { selectedDateForEdit = null },
@@ -619,29 +621,20 @@ private fun HabitDetailContent(
                     
                     // Numeric value input if VALUE type habit
                     if (habit.habitType == "VALUE") {
-                        OutlinedTextField(
-                            value = inputValue,
-                            onValueChange = { inputValue = it },
-                            label = { Text("수치 입력 (${habit.unit ?: ""})") },
-                            // 메인 입력 다이얼로그와 같은 목표 안내(이하 목표는 0도 성공이라는 힌트 포함)
-                            supportingText = RecordOutcomes.targetLabel(habit.targetValue, habit.unit, habit.targetType)?.let { label ->
-                                { Text(if (RecordOutcomes.isAtMost(habit.targetType)) "목표 $label (0도 기록하세요)" else "목표 $label", color = HabitTheme.colors.textSecondary) }
-                            },
-                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = HabitTheme.colors.textPrimary,
-                                unfocusedTextColor = HabitTheme.colors.textPrimary,
-                                focusedBorderColor = themeColor,
-                                unfocusedBorderColor = HabitTheme.colors.lineStrong
-                            ),
-                            modifier = Modifier.fillMaxWidth()
+                        // 메인/위젯 입력 다이얼로그와 같은 필드·파싱·목표 안내(ValueInput)
+                        ValueInputField(
+                            habit = habit,
+                            input = inputValue,
+                            onInput = { inputValue = it },
+                            accent = themeColor,
+                            label = "수치 입력 (${habit.unit ?: ""})",
+                            placeholder = null
                         )
                     }
                 }
             },
             confirmButton = {
-                val value = inputValue.replace(',', '.').toFloatOrNull()?.takeIf { it.isFinite() }
+                val value = ValueInput.parse(inputValue)
                 val isValueRecord = habit.habitType == "VALUE" && status != "NONE" && status != "SKIPPED"
                 TextButton(
                     // 수치형 "기록"은 값이 있어야 저장할 수 있다(값 없는 성공/실패는 만들지 않는다)
