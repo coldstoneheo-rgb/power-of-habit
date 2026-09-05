@@ -11,6 +11,28 @@
 ```yaml
 date: 2026-09-05
 project: power-of-habit
+agent: claude-code (harness-loop-engine, 사용자 부재 자율 세션 ~4h)
+summary: 실기기 관찰 3건 수정(위젯 갱신 신뢰성·삭제 습관 딥링크) + 전문가 3인 회의 결정 3건 구현 — 수치형 3상태(성공/기준미달/미수행), 수치형 위젯 탭 → 투명 입력 액티비티+성공 폭죽, 로컬 JSON 내보내기/가져오기
+status: on_track
+progress: "위젯·3상태·이전 기능 머지 완료 (근거: #28 ba2de36 · #29 f0c3206 · #30, testDebugUnitTest 73/73, 자체리뷰 3회 총 26건 반영). 실기기 검증은 사용자 귀가 후"
+changes: ["#28 fix(widget): 위젯 갱신 신뢰성 + 수치형 3상태 표현 + 삭제 습관 딥링크 안내", "#29 feat(widget): 수치형 1x1 탭 → 투명 입력 액티비티 + 성공 폭죽, 입력 다이얼로그 공용화", "#30 feat(transfer): 로컬 JSON 내보내기/가져오기 — 기기 이전·백업용"]
+next: 실기기 확인(위젯 설정 즉시 반영·1x1 탭 즉시 색 변화·수치형 입력 다이얼로그·삭제 후 위젯 탭·JSON 내보내기/가져오기) → 결정 기록의 사용자 결정 3건(기준미달 부분 점수·AT_MOST·옛 앱 debug 여부) → 옛 앱 DB 파일 가져오기
+blockers: 옛 com.example 앱 데이터 이전은 아직 불가(DB 파일 가져오기 미구현) — 예전 앱 삭제 금지
+learning_need: Glance updateAll()이 내부 리시버→위젯 매핑에 의존해 첫 배치 위젯을 놓치는 동작 — AppWidgetManager id 나열로 우회(재사용 가능한 패턴)
+synergy: docs/decisions 의 3인 회의 기록 형식(찬성/최강 반대/합의/근거)은 다른 프로젝트 의사결정에 재사용 가능 — L2C "에이전트 회의로 제품 결정" 콘텐츠 원재료
+monetization: 아직 0원. Play 내부 테스트 업로드는 키스토어·Console 준비(사용자) 대기
+```
+## 의미
+사용자 부재 중 "결정이 필요한 것"과 "그냥 고칠 것"을 분리했다. 갱신 버그·삭제 오류는 바로 고쳤고, 3상태 모델·위젯 탭 방식·데이터 이전
+수단은 아키텍트/디자이너/QA 역할 3인의 의견서를 받아 합의점과 근거를 `docs/decisions/2026-09-05-…md`에 남긴 뒤 구현했다.
+공통 합의였던 "DB 스키마 변경 금지·옛 앱 건드리지 않기"를 지켰고, 파생 상태 함수 하나(RecordOutcomes)로 4개 렌더러와 2개 저장
+경로를 통일했다. 자체 리뷰가 잡은 캘린더 빈 날 실패 표시 회귀·자정 경계 이중 기록·트랜잭션 누락 같은 결함은 머지 전에 닫았다.
+
+---
+
+```yaml
+date: 2026-09-05
+project: power-of-habit
 agent: claude-code (harness-loop-engine)
 summary: 출시 준비 — applicationId com.woodpeckerai.powerofhabit 확정, 릴리스 서명 설정, versionCode 자동 증가, R8 minify, Play 내부 테스트 업로드(GPP) 배선, RELEASE.md
 status: on_track

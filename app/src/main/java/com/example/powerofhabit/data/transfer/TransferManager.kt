@@ -2,7 +2,10 @@ package com.example.powerofhabit.data.transfer
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import com.example.powerofhabit.data.DataRepository
+import com.example.powerofhabit.data.local.HabitEntity
+import com.example.powerofhabit.reminder.HabitReminderManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -11,10 +14,11 @@ import java.io.FileNotFoundException
 /**
  * 로컬 JSON 파일로 내보내기/가져오기 (SAF Uri). 병합 규칙과 형식은 [HabitTransfer] 참조.
  *
- * 가져오기는 트랜잭션 없이 습관 → 기록 → 뱃지 순서로 삽입한다. 중간에 실패하면 이미 들어간 습관/기록은 남지만
- * 병합 규칙이 멱등이라(같은 습관은 매칭, 같은 (habit,date)는 스킵) 같은 파일을 다시 가져오면 나머지만 채워진다.
- * 뱃지 재판정·Drive 자동 백업([com.example.powerofhabit.data.RecordSideEffects])은 호출하지 않는다 —
- * 위젯은 DB 옵저버가 갱신하고, 뱃지는 다음 체크 때 재판정된다.
+ * 가져오기는 **하나의 DB 트랜잭션** 안에서 습관 → 기록 → 뱃지 순서로 삽입한다. 계획(plan)은 스냅샷이므로
+ * 삽입 직전에 (habitId, date) 존재 여부와 대상 습관의 존재를 다시 확인해, 가져오는 동안 사용자가 위젯을 누르거나
+ * 습관을 지워도 중복 행·FK 실패가 생기지 않게 한다. 요약 수치는 실제로 들어간 행 기준이다.
+ * 가져온 습관 중 알림이 켜진 것은 다른 생성 경로(등록 화면)와 같이 알람을 예약한다.
+ * 뱃지 재판정·Drive 자동 백업은 호출하지 않는다 — 위젯은 DB 옵저버가 갱신하고, 뱃지는 다음 체크 때 재판정된다.
  */
 class TransferManager(private val repository: DataRepository) {
 
@@ -52,15 +56,47 @@ class TransferManager(private val repository: DataRepository) {
                 import = export
             )
 
-            val insertedIds = HashMap<Int, Int>()
-            for (pending in plan.habitsToInsert) {
-                insertedIds[pending.sourceHabitId] = repository.insertHabit(pending.habit).toInt()
-            }
-            val records = plan.resolveRecords(insertedIds)
-            if (records.isNotEmpty()) repository.insertRecords(records)
-            for (badge in plan.badgesToInsert) repository.insertBadge(badge)
+            val insertedHabits = ArrayList<HabitEntity>()
+            var recordsAdded = 0
+            var recordsSkipped = plan.summary.recordsSkipped
+            var badgesAdded = 0
 
-            plan.summary
+            repository.inTransaction {
+                val insertedIds = HashMap<Int, Int>()
+                for (pending in plan.habitsToInsert) {
+                    val newId = repository.insertHabit(pending.habit).toInt()
+                    insertedIds[pending.sourceHabitId] = newId
+                    insertedHabits += pending.habit.copy(habitId = newId)
+                }
+                // 매칭된 습관이 계획 이후 삭제됐으면 그 기록은 버린다(FK 실패로 전체가 롤백되는 것을 막는다).
+                val liveMatched = plan.matchedHabitIds.filterValues { id -> repository.getHabitById(id).first() != null }
+                val idMap = liveMatched + insertedIds
+                for (pending in plan.recordsToInsert) {
+                    val habitId = idMap[pending.sourceHabitId]
+                    if (habitId == null) { recordsSkipped++; continue }
+                    if (repository.getRecord(habitId, pending.record.date) != null) { recordsSkipped++; continue }
+                    repository.insertRecord(pending.record.copy(habitId = habitId))
+                    recordsAdded++
+                }
+                val existingBadgeIds = repository.getAllBadges().first().mapTo(HashSet()) { it.badgeId }
+                for (badge in plan.badgesToInsert) {
+                    if (badge.badgeId in existingBadgeIds) continue
+                    repository.insertBadge(badge)
+                    badgesAdded++
+                }
+            }
+
+            // 알림이 켜진 채 들어온 습관은 등록 화면과 같은 방식으로 알람을 예약한다.
+            val reminderManager = HabitReminderManager(context)
+            for (habit in insertedHabits) {
+                if (habit.isReminderEnabled) {
+                    try { reminderManager.scheduleReminder(habit) } catch (e: Exception) {
+                        Log.w("TransferManager", "reminder schedule failed for ${habit.habitId}", e)
+                    }
+                }
+            }
+
+            plan.summary.copy(recordsAdded = recordsAdded, recordsSkipped = recordsSkipped, badgesAdded = badgesAdded)
         }
     }
 

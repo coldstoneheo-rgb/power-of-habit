@@ -5,6 +5,9 @@ import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.time.Instant
 
 /** 가져오기 결과 요약. UI 메시지와 테스트 검증에 쓴다. */
@@ -30,7 +33,7 @@ data class PendingRecord(val sourceHabitId: Int, val record: HabitRecordEntity)
  */
 data class ImportPlan(
     val habitsToInsert: List<PendingHabit>,
-    /** 파일 habitId → 기존 DB habitId. (title, createdAt) 일치로 맺어진 것. */
+    /** 파일 habitId → 기존 DB habitId. createdAt 일치로 맺어진 것. */
     val matchedHabitIds: Map<Int, Int>,
     val recordsToInsert: List<PendingRecord>,
     val badgesToInsert: List<BadgeEntity>,
@@ -52,8 +55,9 @@ data class ImportPlan(
  * 로컬 JSON 이전의 순수 Kotlin 코어(Android 의존 없음). 파일 I/O는 [TransferManager]가 맡는다.
  *
  * 병합 규칙(가져오기는 항상 "덮어쓰지 않는 병합"):
- * - 습관: (title, createdAt)이 같으면 기존 습관으로 간주해 id를 재사용하고, 아니면 새 습관으로 삽입한다.
- * - 기록: (habitId, date)가 키. 파일 안에서 같은 키가 여러 개면 recordId가 큰 것(가장 최근 쓰기)을 택하고,
+ * - 습관: **createdAt**(생성 시각 ms — 사실상 습관의 안정된 id, 제목을 바꿔도 변하지 않음)이 같으면 기존 습관으로 간주해
+ *   id를 재사용하고, 아니면 새 습관으로 삽입한다. 제목은 키에 넣지 않는다(기기 한쪽에서 이름을 바꿔도 중복 생성되지 않게).
+ * - 기록: **재매핑 후의** (habitId, date)가 키. 파일 안에서 같은 키가 여러 개면 recordId가 큰 것(가장 최근 쓰기)을 택하고,
  *   기존 DB에 같은 키가 이미 있으면 기존 기록을 유지한다(파일 값으로 덮어쓰지 않는다).
  *   status 문자열은 해석 없이 그대로 옮긴다(모르는 값 보존).
  * - 뱃지: badgeId가 없는 것만 추가한다.
@@ -76,26 +80,38 @@ object HabitTransfer {
         formatVersion = HabitExport.CURRENT_FORMAT_VERSION,
         exportedAt = exportedAt.toString(),
         appVersionName = appVersionName,
-        habits = habits.map { it.toDto() },
-        records = records.map { it.toDto() },
+        // NaN/Infinity는 JSON에 실을 수 없어 한 건이 전체 내보내기를 막는다 → null로 정화(미수행과 같은 의미)
+        habits = habits.map { h -> h.toDto().let { d -> d.copy(targetValue = d.targetValue?.takeIf(Float::isFinite)) } },
+        records = records.map { r -> r.toDto().let { d -> d.copy(inputValue = d.inputValue?.takeIf(Float::isFinite)) } },
         badges = badges.map { it.toDto() }
     )
 
     fun encode(export: HabitExport): String = json.encodeToString(HabitExport.serializer(), export)
 
-    /** @throws IllegalArgumentException 지원하지 않는 formatVersion, 또는 JSON 구조가 형식과 맞지 않을 때. */
-    fun decode(text: String): HabitExport {
-        val export = try {
+    /**
+     * @throws IllegalArgumentException 지원하지 않는 formatVersion, 또는 JSON 구조가 형식과 맞지 않을 때.
+     * formatVersion은 전체 역직렬화 **전에** 먼저 읽어, 미래 형식 파일에 "형식이 아니다" 대신 "업데이트하라"를 말한다.
+     * 선행 BOM(U+FEFF, 메모장 저장 등)은 제거한다.
+     */
+    fun decode(rawText: String): HabitExport {
+        val text = rawText.removePrefix("﻿")
+        val peekedVersion = try {
+            json.parseToJsonElement(text).jsonObject["formatVersion"]?.jsonPrimitive?.intOrNull
+        } catch (e: SerializationException) {
+            throw IllegalArgumentException("습관 데이터 파일 형식이 아닙니다", e)
+        } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException("습관 데이터 파일 형식이 아닙니다", e)
+        }
+        if (peekedVersion != null && peekedVersion > HabitExport.CURRENT_FORMAT_VERSION) {
+            throw IllegalArgumentException(
+                "지원하지 않는 형식 버전입니다 (파일 $peekedVersion, 지원 ${HabitExport.CURRENT_FORMAT_VERSION}). 앱을 업데이트해 주세요"
+            )
+        }
+        return try {
             json.decodeFromString(HabitExport.serializer(), text)
         } catch (e: SerializationException) {
             throw IllegalArgumentException("습관 데이터 파일 형식이 아닙니다", e)
         }
-        if (export.formatVersion > HabitExport.CURRENT_FORMAT_VERSION) {
-            throw IllegalArgumentException(
-                "지원하지 않는 형식 버전입니다 (파일 ${export.formatVersion}, 지원 ${HabitExport.CURRENT_FORMAT_VERSION}). 앱을 업데이트해 주세요"
-            )
-        }
-        return export
     }
 
     fun plan(
@@ -104,16 +120,16 @@ object HabitTransfer {
         existingBadges: List<BadgeEntity>,
         import: HabitExport
     ): ImportPlan {
-        // 1) 습관 매칭. 같은 (title, createdAt)이 기존 DB에 여럿이면 id가 가장 작은(먼저 만든) 것을 쓴다.
-        val existingByKey = HashMap<Pair<String, Long>, HabitEntity>()
+        // 1) 습관 매칭(createdAt). 같은 createdAt이 기존 DB에 여럿이면 id가 가장 작은(먼저 만든) 것을 쓴다.
+        val existingByCreatedAt = HashMap<Long, HabitEntity>()
         for (habit in existingHabits.sortedBy { it.habitId }) {
-            existingByKey.putIfAbsent(habit.title to habit.createdAt, habit)
+            existingByCreatedAt.putIfAbsent(habit.createdAt, habit)
         }
         val matched = LinkedHashMap<Int, Int>()
         val toInsert = ArrayList<PendingHabit>()
         // 파일 안에서 같은 habitId가 중복되면 첫 번째만 쓴다.
         for (dto in import.habits.distinctBy { it.habitId }) {
-            val hit = existingByKey[dto.title to dto.createdAt]
+            val hit = existingByCreatedAt[dto.createdAt]
             if (hit != null) {
                 matched[dto.habitId] = hit.habitId
             } else {
@@ -122,11 +138,16 @@ object HabitTransfer {
         }
         val knownSourceIds: Set<Int> = matched.keys + toInsert.map { it.sourceHabitId }
 
-        // 2) 기록. 파일 내부 (habitId, date) 중복은 recordId 큰 것 우선.
+        // 2) 기록. 키는 재매핑 후의 습관("e<기존id>" 또는 "n<파일id>")과 날짜 — 파일의 두 습관이 같은 기존 습관에 매칭돼도 중복이 안 생긴다.
+        fun resolvedKey(sourceHabitId: Int): String =
+            matched[sourceHabitId]?.let { "e$it" } ?: "n$sourceHabitId"
         val existingKeys: Set<Pair<Int, String>> = existingRecords.mapTo(HashSet()) { it.habitId to it.date }
         var skipped = 0
+        val orphanCount = import.records.count { it.habitId !in knownSourceIds }
+        skipped += orphanCount // 파일에 습관이 없는 고아 기록 — FK를 만족시킬 수 없다.
         val dedupedInFile: List<RecordDto> = import.records
-            .groupBy { it.habitId to it.date }
+            .filter { it.habitId in knownSourceIds }
+            .groupBy { resolvedKey(it.habitId) to it.date }
             .values
             .map { group ->
                 skipped += group.size - 1
@@ -134,10 +155,6 @@ object HabitTransfer {
             }
         val records = ArrayList<PendingRecord>()
         for (dto in dedupedInFile) {
-            if (dto.habitId !in knownSourceIds) {
-                skipped++ // 파일에 습관이 없는 고아 기록 — FK를 만족시킬 수 없다.
-                continue
-            }
             val targetHabitId = matched[dto.habitId]
             if (targetHabitId != null && (targetHabitId to dto.date) in existingKeys) {
                 skipped++ // 기존 기록 유지

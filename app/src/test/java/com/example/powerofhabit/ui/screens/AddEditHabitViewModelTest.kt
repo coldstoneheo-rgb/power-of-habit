@@ -183,6 +183,7 @@ class AddEditHabitViewModelTest {
         override fun getRecordsBetween(startDate: String, endDate: String): Flow<List<HabitRecordEntity>> = flow { emit(emptyList()) }
         override suspend fun insertRecord(record: HabitRecordEntity): Long = 0L
         override suspend fun insertRecords(records: List<HabitRecordEntity>): List<Long> = records.map { 0L }
+        override suspend fun <T> inTransaction(block: suspend () -> T): T = block()
         override suspend fun updateRecordStatus(recordId: Int, status: String) {}
         override suspend fun deleteRecord(record: HabitRecordEntity) {}
 

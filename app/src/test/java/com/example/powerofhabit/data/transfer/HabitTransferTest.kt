@@ -130,11 +130,72 @@ class HabitTransferTest {
     }
 
     @Test
-    fun plan_matchesHabitByTitleAndCreatedAt_andRemapsIds() {
+    fun plan_matchesHabitByCreatedAt_evenIfRenamed() {
+        // 한쪽 기기에서 제목을 바꿔도 createdAt이 같으면 같은 습관이다 — 중복 생성 없이 매칭
+        val existing = listOf(habit(5, "물 2L 마시기", 100L))
+        val import = export(habits = listOf(habit(1, "물 마시기", 100L)), records = listOf(record(1, 1, "2026-09-01")))
+
+        val plan = HabitTransfer.plan(existing, emptyList(), emptyList(), import)
+
+        assertEquals(mapOf(1 to 5), plan.matchedHabitIds)
+        assertTrue(plan.habitsToInsert.isEmpty())
+        assertEquals(listOf(5), plan.resolveRecords(emptyMap()).map { it.habitId })
+    }
+
+    @Test
+    fun plan_twoFileHabitsMatchingSameExisting_dedupeRecordsAfterRemap() {
+        // 파일의 습관 1·2가 모두 기존 5에 매칭되면 같은 날짜 기록은 한 번만(recordId 큰 것) 들어간다
+        val existing = listOf(habit(5, "물", 100L))
+        val import = export(
+            habits = listOf(habit(1, "물", 100L), habit(2, "물(복사)", 100L)),
+            records = listOf(record(10, 1, "2026-09-01", value = 3f), record(11, 2, "2026-09-01", value = 7f))
+        )
+
+        val plan = HabitTransfer.plan(existing, emptyList(), emptyList(), import)
+
+        val resolved = plan.resolveRecords(emptyMap())
+        assertEquals(1, resolved.size)
+        assertEquals(7f, resolved.single().inputValue)
+        assertEquals(1, plan.summary.recordsSkipped)
+    }
+
+    @Test
+    fun decode_stripsLeadingBom() {
+        val text = "﻿" + HabitTransfer.encode(export(habits = listOf(habit(1, "물", 100L))))
+        assertEquals(1, HabitTransfer.decode(text).habits.size)
+    }
+
+    @Test
+    fun decode_newerVersionWithDifferentShape_saysUpdateNotWrongFormat() {
+        // 미래 형식: formatVersion 2 + 우리가 모르는 구조(records가 객체). 버전을 먼저 읽어 "업데이트" 안내를 해야 한다
+        val text = """{"formatVersion":2,"exportedAt":"x","habits":[],"records":{"v2":true},"badges":[]}"""
+        try {
+            HabitTransfer.decode(text)
+            fail("expected IllegalArgumentException")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message!!.contains("업데이트"))
+        }
+    }
+
+    @Test
+    fun buildExport_sanitizesNonFiniteFloats() {
+        val habits = listOf(habit(1, "물", 100L, type = "VALUE").copy(targetValue = Float.NaN))
+        val records = listOf(record(1, 1, "2026-09-01", value = Float.POSITIVE_INFINITY), record(2, 1, "2026-09-02", value = 5f))
+
+        val export = export(habits, records)
+        val decoded = HabitTransfer.decode(HabitTransfer.encode(export)) // NaN이 있었다면 encode에서 예외
+
+        assertNull(decoded.habits.single().targetValue)
+        assertNull(decoded.records.first { it.date == "2026-09-01" }.inputValue)
+        assertEquals(5f, decoded.records.first { it.date == "2026-09-02" }.inputValue)
+    }
+
+    @Test
+    fun plan_matchesHabitByCreatedAt_andRemapsIds() {
         val existing = listOf(habit(5, "물 마시기", 100L), habit(6, "다른 습관", 999L))
         val import = export(
             habits = listOf(
-                habit(1, "물 마시기", 100L),  // 같은 (title, createdAt) → 기존 id 5 재사용
+                habit(1, "물 마시기", 100L),  // 같은 createdAt → 기존 id 5 재사용
                 habit(2, "물 마시기", 101L),  // createdAt 다름 → 새 습관
                 habit(3, "운동", 300L)        // 새 습관
             ),
