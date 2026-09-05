@@ -17,6 +17,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 
 sealed interface HabitDetailUiState {
     object Loading : HabitDetailUiState
+    /** 습관이 없다(삭제됨). 오류가 아니라 정상 흐름이라 별도 상태로 둔다. */
+    object NotFound : HabitDetailUiState
     data class Error(val throwable: Throwable) : HabitDetailUiState
     data class Success(
         val habit: HabitEntity,
@@ -41,12 +43,15 @@ class HabitDetailViewModel @Inject constructor(
             
             combine(habitFlow, recordsFlow) { habit, records ->
                 if (habit == null) {
-                    HabitDetailUiState.Error(IllegalArgumentException("Habit not found with id $id"))
+                    HabitDetailUiState.NotFound
                 } else {
                     HabitDetailUiState.Success(habit, records)
                 }
             }
-            .catch { emit(HabitDetailUiState.Error(it)) }
+            .catch { e ->
+                android.util.Log.e("HabitDetailViewModel", "Failed to load habit $id", e)
+                emit(HabitDetailUiState.Error(e))
+            }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), HabitDetailUiState.Loading)
 

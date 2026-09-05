@@ -67,7 +67,6 @@ fun AddEditHabitScreen(
     var habitType by remember { mutableStateOf(defaultHabitType) }
     var unit by remember { mutableStateOf("") }
     var targetValueString by remember { mutableStateOf("") }
-    var targetType by remember { mutableStateOf("AT_LEAST") } // "AT_LEAST" (적어도) vs "AT_MOST" (최대)
     
     var showColorPickerDialog by remember { mutableStateOf(false) }
     
@@ -410,23 +409,7 @@ fun AddEditHabitScreen(
                         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
                     )
 
-                    // 목표 유형 (적어도 vs 최대)
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("목표 유형", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            FilterChip(
-                                selected = targetType == "AT_LEAST",
-                                onClick = { targetType = "AT_LEAST" },
-                                label = { Text("적어도", fontSize = 12.sp) }
-                            )
-                            FilterChip(
-                                selected = targetType == "AT_MOST",
-                                onClick = { targetType = "AT_MOST" },
-                                label = { Text("최대", fontSize = 12.sp) }
-                            )
-                        }
-                    }
+                    // 목표 유형(적어도/최대)은 아직 저장되지 않아 UI를 숨긴다 — 결정 기록 2026-09-05 (AT_MOST 의미 설계 후 v5에서 부활)
                 }
             }
             

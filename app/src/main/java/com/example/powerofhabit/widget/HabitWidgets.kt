@@ -1,13 +1,15 @@
 package com.example.powerofhabit.widget
 
 import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.glance.appwidget.updateAll
+import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.GlanceAppWidgetManager
 import com.example.powerofhabit.MainActivity
 import com.example.powerofhabit.data.DataRepository
 import com.example.powerofhabit.ui.theme.DarkTokens
@@ -38,12 +40,45 @@ object HabitWidgets {
     const val EXTRA_HABIT_ID = "com.example.powerofhabit.extra.HABIT_ID"
     private const val TAG = "HabitWidgets"
 
+    /**
+     * 모든 위젯 인스턴스를 다시 그린다.
+     * Glance의 `updateAll()`은 리시버→위젯 내부 매핑에 의존해 방금 추가된 위젯이나 프로세스 재시작 직후에는 빈 목록을 돌려주는 경우가 있어
+     * (실기기 관찰: 설정 후 30분 주기까지 미반영), AppWidgetManager에서 provider별 appWidgetId를 직접 나열해 하나씩 갱신한다.
+     */
     suspend fun updateAll(context: Context) {
+        updateProvider(context, CheckWidgetReceiver::class.java, CheckGlanceWidget())
+        updateProvider(context, CalendarWidgetReceiver::class.java, CalendarGlanceWidget())
+    }
+
+    /** 특정 appWidgetId 하나만 갱신(설정 액티비티에서 즉시 반영용). provider를 보고 어떤 위젯인지 결정한다. */
+    suspend fun updateOne(context: Context, appWidgetId: Int) {
+        val info = AppWidgetManager.getInstance(context).getAppWidgetInfo(appWidgetId)
+        val widget: GlanceAppWidget = when (info?.provider?.className) {
+            CheckWidgetReceiver::class.java.name -> CheckGlanceWidget()
+            CalendarWidgetReceiver::class.java.name -> CalendarGlanceWidget()
+            else -> { updateAll(context); return }
+        }
         try {
-            CheckGlanceWidget().updateAll(context)
-            CalendarGlanceWidget().updateAll(context)
+            widget.update(context, GlanceAppWidgetManager(context).getGlanceIdBy(appWidgetId))
         } catch (e: Exception) {
-            Log.w(TAG, "widget update failed", e)
+            Log.w(TAG, "widget update failed for id=$appWidgetId", e)
+        }
+    }
+
+    private suspend fun updateProvider(context: Context, receiver: Class<*>, widget: GlanceAppWidget) {
+        val ids = try {
+            AppWidgetManager.getInstance(context).getAppWidgetIds(ComponentName(context, receiver)) ?: IntArray(0)
+        } catch (e: Exception) {
+            Log.w(TAG, "getAppWidgetIds failed", e); return
+        }
+        if (ids.isEmpty()) return
+        val manager = GlanceAppWidgetManager(context)
+        for (id in ids) {
+            try {
+                widget.update(context, manager.getGlanceIdBy(id))
+            } catch (e: Exception) {
+                Log.w(TAG, "widget update failed for id=$id", e)
+            }
         }
     }
 
@@ -76,5 +111,8 @@ object HabitWidgets {
         val skip: Color = DarkTokens.statusSkip
         val fail: Color = DarkTokens.statusFail
         val dotEmpty: Color = DarkTokens.textDisabled.copy(alpha = 0.45f)
+
+        /** 기준미달 수행: 앱과 완전히 같은 함수(다크 토큰, 위젯 배경 ≈ bg.base 기준 AA 보정). */
+        fun partial(accent: Color): Color = DarkTokens.partialAccent(accent)
     }
 }

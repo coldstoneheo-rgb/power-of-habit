@@ -59,6 +59,13 @@ data class HabitColorTokens(
     /** 선택 셀 배경, 캘린더 오늘 표시. */
     fun accentGlow(accent: Color): Color = accent.copy(alpha = 0.12f)
 
+    /**
+     * "수행했지만 기준 미달" 색: 액센트를 text.secondary 쪽으로 60% 당겨 채도·명도를 낮춘 습관색 계열(결정 기록 2026-09-05 결정 1).
+     * 두 테마 모두 채도가 약 40% 남아 회색 X(미수행)와 구분되고, 바탕 대비는 [accentForText]로 AA를 맞춘다.
+     */
+    fun partialAccent(accent: Color, background: Color = bgBase): Color =
+        accentForText(lerp(accent, textSecondary, PARTIAL_MIX), background)
+
     /** 액센트로 채운 면 위의 글자/아이콘 색. 액센트 명도에 따라 어두운/밝은 잉크를 고른다. */
     fun onAccent(accent: Color): Color = if (accent.luminance() > 0.4f) Color(0xFF1C1C1E) else Color(0xFFF2F2F7)
 
@@ -103,6 +110,9 @@ data class HabitColorTokens(
     }
 
     companion object {
+        /** 기준미달 색을 만들 때 text.secondary 쪽으로 당기는 비율. */
+        const val PARTIAL_MIX = 0.6f
+
         /** WCAG 대비비. 알파가 있는 색은 배경 위에 합성해 계산한다. */
         fun contrastRatio(fg: Color, bg: Color): Float {
             val f = fg.compositeOver(bg).luminance()

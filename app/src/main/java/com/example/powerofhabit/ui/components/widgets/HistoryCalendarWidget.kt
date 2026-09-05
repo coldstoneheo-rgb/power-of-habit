@@ -73,7 +73,8 @@ fun HistoryCalendarWidget(
                         Spacer(modifier = Modifier.weight(1f))
                     } else {
                         val currentDate = yearMonth.atDay(day)
-                        val status = records[currentDate] ?: "NONE"
+                        // null = 기록 없음(빈 칸). "NONE" = 기록이 있는데 미수행(실패 표시). 둘을 섞지 않는다.
+                        val status: String? = records[currentDate]
                         
                         Box(
                             modifier = Modifier
@@ -82,9 +83,11 @@ fun HistoryCalendarWidget(
                                 .padding(4.dp)
                                 .clip(CircleShape)
                                 .background(
+                                    // status = RecordOutcome 이름(SUCCESS/PARTIAL/NONE/SKIPPED). NONE은 기록이 있는데 미수행 = 실패 표시.
                                     when (status) {
-                                        "COMPLETED" -> themeColor
-                                        "FAILED" -> HabitTheme.colors.statusFail.copy(alpha = 0.16f)
+                                        "SUCCESS" -> themeColor
+                                        "PARTIAL" -> HabitTheme.colors.partialAccent(themeColor).copy(alpha = 0.35f)
+                                        "NONE" -> HabitTheme.colors.statusFail.copy(alpha = 0.16f)
                                         "SKIPPED" -> HabitTheme.colors.lineHair
                                         else -> Color.Transparent
                                     }
@@ -100,13 +103,15 @@ fun HistoryCalendarWidget(
                             Text(
                                 text = day.toString(),
                                 color = when (status) {
-                                    "COMPLETED" -> HabitTheme.colors.onAccent(themeColor)
-                                    "FAILED" -> HabitTheme.colors.statusFail
+                                    "SUCCESS" -> HabitTheme.colors.onAccent(themeColor)
+                                    // 35% 틴트 위에서는 같은 계열 글자가 AA에 못 미쳐 기본 잉크를 쓴다(대비 테스트 참조)
+                                    "PARTIAL" -> HabitTheme.colors.textPrimary
+                                    "NONE" -> HabitTheme.colors.statusFail
                                     "SKIPPED" -> HabitTheme.colors.textPrimary.copy(alpha = 0.9f)
                                     else -> HabitTheme.colors.textPrimary.copy(alpha = 0.7f)
                                 },
                                 fontSize = 13.sp,
-                                fontWeight = if (status == "COMPLETED" || status == "FAILED" || status == "SKIPPED") FontWeight.Bold else FontWeight.Normal
+                                fontWeight = if (status != null) FontWeight.Bold else FontWeight.Normal
                             )
                         }
                         day++

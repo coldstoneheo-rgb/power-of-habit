@@ -31,6 +31,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
+import com.example.powerofhabit.domain.RecordOutcomes
 import com.example.powerofhabit.domain.stats.HabitFrequency
 import com.example.powerofhabit.domain.stats.HabitStatsCalculator
 import com.example.powerofhabit.ui.components.widgets.*
@@ -79,16 +80,55 @@ fun HabitDetailScreen(
                     }
                 )
             }
-            is HabitDetailUiState.Error -> {
+            HabitDetailUiState.NotFound -> {
+                // 위젯 딥링크로 삭제된 습관에 들어온 경우. 짧게 알리고 자동으로 돌아간다 — 단 한 번만 pop(이중 pop 방지).
+                var navigated by remember { mutableStateOf(false) }
+                val goBackOnce = {
+                    if (!navigated) { navigated = true; onBack() }
+                }
+                LaunchedEffect(Unit) {
+                    kotlinx.coroutines.delay(1500)
+                    goBackOnce()
+                }
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "Error: ${(state as HabitDetailUiState.Error).throwable.localizedMessage}",
-                            color = Color.Red
+                            text = "삭제되었거나 찾을 수 없는 습관입니다",
+                            color = HabitTheme.colors.textPrimary,
+                            style = MaterialTheme.typography.titleMedium
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(Space.s2))
+                        Text(
+                            text = "목록으로 돌아갑니다",
+                            color = HabitTheme.colors.textSecondary,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(Space.s4))
+                        Button(onClick = goBackOnce, colors = ButtonDefaults.buttonColors(containerColor = HabitTheme.colors.bgLayer3)) {
+                            Text("돌아가기", color = HabitTheme.colors.textPrimary)
+                        }
+                    }
+                }
+            }
+            is HabitDetailUiState.Error -> {
+                // 실제 DB/IO 예외: 삭제와 구분해 원인을 보여주고 자동 이동은 하지 않는다(ViewModel이 로그 남김).
+                val message = (state as HabitDetailUiState.Error).throwable.localizedMessage ?: "알 수 없는 오류"
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "기록을 불러오지 못했습니다",
+                            color = HabitTheme.colors.textPrimary,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.height(Space.s2))
+                        Text(
+                            text = message,
+                            color = HabitTheme.colors.statusError,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(Space.s4))
                         Button(onClick = onBack, colors = ButtonDefaults.buttonColors(containerColor = HabitTheme.colors.bgLayer3)) {
-                            Text("Back", color = HabitTheme.colors.textPrimary)
+                            Text("돌아가기", color = HabitTheme.colors.textPrimary)
                         }
                     }
                 }
@@ -140,19 +180,19 @@ private fun HabitDetailContent(
     val maxStreak = stats.maxStreak
     val progress = stats.monthProgress
 
-    // 4) Calendar records map
-    val calendarRecords = remember(records) {
-        records.associate {
+    // 4) Calendar records map — 표시 상태(RecordOutcome 이름). 기록이 있는데 NONE이면 캘린더는 "실패"로 그린다.
+    val calendarRecords = remember(records, habit.habitType, habit.targetValue) {
+        records.mapNotNull { r ->
             try {
-                LocalDate.parse(it.date) to it.status
+                LocalDate.parse(r.date) to RecordOutcomes.of(habit.habitType, r.status, r.inputValue, habit.targetValue).name
             } catch (e: Exception) {
-                LocalDate.now() to "NONE"
+                null
             }
-        }
+        }.toMap()
     }
     
     // 5) Heatmap calculation
-    val heatmapFrequencies = remember(records) {
+    val heatmapFrequencies = remember(records, habit.habitType, habit.targetValue) {
         val today = LocalDate.now()
         val oneYearAgo = today.minusWeeks(51).with(java.time.DayOfWeek.SUNDAY)
         val matrix = List(7) { MutableList(52) { 0 } }
@@ -165,10 +205,12 @@ private fun HabitDetailContent(
                         val week = daysBetween / 7
                         val dayOfWeek = date.dayOfWeek.value % 7
                         if (week in 0..51 && dayOfWeek in 0..6) {
-                            if (record.status == "COMPLETED") {
-                                matrix[dayOfWeek][week] = 10
-                            } else if (record.status == "SKIPPED") {
-                                matrix[dayOfWeek][week] = 3
+                            // 캘린더·위젯과 같은 판정(RecordOutcomes)을 쓴다: 성공 10 / 기준미달 6 / 건너뜀 3 / 미수행 0
+                            matrix[dayOfWeek][week] = when (RecordOutcomes.of(habit.habitType, record.status, record.inputValue, habit.targetValue)) {
+                                com.example.powerofhabit.domain.RecordOutcome.SUCCESS -> 10
+                                com.example.powerofhabit.domain.RecordOutcome.PARTIAL -> 6
+                                com.example.powerofhabit.domain.RecordOutcome.SKIPPED -> 3
+                                com.example.powerofhabit.domain.RecordOutcome.NONE -> 0
                             }
                         }
                     }
@@ -555,12 +597,13 @@ private fun HabitDetailContent(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        listOf(
-                            "COMPLETED" to "성공",
-                            "FAILED" to "실패",
-                            "SKIPPED" to "건너뜀",
-                            "NONE" to "삭제"
-                        ).forEach { (statKey, statLabel) ->
+                        // 수치형은 값이 성공/기준미달을 결정하므로 성공·실패 칩 대신 "기록" 칩 하나만 보인다.
+                        val chips = if (habit.habitType == "VALUE") {
+                            listOf("COMPLETED" to "기록", "SKIPPED" to "건너뜀", "NONE" to "삭제")
+                        } else {
+                            listOf("COMPLETED" to "성공", "FAILED" to "실패", "SKIPPED" to "건너뜀", "NONE" to "삭제")
+                        }
+                        chips.forEach { (statKey, statLabel) ->
                             val isSelected = status == statKey
                             Box(
                                 modifier = Modifier
@@ -602,20 +645,19 @@ private fun HabitDetailContent(
                 }
             },
             confirmButton = {
+                val value = inputValue.replace(',', '.').toFloatOrNull()?.takeIf { it.isFinite() }
+                val isValueRecord = habit.habitType == "VALUE" && status != "NONE" && status != "SKIPPED"
                 TextButton(
+                    // 수치형 "기록"은 값이 있어야 저장할 수 있다(값 없는 성공/실패는 만들지 않는다)
+                    enabled = !isValueRecord || value != null,
                     onClick = {
-                        val value = inputValue.toFloatOrNull()
-                        val computedStatus = if (habit.habitType == "VALUE" && status != "NONE" && status != "SKIPPED") {
-                            val targetVal = habit.targetValue
-                            if (targetVal != null) {
-                                if (value != null && value >= targetVal) "COMPLETED" else "FAILED"
-                            } else {
-                                status
-                            }
+                        // 수치형은 값이 곧 상태다(RecordOutcomes.statusForValue). 삭제/건너뜀 선택만 그대로 둔다.
+                        val computedStatus = if (isValueRecord) {
+                            RecordOutcomes.statusForValue(value, habit.targetValue)
                         } else {
                             status
                         }
-                        onUpdateRecordForDate(date.toString(), computedStatus, value)
+                        onUpdateRecordForDate(date.toString(), computedStatus, if (isValueRecord) value else null)
                         selectedDateForEdit = null
                     }
                 ) {
