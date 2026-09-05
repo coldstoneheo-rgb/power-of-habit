@@ -97,7 +97,8 @@ private fun CheckContent(habit: HabitEntity?, record: HabitRecordEntity?, render
     val completed = outcome == RecordOutcome.SUCCESS
     val isValue = habit.habitType == "VALUE"
     val action = if (isValue) {
-        actionStartActivity(HabitWidgets.openHabitIntent(context, habit.habitId))
+        // 수치형: 앱을 열지 않고 투명 입력 액티비티에서 값만 넣는다 (결정 기록 2026-09-05 결정 2)
+        actionStartActivity(HabitWidgets.valueInputIntent(context, habit.habitId, renderedDate, appWidgetId))
     } else {
         actionRunCallback<ToggleCheckAction>(
             actionParametersOf(ToggleCheckAction.HabitIdKey to habit.habitId, ToggleCheckAction.DateKey to renderedDate)

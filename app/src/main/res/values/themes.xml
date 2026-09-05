@@ -2,4 +2,14 @@
 <resources>
 
     <style name="Theme.PowerOfHabit" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- 위젯 위에 다이얼로그만 띄우는 투명 액티비티용 (런처가 뒤에 흐릿하게 남는다) -->
+    <style name="Theme.PowerOfHabit.Translucent" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+    </style>
 </resources>

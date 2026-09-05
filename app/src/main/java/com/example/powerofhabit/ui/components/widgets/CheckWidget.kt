@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.powerofhabit.domain.RecordOutcome
 import com.example.powerofhabit.domain.RecordOutcomes
+import com.example.powerofhabit.ui.components.SuccessBurst
 import com.example.powerofhabit.ui.theme.HabitTheme
 import kotlinx.coroutines.launch
 
@@ -34,6 +35,8 @@ fun CheckWidget(
     unit: String? = null,
     inputValue: Float? = null,
     targetValue: Float? = null,
+    burst: Boolean = false, // 성공(목표 충족) 저장 직후 폭죽 재생
+    onBurstDone: () -> Unit = {},
     onClick: () -> Unit,
     onLongClick: () -> Unit
 ) {
@@ -148,6 +151,15 @@ fun CheckWidget(
             }
         }
         
+        // 수치형 성공 폭죽 (액센트 2톤, 450ms) — 기준미달·미수행은 색 변화만
+        if (burst) {
+            SuccessBurst(
+                accent = themeColor,
+                modifier = Modifier.size(30.dp),
+                onFinished = onBurstDone
+            )
+        }
+
         // 채점 체크 팝업 쾌감 애니메이션 오버레이 (선생님 채점 체크 느낌)
         if (triggerAnim) {
             Icon(

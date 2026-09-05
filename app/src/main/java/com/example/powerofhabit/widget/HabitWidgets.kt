@@ -91,6 +91,17 @@ object HabitWidgets {
             putExtra(EXTRA_HABIT_ID, habitId)
         }
 
+    /** 수치형 습관 1x1 탭 → 앱을 열지 않고 값만 입력하는 투명 액티비티. 렌더 날짜를 함께 보내 자정 가드를 적용한다. */
+    fun valueInputIntent(context: Context, habitId: Int, renderedDate: String, appWidgetId: Int): Intent =
+        Intent(context, ValueInputActivity::class.java).apply {
+            action = Intent.ACTION_EDIT
+            data = Uri.parse("powerofhabit://value/$habitId/$appWidgetId")
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra(ValueInputActivity.EXTRA_HABIT_ID, habitId)
+            putExtra(ValueInputActivity.EXTRA_RENDERED_DATE, renderedDate)
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+        }
+
     /** 습관이 없거나 삭제된 위젯의 빈 상태 탭 → 습관 다시 고르기. */
     fun reconfigureIntent(context: Context, appWidgetId: Int): Intent =
         Intent(context, WidgetConfigActivity::class.java).apply {
