@@ -259,7 +259,7 @@ internal fun MainScreenContent(
             },
             confirmButton = {
                 TextButton(onClick = { showRestoreConfirm = false; onRestore() }) {
-                    Text("복원", color = HabitTheme.colors.primary, fontWeight = FontWeight.Bold)
+                    Text("복원", color = HabitTheme.colors.accentForText(HabitTheme.colors.primary), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -449,7 +449,7 @@ internal fun MainScreenContent(
                             )
                             Text(
                                 text = date.dayOfMonth.toString(),
-                                color = if (date == today) HabitTheme.colors.primary else MaterialTheme.colorScheme.onBackground,
+                                color = if (date == today) HabitTheme.colors.accentForText(HabitTheme.colors.primary) else MaterialTheme.colorScheme.onBackground,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -705,7 +705,7 @@ internal fun MainScreenContent(
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("백업하기", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("백업하기", fontWeight = FontWeight.Bold) // 잉크는 M3 onPrimary(onAccent(primary))
                     }
 
                     Button(

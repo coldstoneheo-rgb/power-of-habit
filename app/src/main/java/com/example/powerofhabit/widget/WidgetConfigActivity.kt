@@ -43,6 +43,7 @@ import com.example.powerofhabit.data.local.SettingsManager
 import com.example.powerofhabit.ui.theme.HabitTheme
 import com.example.powerofhabit.ui.theme.PowerOfHabitTheme
 import com.example.powerofhabit.ui.theme.Space
+import com.example.powerofhabit.ui.theme.habitAccent
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -151,7 +152,7 @@ private fun HabitPicker(habits: List<HabitEntity>, onPick: (HabitEntity) -> Unit
                         modifier = Modifier
                             .size(12.dp)
                             .clip(CircleShape)
-                            .background(HabitWidgets.parseThemeColor(habit.themeColor))
+                            .background(habitAccent(habit.themeColor))
                     )
                     Text(
                         text = habit.title,

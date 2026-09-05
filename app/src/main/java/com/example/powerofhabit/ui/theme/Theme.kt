@@ -20,7 +20,8 @@ fun PowerOfHabitTheme(
     content: @Composable () -> Unit
 ) {
     val tokens = if (darkTheme) DarkTokens else LightTokens
-    // primary는 토큰(tokens.primary) — 버튼·스위치·로딩 등 습관 컨텍스트 밖 강조에만 쓴다(가이드 B2 완료).
+    // primary는 토큰(tokens.primary) — 버튼·스위치·로딩 등 습관 컨텍스트 밖 강조에만 쓴다.
+    // 토큰화는 끝났고, 색 정책(DESIGN_GUIDE B7~B9: 채움 버튼 layer3·primary 중립화)은 별도 디자인 결정으로 남아 있다.
     val colorScheme = remember(tokens) { tokens.toColorScheme() }
     val view = LocalView.current
     if (applyWindowChrome && !view.isInEditMode) {

@@ -135,13 +135,7 @@ fun AddEditHabitScreen(
         }
     }
     
-    val themeColor = remember(selectedThemeHex) {
-        try {
-            Color(android.graphics.Color.parseColor(selectedThemeHex))
-        } catch (e: Exception) {
-            PremiumMatteColors.first().second
-        }
-    }
+    val themeColor = habitAccent(selectedThemeHex) // 목록·상세와 같은 파싱·폴백(primary)
     
     val scrollState = rememberScrollState()
     

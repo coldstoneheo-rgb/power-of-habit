@@ -29,6 +29,7 @@ import com.example.powerofhabit.domain.RecordOutcomes
 import com.example.powerofhabit.ui.components.SuccessBurst
 import com.example.powerofhabit.ui.components.ValueInputDialog
 import com.example.powerofhabit.ui.theme.PowerOfHabitTheme
+import com.example.powerofhabit.ui.theme.habitAccent
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
@@ -100,10 +101,11 @@ class ValueInputActivity : ComponentActivity() {
                         SuccessBurst(accent = accent, modifier = Modifier.size(160.dp), radiusScale = 1.2f)
                     }
                 } else if (loaded && h != null) {
+                    val habitColor = habitAccent(h.themeColor) // 컴포지션 안 — 테마 폴백은 앱 화면과 같은 규칙
                     ValueInputDialog(
                         habit = h,
                         initialValue = existing?.inputValue,
-                        accent = HabitWidgets.parseThemeColor(h.themeColor),
+                        accent = habitColor,
                         autoFocus = true,
                         onDismiss = { finish() },
                         onSave = { value, outcome ->
@@ -117,7 +119,7 @@ class ValueInputActivity : ComponentActivity() {
                                 }
                                 refreshWidget(appWidgetId)
                                 if (outcome == RecordOutcome.SUCCESS) {
-                                    burstAccent = HabitWidgets.parseThemeColor(h.themeColor)
+                                    burstAccent = habitColor
                                     kotlinx.coroutines.delay(BURST_MILLIS)
                                 }
                                 finish()

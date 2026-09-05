@@ -11,6 +11,27 @@
 ```yaml
 date: 2026-09-06
 project: power-of-habit
+agent: claude-code (harness-loop-engine, 야간 자율 루프 — 사용자 사전 승인 1~6)
+summary: 야간 루프 6항목 — 옛 앱 DB 파일 가져오기(#34), 뱃지 스트릭 빈도 인지형(#35), 수치 입력 필드 공용화(#36), Drive 연결 해제(#37), primary 토큰화(#38), 릴리스 번들 점검
+status: on_track
+progress: "PR #34~#38 5건 머지 (근거: 각 PR 자체 리뷰 반영 후 testDebugUnitTest 116/116, assembleDebug 성공; bundleRelease 미서명 R8 AAB 성공 — 첫 콜드 빌드는 Gradle TimeoutException으로 실패했고 증분 재실행에서 25초 성공, 코드 문제 아님). 실기기 재검증은 사용자가 Drive apk/로 복사한 빌드로"
+changes: ["#34 feat(transfer): 옛 앱 DB 파일 가져오기 — SQLite(.db+-wal/-shm)를 JSON과 같은 병합 경로로", "#35 feat(badges): 스트릭 뱃지를 빈도 인지형으로 — 통계 엔진의 연속 MET 기간, 규칙은 BadgeRules로 분리", "#36 refactor(ui): 수치 입력 필드·파싱·목표 안내를 ValueInput/ValueInputField로 공용화", "#37 feat(backup): Drive 연결 해제 — Google signOut", "#38 refactor(theme): 브랜드 primary를 디자인 토큰으로"]
+next: 실기기 재검증(옛 앱 DB 가져오기 실제 파일·-wal 경고, 뱃지 보관함 10종, 이하 습관, 색 필드, 앱 이름) → 사용자: adb run-as로 옛 DB 추출(debug 빌드면) → 사용자: OAuth 클라이언트 등록 후 Drive 로그인·연결 해제 확인 → 후보: GoogleDriveBackupManager Hilt 주입(테스트 더블), 라이트 테마 오렌지 글자 대비(2.1:1) 디자인 결정, 같은 날짜 중복 기록 정리
+blockers: Drive 백업/복원·연결 해제는 OAuth 클라이언트 미등록(사용자 작업). 옛 앱이 release 빌드면 DB 추출 불가(루팅 없이)
+learning_need: 소스 문자열에 NUL 제어문자를 그대로 넣으면 git이 파일을 바이너리로 취급해 diff·grep·커밋 메시지가 모두 깨진다 — 이스케이프(\u0000)로 쓰고 공용 헬퍼로 모아야 한다. Room suspend DAO 호출부에서 withContext(IO)를 겹치면 테스트 디스패처가 결과를 기다리지 못한다
+synergy: "리뷰 10건 → 표로 반영 기록 → 머지" 루프가 5회 연속 안정 동작. L2C "야간 자율 루프 6 PR 회고" 콘텐츠 원재료(결정 기록 2건 포함)
+monetization: 아직 0원. 출시 준비는 키스토어·Play Console·OAuth 클라이언트(사용자 몫) 대기
+```
+## 의미
+사용자가 잠든 사이 사전 승인된 6항목만 순서대로 처리했다. 옛 앱 데이터 이전은 "덮어쓰기 복원" 대신 JSON과 같은 병합 경로로 구현해
+현재 데이터를 지키고, 뱃지 스트릭은 통계 엔진의 숫자와 일치시키며 받을 수 없던 뱃지 5종을 보관함에서 걷어냈다. 각 PR은 자체 리뷰
+(8~10건)를 전부 또는 기록과 함께 반영한 뒤 머지했고, 결정이 갈리는 두 지점(스트릭 단위·보관함 카탈로그)은 결정 기록으로 남겼다.
+
+---
+
+```yaml
+date: 2026-09-06
+project: power-of-habit
 agent: claude-code (harness-loop-engine, 사용자 동석 세션)
 summary: 이하 목표(AT_MOST) 수치 습관 부활 — DB v5 targetType, RecordOutcomes 방향 인지 판정(0=성공·초과=PARTIAL·미기록=미수행), 등록 화면 이상/이하 칩, 상세·입력 다이얼로그 표기, JSON 이전 필드
 status: on_track

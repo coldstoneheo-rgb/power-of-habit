@@ -91,11 +91,11 @@ data class HabitColorTokens(
     }
 
     /** M3 colorScheme. surfaceContainer* 계열까지 톤 계단에 매핑해 기본 컴포넌트가 팔레트 밖 회색을 쓰지 않게 한다. */
-    fun toColorScheme(primary: Color = this.primary, onPrimary: Color = onAccent(primary)): ColorScheme {
+    fun toColorScheme(): ColorScheme {
         val base = if (isDark) darkColorScheme() else lightColorScheme()
         return base.copy(
             primary = primary,
-            onPrimary = onPrimary,
+            onPrimary = onAccent(primary),
             background = bgBase,
             onBackground = textPrimary,
             surface = bgLayer2,
@@ -214,7 +214,9 @@ val HabitShapes = Shapes(
 @Composable
 fun habitAccent(hex: String?): Color {
     val fallback = HabitTheme.colors.primary
-    return remember(hex, fallback) {
-        try { Color(android.graphics.Color.parseColor(hex)) } catch (e: Exception) { fallback }
-    }
+    return remember(hex, fallback) { parseHabitColorOr(hex, fallback) }
 }
+
+/** 습관색 hex 파싱 규칙 한 곳(순수). 앱은 [habitAccent], Glance 위젯은 `HabitWidgets.parseThemeColor`가 이 함수에 위임한다. */
+fun parseHabitColorOr(hex: String?, fallback: Color): Color =
+    try { Color(android.graphics.Color.parseColor(hex)) } catch (e: Exception) { fallback }
