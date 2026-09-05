@@ -13,7 +13,6 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import com.example.powerofhabit.MainActivity
 import com.example.powerofhabit.data.DataRepository
 import com.example.powerofhabit.ui.theme.DarkTokens
-import com.example.powerofhabit.ui.theme.HabitOrange
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -112,7 +111,7 @@ object HabitWidgets {
         }
 
     fun parseThemeColor(hex: String?): Color =
-        try { Color(android.graphics.Color.parseColor(hex)) } catch (e: Exception) { HabitOrange }
+        try { Color(android.graphics.Color.parseColor(hex)) } catch (e: Exception) { DarkTokens.primary } // 앱의 habitAccent와 같은 폴백
 
     /** 위젯 전용 다크 팔레트(디자인 토큰 다크 값). 배경은 drawable `widget_bg`(85% 불투명 웜 블랙). */
     object Colors {

@@ -8,6 +8,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
@@ -51,7 +52,12 @@ data class HabitColorTokens(
     /** 사용자가 "실패"로 표시한 날. 저채도 적색 — 시스템 오류색과 구분. */
     val statusFail: Color,
     /** 시스템 오류(삭제·복원 실패 등)에만. */
-    val statusError: Color
+    val statusError: Color,
+    /**
+     * 브랜드 강조(primary): 버튼·스위치·로딩·오늘 날짜 등 **습관 컨텍스트 밖** 강조와, 습관색을 파싱할 수 없을 때의 폴백.
+     * 습관 하나의 색은 항상 `habit.themeColor`(accent)를 쓴다. M3 colorScheme.primary에 매핑. 두 테마 모두 브랜드 오렌지.
+     */
+    val primary: Color
 ) {
     /** 바 트랙 위 비강조 구간, 이력 막대. */
     fun accentDim(accent: Color): Color = accent.copy(alpha = 0.45f)
@@ -85,7 +91,7 @@ data class HabitColorTokens(
     }
 
     /** M3 colorScheme. surfaceContainer* 계열까지 톤 계단에 매핑해 기본 컴포넌트가 팔레트 밖 회색을 쓰지 않게 한다. */
-    fun toColorScheme(primary: Color, onPrimary: Color = onAccent(primary)): ColorScheme {
+    fun toColorScheme(primary: Color = this.primary, onPrimary: Color = onAccent(primary)): ColorScheme {
         val base = if (isDark) darkColorScheme() else lightColorScheme()
         return base.copy(
             primary = primary,
@@ -137,7 +143,8 @@ val DarkTokens = HabitColorTokens(
     textDisabled = Color(0xFF55555E),
     statusSkip = Color(0xFF9A9AA3),
     statusFail = Color(0xFFD26A6A),
-    statusError = Color(0xFFFF6B6B)
+    statusError = Color(0xFFFF6B6B),
+    primary = HabitOrange
 )
 
 val LightTokens = HabitColorTokens(
@@ -154,7 +161,8 @@ val LightTokens = HabitColorTokens(
     textDisabled = Color(0xFFB5B5BD),
     statusSkip = Color(0xFF6B6B75),
     statusFail = Color(0xFFB94A4A),
-    statusError = Color(0xFFD64545)
+    statusError = Color(0xFFD64545),
+    primary = HabitOrange
 )
 
 val LocalHabitTokens = staticCompositionLocalOf { DarkTokens }
@@ -198,3 +206,15 @@ val HabitShapes = Shapes(
     large = RoundedCornerShape(Radius.lg),
     extraLarge = RoundedCornerShape(28.dp)
 )
+
+/**
+ * 습관색 hex → Color. 파싱할 수 없으면 테마의 primary(브랜드 오렌지)로 폴백한다. 메인 목록·상세·입력 다이얼로그가 공용.
+ * (위젯은 컴포지션 밖이라 `HabitWidgets.parseThemeColor`가 `DarkTokens.primary`로 같은 규칙을 쓴다.)
+ */
+@Composable
+fun habitAccent(hex: String?): Color {
+    val fallback = HabitTheme.colors.primary
+    return remember(hex, fallback) {
+        try { Color(android.graphics.Color.parseColor(hex)) } catch (e: Exception) { fallback }
+    }
+}

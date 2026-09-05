@@ -237,7 +237,7 @@ fun BadgesScreen(
             },
             confirmButton = {
                 TextButton(onClick = { selectedBadgeDetail = null }) {
-                    Text("확인", color = HabitOrange, fontWeight = FontWeight.Bold)
+                    Text("확인", color = HabitTheme.colors.primary, fontWeight = FontWeight.Bold)
                 }
             },
             containerColor = MaterialTheme.colorScheme.surface,
