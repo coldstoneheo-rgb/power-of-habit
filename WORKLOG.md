@@ -9,6 +9,27 @@
 ---
 
 ```yaml
+date: 2026-09-06
+project: power-of-habit
+agent: claude-code (harness-loop-engine, 사용자 동석 세션)
+summary: 이하 목표(AT_MOST) 수치 습관 부활 — DB v5 targetType, RecordOutcomes 방향 인지 판정(0=성공·초과=PARTIAL·미기록=미수행), 등록 화면 이상/이하 칩, 상세·입력 다이얼로그 표기, JSON 이전 필드
+status: on_track
+progress: "PR #33 머지 (근거: testDebugUnitTest 90/90, assembleDebug 성공, 자체 리뷰 10건 전부 반영). 실기기 재검증은 사용자가 Drive apk/로 복사한 빌드로 진행"
+changes: ["#33 feat(habit): 이하 목표(AT_MOST) 유형 부활 — DB v5 targetType, 방향 인지 판정, 등록 화면 이상/이하 칩"]
+next: 실기기 재검증(기존 설치 위 v4→v5 업데이트·이하 습관 등록·0 입력 성공·초과 PARTIAL 색·위젯) → #32 항목(앱 이름·아이콘·색 필드·Drive 로그인) 재검증 → 사용자 OAuth 클라이언트 등록 후 Drive 백업 확인 → 옛 앱 DB 가져오기 또는 BadgeManager 스트릭 빈도 인지형
+blockers: Drive 백업/복원은 OAuth 클라이언트 미등록(사용자 작업). 옛 com.example 앱 데이터 이전 미구현
+learning_need: "미기록=성공"이 편해 보여도 통계를 조용히 부풀린다 — 이하 목표는 0을 직접 적게 하고 UI가 그것을 안내하는 쪽이 데이터 신뢰성 면에서 맞다. 판정 함수 하나에 매개변수 하나를 더하면 렌더러·저장 경로 12곳이 한 번에 따라오는 구조가 이번에 값을 했다
+synergy: "의미 충돌을 표로 정리하고 역할별 최강 반대를 적은 뒤 결정"하는 결정 기록 형식이 두 번째로 재사용됨 — L2C "제품 의미 설계를 에이전트 회의로" 콘텐츠 원재료
+monetization: 아직 0원. 출시 준비는 키스토어·Play Console·OAuth 클라이언트(사용자 몫) 대기
+```
+## 의미
+지난 세션이 "의미 설계 선행"을 조건으로 보류했던 이하 목표를, 사용자 결정 뒤 3인 역할 의견으로 규칙을 확정하고 구현했다.
+핵심은 이상 목표의 "0=미수행"과 이하 목표의 "0=성공"을 한 함수 안에서 방향 매개변수로 가르고, 기록하지 않은 날은 어느 방향에서도
+성공으로 치지 않는 것이다. DB는 v5로 올렸지만 기본값이 AT_LEAST라 기존 습관·통계는 한 줄도 달라지지 않는다.
+
+---
+
+```yaml
 date: 2026-09-05
 project: power-of-habit
 agent: claude-code (harness-loop-engine, 사용자 동석 세션)

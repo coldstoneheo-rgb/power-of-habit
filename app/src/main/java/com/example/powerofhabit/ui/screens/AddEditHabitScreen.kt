@@ -169,6 +169,8 @@ fun AddEditHabitScreen(
         if (title.isBlank()) {
             Toast.makeText(context, "습관 이름을 입력해주세요.", Toast.LENGTH_SHORT).show()
         } else {
+            // 목표 수치는 한 번만 파싱하고 유한값만 인정한다("NaN"·"Infinity"·"1e40"은 toFloatOrNull을 통과한다)
+            val parsedTargetValue = targetValueString.replace(',', '.').toFloatOrNull()?.takeIf { it.isFinite() }
             val isFrequencyValid = when (frequencyType) {
                 "DAILY" -> true
                 "INTERVAL" -> intervalDays.toIntOrNull()?.let { it >= 1 } ?: false
@@ -186,9 +188,10 @@ fun AddEditHabitScreen(
                 Toast.makeText(context, "올바른 빈도 값을 입력해주세요.", Toast.LENGTH_SHORT).show()
             } else if (habitType == "VALUE" && unit.isBlank()) {
                 Toast.makeText(context, "단위(예: km, 쪽)를 입력해주세요.", Toast.LENGTH_SHORT).show()
-            } else if (habitType == "VALUE" && targetValueString.isNotBlank() && targetValueString.toFloatOrNull() == null) {
+            } else if (habitType == "VALUE" && targetValueString.isNotBlank() && parsedTargetValue == null) {
+                // "NaN"·"Infinity"·"1e40"도 toFloatOrNull은 통과하므로 유한값만 목표로 받는다
                 Toast.makeText(context, "올바른 목표 수치를 입력해주세요 (예: 15).", Toast.LENGTH_SHORT).show()
-            } else if (habitType == "VALUE" && RecordOutcomes.isAtMost(targetType) && (targetValueString.toFloatOrNull() ?: -1f) <= 0f) {
+            } else if (habitType == "VALUE" && RecordOutcomes.isAtMost(targetType) && (parsedTargetValue == null || parsedTargetValue <= 0f)) {
                 Toast.makeText(context, "'이하' 목표는 0보다 큰 목표 수치가 필요합니다 (예: 5).", Toast.LENGTH_SHORT).show()
             } else {
                 val computedFrequencyValue = when (frequencyType) {
@@ -211,7 +214,7 @@ fun AddEditHabitScreen(
                     habitType = habitType,
                     unit = if (habitType == "VALUE") unit else null,
                     memo = if (memo.isBlank()) null else memo,
-                    targetValue = if (habitType == "VALUE") targetValueString.toFloatOrNull() else null,
+                    targetValue = if (habitType == "VALUE") parsedTargetValue else null,
                     targetType = if (habitType == "VALUE") targetType else RecordOutcomes.TARGET_AT_LEAST
                 )
             }

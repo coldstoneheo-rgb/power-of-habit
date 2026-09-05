@@ -50,15 +50,37 @@ class RecordOutcomesAtMostTest {
         assertEquals("COMPLETED", RecordOutcomes.statusForValue(5f, 5f, atMost))
         assertEquals("FAILED", RecordOutcomes.statusForValue(6f, 5f, atMost))
         // 기본(이상)은 예전과 같다
-        assertEquals("FAILED", RecordOutcomes.statusForValue(0f, 5f))
-        assertEquals("COMPLETED", RecordOutcomes.statusForValue(5f, 5f))
+        assertEquals("FAILED", RecordOutcomes.statusForValue(0f, 5f, RecordOutcomes.TARGET_AT_LEAST))
+        assertEquals("COMPLETED", RecordOutcomes.statusForValue(5f, 5f, RecordOutcomes.TARGET_AT_LEAST))
         assertEquals("FAILED", RecordOutcomes.statusForValue(4f, 5f, RecordOutcomes.TARGET_AT_LEAST))
     }
 
     @Test
-    fun unknownOrNullDirection_behavesAsAtLeast() {
+    fun unknownDirection_behavesAsAtLeast() {
         assertEquals(RecordOutcome.NONE, RecordOutcomes.of("VALUE", null, 0f, 5f, "WHATEVER"))
-        assertEquals(RecordOutcome.SUCCESS, RecordOutcomes.of("VALUE", null, 5f, 5f, null))
-        assertEquals(RecordOutcome.PARTIAL, RecordOutcomes.of("VALUE", null, 4f, 5f, null))
+        assertEquals(RecordOutcome.SUCCESS, RecordOutcomes.of("VALUE", null, 5f, 5f, "WHATEVER"))
+        assertEquals(RecordOutcome.PARTIAL, RecordOutcomes.of("VALUE", null, 4f, 5f, "WHATEVER"))
+    }
+
+    @Test
+    fun restatusAfterTargetChange_rewritesOnlyValueRecordsWhoseCacheFlipped() {
+        // 이상 5 → 이하 5로 바꾼 뒤: 0(FAILED)→COMPLETED, 3(FAILED)→COMPLETED, 8(COMPLETED)→FAILED, 5(COMPLETED)는 그대로
+        assertEquals("COMPLETED", RecordOutcomes.restatusAfterTargetChange("FAILED", 0f, 5f, atMost))
+        assertEquals("COMPLETED", RecordOutcomes.restatusAfterTargetChange("FAILED", 3f, 5f, atMost))
+        assertEquals("FAILED", RecordOutcomes.restatusAfterTargetChange("COMPLETED", 8f, 5f, atMost))
+        assertEquals(null, RecordOutcomes.restatusAfterTargetChange("COMPLETED", 5f, 5f, atMost))
+        // 건너뜀·값 없는 기록은 건드리지 않는다
+        assertEquals(null, RecordOutcomes.restatusAfterTargetChange("SKIPPED", 9f, 5f, atMost))
+        assertEquals(null, RecordOutcomes.restatusAfterTargetChange("COMPLETED", null, 5f, atMost))
+        assertEquals(null, RecordOutcomes.restatusAfterTargetChange("FAILED", null, 5f, atMost))
+    }
+
+    @Test
+    fun targetLabel_formatsNumberUnitAndDirection() {
+        assertEquals("5 개비 이하", RecordOutcomes.targetLabel(5f, "개비", atMost))
+        assertEquals("2.5 km", RecordOutcomes.targetLabel(2.5f, "km", RecordOutcomes.TARGET_AT_LEAST))
+        assertEquals("5 이하", RecordOutcomes.targetLabel(5f, "", atMost))
+        assertEquals(null, RecordOutcomes.targetLabel(null, "km", atMost))
+        assertEquals(null, RecordOutcomes.targetLabel(Float.NaN, "km", atMost))
     }
 }

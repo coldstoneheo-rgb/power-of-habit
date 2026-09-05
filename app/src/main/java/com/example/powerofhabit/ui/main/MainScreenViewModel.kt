@@ -204,6 +204,7 @@ class MainScreenViewModel @Inject constructor(
         DriveOutcome.FAILED -> _transferMessages.emit(
           if (action == DriveAction.BACKUP) "백업에 실패했습니다." else "복원에 실패했습니다. Drive에 올바른 백업 파일이 없습니다."
         )
+        DriveOutcome.BACKUP_TOO_NEW -> _transferMessages.emit("백업이 더 새 버전의 앱에서 만들어졌습니다. 앱을 업데이트한 뒤 복원해 주세요.")
       }
     }
   }

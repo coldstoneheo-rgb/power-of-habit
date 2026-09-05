@@ -90,6 +90,8 @@ fun CheckWidget(
             val hasRecord = inputValue != null
             val displayValue = if (hasRecord) {
                 if (inputValue % 1f == 0f) "${inputValue!!.toInt()}" else "$inputValue"
+            } else if (RecordOutcomes.isAtMost(targetType)) {
+                "–" // 이하 목표는 "기록한 0(성공)"과 "안 적음(미수행)"이 달라야 하므로 미기록은 대시
             } else "0"
             val displayUnit = unit ?: ""
             

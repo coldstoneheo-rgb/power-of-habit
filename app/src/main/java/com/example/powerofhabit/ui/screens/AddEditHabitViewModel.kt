@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.powerofhabit.data.DataRepository
 import com.example.powerofhabit.data.local.HabitEntity
+import com.example.powerofhabit.domain.RecordOutcomes
 import android.content.Context
 import com.example.powerofhabit.reminder.HabitReminderManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -110,7 +111,20 @@ class AddEditHabitViewModel @Inject constructor(
                             targetValue = targetValue,
                             targetType = targetType
                         )
-                        repository.updateHabit(updatedHabit)
+                        val targetChanged = updatedHabit.habitType == "VALUE" &&
+                            (existingHabit.targetValue != updatedHabit.targetValue || existingHabit.targetType != updatedHabit.targetType ||
+                                existingHabit.habitType != updatedHabit.habitType)
+                        repository.inTransaction {
+                            repository.updateHabit(updatedHabit)
+                            // 목표(값·방향)가 바뀌면 기존 기록의 status 캐시도 새 규칙으로 — 통계·뱃지는 캐시만 보기 때문(RecordOutcomes 문서).
+                            if (targetChanged) {
+                                repository.getRecordsForHabit(habitId).first().forEach { record ->
+                                    RecordOutcomes.restatusAfterTargetChange(
+                                        record.status, record.inputValue, updatedHabit.targetValue, updatedHabit.targetType
+                                    )?.let { repository.updateRecordStatus(record.recordId, it) }
+                                }
+                            }
+                        }
                         reminderManager.scheduleReminder(updatedHabit)
                     } else {
                         _uiEvent.emit(AddEditHabitUiEvent.Error("Habit not found"))

@@ -24,13 +24,16 @@ object RecordOutcomes {
 
     fun isAtMost(targetType: String?): Boolean = targetType == TARGET_AT_MOST
 
-    /** 표시 상태 판정. 4개 렌더러(메인 셀·상세 캘린더·1x1·2x2 위젯)가 모두 이 함수만 쓴다. */
+    /**
+     * 표시 상태 판정. 4개 렌더러(메인 셀·상세 캘린더·1x1·2x2 위젯)가 모두 이 함수만 쓴다.
+     * [targetType]에 기본값을 두지 않는다 — 방향을 빠뜨린 새 호출자가 조용히 "이상"으로 판정하는 일을 컴파일러가 막게 한다.
+     */
     fun of(
         habitType: String,
         status: String?,
         inputValue: Float?,
         targetValue: Float?,
-        targetType: String? = TARGET_AT_LEAST
+        targetType: String
     ): RecordOutcome {
         if (status == "SKIPPED") return RecordOutcome.SKIPPED
         if (habitType != TYPE_VALUE) {
@@ -64,9 +67,31 @@ object RecordOutcomes {
      * 수치형 저장 시 기록할 status. 메인 다이얼로그·상세 다이얼로그·위젯 입력이 모두 이 함수로 저장해
      * "status는 값의 캐시"라는 불변식을 유지한다. 목표 미달성(기준미달·한도 초과)과 미수행은 FAILED다.
      */
-    fun statusForValue(inputValue: Float?, targetValue: Float?, targetType: String? = TARGET_AT_LEAST): String =
+    fun statusForValue(inputValue: Float?, targetValue: Float?, targetType: String): String =
         when (of(TYPE_VALUE, null, inputValue, targetValue, targetType)) {
             RecordOutcome.SUCCESS -> "COMPLETED"
             else -> "FAILED"
         }
+
+    /**
+     * 습관의 목표(값·방향)가 바뀐 뒤 기존 기록의 status 캐시를 다시 맞춘다. 통계·뱃지는 캐시만 보므로 이 재계산이 없으면
+     * 캘린더(값 기준)와 통계(캐시 기준)가 서로 반대를 말한다. 값이 있는 기록만 대상이고, 건너뜀과 값 없는 기록은 건드리지 않는다.
+     * @return 바뀐 status, 바꿀 필요가 없으면 null.
+     */
+    fun restatusAfterTargetChange(status: String, inputValue: Float?, targetValue: Float?, targetType: String): String? {
+        if (status == "SKIPPED" || inputValue == null) return null
+        val next = statusForValue(inputValue, targetValue, targetType)
+        return next.takeIf { it != status }
+    }
+
+    /**
+     * 목표 표기 한 곳: "5 개비 이하" / "5 km". 정수는 소수점 없이. 목표가 없으면 null.
+     * 상세 화면·입력 다이얼로그·상세 편집 다이얼로그가 같은 문자열을 쓴다.
+     */
+    fun targetLabel(targetValue: Float?, unit: String?, targetType: String): String? {
+        val t = targetValue?.takeIf { it.isFinite() } ?: return null
+        val number = if (t % 1f == 0f) t.toInt().toString() else t.toString()
+        return listOfNotNull(number, unit?.takeIf { it.isNotBlank() }, if (isAtMost(targetType)) "이하" else null)
+            .joinToString(" ")
+    }
 }

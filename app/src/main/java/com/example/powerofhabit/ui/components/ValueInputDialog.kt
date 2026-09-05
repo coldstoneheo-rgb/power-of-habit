@@ -50,11 +50,9 @@ fun ValueInputDialog(
     val focusRequester = remember { FocusRequester() }
     // 저장 가능 여부는 버튼 활성화로 드러낸다(빈 값·NaN·Infinity는 저장 불가) — 무반응 탭을 없앤다.
     val parsedValue = input.replace(',', '.').toFloatOrNull()?.takeIf { it.isFinite() }
-    val targetText = habit.targetValue?.let { t ->
-        val v = if (t % 1f == 0f) t.toInt().toString() else t.toString()
-        val base = "목표 $v ${habit.unit ?: ""}".trim()
-        // 이하 목표는 방향을 말해 준다(0도 성공이라는 힌트). 이상 목표는 기존 표기 유지.
-        if (RecordOutcomes.isAtMost(habit.targetType)) "$base 이하 (0도 기록하세요)" else base
+    // 목표 표기는 RecordOutcomes.targetLabel 한 곳. 이하 목표는 0도 성공이라는 힌트를 덧붙인다.
+    val targetText = RecordOutcomes.targetLabel(habit.targetValue, habit.unit, habit.targetType)?.let { label ->
+        if (RecordOutcomes.isAtMost(habit.targetType)) "목표 $label (0도 기록하세요)" else "목표 $label"
     }
 
     AlertDialog(

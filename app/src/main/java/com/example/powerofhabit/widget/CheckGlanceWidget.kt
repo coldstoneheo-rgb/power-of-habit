@@ -120,7 +120,8 @@ private fun CheckContent(habit: HabitEntity?, record: HabitRecordEntity?, render
             if (isValue) {
                 val value = record?.inputValue
                 val valueText = when {
-                    value == null -> "0"
+                    // 이하 목표는 "기록한 0(성공)"과 "안 적음(미수행)"이 달라야 하므로 미기록은 대시
+                    value == null -> if (RecordOutcomes.isAtMost(habit.targetType)) "–" else "0"
                     value % 1f == 0f -> value.toInt().toString()
                     else -> value.toString()
                 }

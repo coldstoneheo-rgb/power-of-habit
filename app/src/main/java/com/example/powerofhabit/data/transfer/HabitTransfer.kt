@@ -3,6 +3,7 @@ package com.example.powerofhabit.data.transfer
 import com.example.powerofhabit.data.local.BadgeEntity
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
+import com.example.powerofhabit.domain.RecordOutcomes
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.intOrNull
@@ -76,15 +77,19 @@ object HabitTransfer {
         badges: List<BadgeEntity>,
         appVersionName: String?,
         exportedAt: Instant = Instant.now()
-    ): HabitExport = HabitExport(
-        formatVersion = HabitExport.CURRENT_FORMAT_VERSION,
-        exportedAt = exportedAt.toString(),
-        appVersionName = appVersionName,
+    ): HabitExport {
         // NaN/Infinity는 JSON에 실을 수 없어 한 건이 전체 내보내기를 막는다 → null로 정화(미수행과 같은 의미)
-        habits = habits.map { h -> h.toDto().let { d -> d.copy(targetValue = d.targetValue?.takeIf(Float::isFinite)) } },
-        records = records.map { r -> r.toDto().let { d -> d.copy(inputValue = d.inputValue?.takeIf(Float::isFinite)) } },
-        badges = badges.map { it.toDto() }
-    )
+        val habitDtos = habits.map { h -> h.toDto().let { d -> d.copy(targetValue = d.targetValue?.takeIf(Float::isFinite)) } }
+        return HabitExport(
+            // 이하 목표 습관이 있을 때만 2 — 옛 앱이 그 습관을 "이상"으로 뒤집어 읽는 대신 "업데이트하라"를 보게 한다
+            formatVersion = HabitExport.versionFor(habitDtos),
+            exportedAt = exportedAt.toString(),
+            appVersionName = appVersionName,
+            habits = habitDtos,
+            records = records.map { r -> r.toDto().let { d -> d.copy(inputValue = d.inputValue?.takeIf(Float::isFinite)) } },
+            badges = badges.map { it.toDto() }
+        )
+    }
 
     fun encode(export: HabitExport): String = json.encodeToString(HabitExport.serializer(), export)
 
@@ -126,12 +131,14 @@ object HabitTransfer {
             existingByCreatedAt.putIfAbsent(habit.createdAt, habit)
         }
         val matched = LinkedHashMap<Int, Int>()
+        val matchedHabit = HashMap<Int, HabitEntity>() // 파일 habitId → 기존 습관(목표·방향은 기존 것을 따른다)
         val toInsert = ArrayList<PendingHabit>()
         // 파일 안에서 같은 habitId가 중복되면 첫 번째만 쓴다.
         for (dto in import.habits.distinctBy { it.habitId }) {
             val hit = existingByCreatedAt[dto.createdAt]
             if (hit != null) {
                 matched[dto.habitId] = hit.habitId
+                matchedHabit[dto.habitId] = hit
             } else {
                 toInsert += PendingHabit(dto.habitId, dto.toEntity(habitId = 0))
             }
@@ -160,7 +167,15 @@ object HabitTransfer {
                 skipped++ // 기존 기록 유지
                 continue
             }
-            records += PendingRecord(dto.habitId, dto.toEntity(habitId = dto.habitId))
+            var entity = dto.toEntity(habitId = dto.habitId)
+            // 기존 습관에 붙는 수치 기록은 status 캐시를 **기존 습관의** 목표·방향으로 다시 맞춘다 —
+            // 파일을 만든 기기에서 방향이 달랐다면 그대로 옮기면 통계(캐시)와 캘린더(값)가 반대를 말한다.
+            val local = matchedHabit[dto.habitId]
+            if (local != null && local.habitType == RecordOutcomes.TYPE_VALUE) {
+                RecordOutcomes.restatusAfterTargetChange(entity.status, entity.inputValue, local.targetValue, local.targetType)
+                    ?.let { entity = entity.copy(status = it) }
+            }
+            records += PendingRecord(dto.habitId, entity)
         }
 
         // 3) 뱃지. badgeId 없는 것만.
