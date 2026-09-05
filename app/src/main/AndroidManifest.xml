@@ -33,6 +33,17 @@
             </intent-filter>
         </activity>
 
+        <!-- 1x1 위젯 수치 입력(투명, 최근 앱 제외, 히스토리 없음) -->
+        <activity
+            android:name=".widget.ValueInputActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:launchMode="singleTask"
+            android:taskAffinity=".widget.valueinput"
+            android:windowSoftInputMode="stateVisible|adjustResize"
+            android:theme="@style/Theme.PowerOfHabit.Translucent" />
+
         <receiver
             android:name=".widget.CheckWidgetReceiver"
             android:exported="true"

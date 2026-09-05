@@ -1,6 +1,7 @@
 package com.example.powerofhabit.widget
 
 import android.content.Context
+import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -19,6 +20,7 @@ import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.action.actionStartActivity
+import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.background
@@ -48,7 +50,8 @@ import java.time.LocalDate
 /**
  * 1x1 체크 위젯 (PRD §4-1): 어두운 반투명 사각형 위에 마크 하나.
  * 체크형은 탭으로 오늘 기록 토글(메인 화면 셀과 동일 규칙: 없음→완료, 완료→실패, 실패/건너뜀→완료),
- * 수치형은 값+단위를 보여주고 탭하면 앱 상세에서 입력한다. 습관이 없으면 탭으로 다시 고른다.
+ * 수치형은 값+단위를 보여주고 탭하면 투명 입력 액티비티([ValueInputActivity])에서 값만 넣는다. 습관이 없으면 탭으로 다시 고른다.
+ * 성공한 날은 타일 전체를 습관색으로 채운다(API 31+).
  */
 class CheckGlanceWidget : GlanceAppWidget() {
 
@@ -97,14 +100,22 @@ private fun CheckContent(habit: HabitEntity?, record: HabitRecordEntity?, render
     val completed = outcome == RecordOutcome.SUCCESS
     val isValue = habit.habitType == "VALUE"
     val action = if (isValue) {
-        actionStartActivity(HabitWidgets.openHabitIntent(context, habit.habitId))
+        // 수치형: 앱을 열지 않고 투명 입력 액티비티에서 값만 넣는다 (결정 기록 2026-09-05 결정 2)
+        actionStartActivity(HabitWidgets.valueInputIntent(context, habit.habitId, renderedDate, appWidgetId))
     } else {
         actionRunCallback<ToggleCheckAction>(
             actionParametersOf(ToggleCheckAction.HabitIdKey to habit.habitId, ToggleCheckAction.DateKey to renderedDate)
         )
     }
 
-    Box(modifier = base.clickable(action), contentAlignment = Alignment.Center) {
+    // 레퍼런스 앱처럼 성공한 날은 타일 전체를 습관색으로 채운다(API 31+에서 둥근 모서리 배경 가능). 그 위 잉크는 onAccent.
+    val fillTile = completed && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    val onTile = HabitWidgets.Colors.onAccent(accent)
+    val tileModifier = if (fillTile) {
+        GlanceModifier.fillMaxSize().background(ColorProvider(accent)).cornerRadius(20.dp).padding(6.dp)
+    } else base
+
+    Box(modifier = tileModifier.clickable(action), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             if (isValue) {
                 val value = record?.inputValue
@@ -113,9 +124,9 @@ private fun CheckContent(habit: HabitEntity?, record: HabitRecordEntity?, render
                     value % 1f == 0f -> value.toInt().toString()
                     else -> value.toString()
                 }
-                // 3상태: 성공 = 습관색 / 기준미달 = 어두운 습관색 / 미수행(0·없음) = 비활성
+                // 3상태: 성공 = 습관색(채운 타일에서는 onAccent) / 기준미달 = 어두운 습관색 / 미수행(0·없음) = 비활성
                 val color = when (outcome) {
-                    RecordOutcome.SUCCESS -> accent
+                    RecordOutcome.SUCCESS -> if (fillTile) onTile else accent
                     RecordOutcome.PARTIAL -> HabitWidgets.Colors.partial(accent)
                     else -> HabitWidgets.Colors.inkDisabled
                 }
@@ -134,7 +145,7 @@ private fun CheckContent(habit: HabitEntity?, record: HabitRecordEntity?, render
                 Image(
                     provider = ImageProvider(if (completed) R.drawable.ic_widget_check else R.drawable.ic_widget_close),
                     contentDescription = if (completed) "완료" else "미완료",
-                    colorFilter = ColorFilter.tint(ColorProvider(if (completed) accent else HabitWidgets.Colors.inkDisabled)),
+                    colorFilter = ColorFilter.tint(ColorProvider(if (completed) (if (fillTile) onTile else accent) else HabitWidgets.Colors.inkDisabled)),
                     modifier = GlanceModifier.size(26.dp)
                 )
             }
@@ -144,7 +155,7 @@ private fun CheckContent(habit: HabitEntity?, record: HabitRecordEntity?, render
                 style = TextStyle(
                     color = ColorProvider(
                         when (outcome) {
-                            RecordOutcome.SUCCESS -> accent
+                            RecordOutcome.SUCCESS -> if (fillTile) onTile else accent
                             RecordOutcome.PARTIAL -> HabitWidgets.Colors.partial(accent)
                             else -> HabitWidgets.Colors.inkMuted
                         }

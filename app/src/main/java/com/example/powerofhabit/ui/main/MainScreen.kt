@@ -23,7 +23,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,7 +31,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
+import com.example.powerofhabit.domain.RecordOutcome
 import com.example.powerofhabit.domain.RecordOutcomes
+import com.example.powerofhabit.ui.components.ValueInputDialog
 import com.example.powerofhabit.ui.components.widgets.CheckWidget
 import com.example.powerofhabit.ui.theme.HabitOrange
 import com.example.powerofhabit.ui.theme.HabitTheme
@@ -134,6 +135,8 @@ internal fun MainScreenContent(
     }
     
     var showValueDialogForHabit by remember { mutableStateOf<Pair<HabitEntity, LocalDate>?>(null) }
+    // 성공 폭죽을 재생할 셀 (habitId, "YYYY-MM-DD"). 애니메이션이 끝나면 null.
+    var burstCell by remember { mutableStateOf<Pair<Int, String>?>(null) }
     var showBackupSettings by remember { mutableStateOf(false) }
     var showAddTypeModal by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -338,6 +341,8 @@ internal fun MainScreenContent(
                         recordsMap = records[habit.habitId] ?: emptyMap(),
                         score = scores[habit.habitId],
                         showDivider = index < habits.lastIndex,
+                        burstDate = burstCell?.takeIf { it.first == habit.habitId }?.second,
+                        onBurstDone = { burstCell = null },
                         onNavigateToDetail = onNavigateToDetail,
                         onCheckClick = { date, record ->
                             if (habit.habitType == "VALUE") {
@@ -373,73 +378,31 @@ internal fun MainScreenContent(
         }
     }
     
-    // Value input dialog
+    // Value input dialog — 위젯(ValueInputActivity)과 같은 컴포저블·저장 규칙을 쓴다
     showValueDialogForHabit?.let { (habit, date) ->
         val existingRecord = records[habit.habitId]?.get(date.toString())
-        var inputValue by remember { mutableStateOf(existingRecord?.inputValue?.toString() ?: "") }
-        
         val habitThemeColor = remember(habit.themeColor) {
             try { Color(android.graphics.Color.parseColor(habit.themeColor)) } catch (e: Exception) { HabitOrange }
         }
-
-        AlertDialog(
-            onDismissRequest = { showValueDialogForHabit = null },
-            title = { Text(text = habit.title, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold) },
-            text = {
-                Column {
-                    Text(
-                        text = habit.question,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontSize = 13.sp,
-                        modifier = Modifier.padding(bottom = 16.dp)
+        ValueInputDialog(
+            habit = habit,
+            initialValue = existingRecord?.inputValue,
+            accent = habitThemeColor,
+            onDismiss = { showValueDialogForHabit = null },
+            onSave = { value, outcome ->
+                if (existingRecord != null) onDeleteRecord(existingRecord)
+                onInsertRecord(
+                    HabitRecordEntity(
+                        habitId = habit.habitId,
+                        date = date.toString(),
+                        status = RecordOutcomes.statusForValue(value, habit.targetValue),
+                        inputValue = value
                     )
-                    OutlinedTextField(
-                        value = inputValue,
-                        onValueChange = { inputValue = it },
-                        label = { Text("수치 (${habit.unit ?: ""})") },
-                        placeholder = { Text("예) 5.0") },
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                            focusedBorderColor = habitThemeColor,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                        )
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val value = inputValue.replace(',', '.').toFloatOrNull()?.takeIf { it.isFinite() }
-                        if (value != null) {
-                            if (existingRecord != null) {
-                                onDeleteRecord(existingRecord)
-                            }
-                            val status = RecordOutcomes.statusForValue(value, habit.targetValue)
-                            onInsertRecord(
-                                HabitRecordEntity(
-                                    habitId = habit.habitId,
-                                    date = date.toString(),
-                                    status = status,
-                                    inputValue = value
-                                )
-                            )
-                        }
-                        showValueDialogForHabit = null
-                    }
-                ) {
-                    Text("저장", color = habitThemeColor, fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showValueDialogForHabit = null }) {
-                    Text("취소", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            },
-            containerColor = MaterialTheme.colorScheme.surface,
-            titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
+                // 성공(목표 충족)일 때만 해당 셀에 폭죽. 기준미달·미수행은 색 변화만.
+                if (outcome == RecordOutcome.SUCCESS) burstCell = habit.habitId to date.toString()
+                showValueDialogForHabit = null
+            }
         )
     }
 
@@ -645,6 +608,8 @@ private fun HabitRow(
     recordsMap: Map<String, HabitRecordEntity>,
     score: Float?, // 0~100, ViewModel이 전체 이력으로 계산. null이면 점수 없음
     showDivider: Boolean,
+    burstDate: String? = null, // 이 날짜 셀에 성공 폭죽 재생
+    onBurstDone: () -> Unit = {},
     onNavigateToDetail: (Int) -> Unit,
     onCheckClick: (LocalDate, HabitRecordEntity?) -> Unit,
     onCheckLongClick: (LocalDate, HabitRecordEntity?) -> Unit
@@ -705,6 +670,8 @@ private fun HabitRow(
                         unit = habit.unit,
                         inputValue = record?.inputValue,
                         targetValue = habit.targetValue,
+                        burst = burstDate == date.toString(),
+                        onBurstDone = onBurstDone,
                         onClick = { onCheckClick(date, record) },
                         onLongClick = { onCheckLongClick(date, record) }
                     )
