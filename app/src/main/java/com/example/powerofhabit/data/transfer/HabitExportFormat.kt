@@ -41,6 +41,8 @@ data class HabitDto(
     val isReminderEnabled: Boolean = false,
     val memo: String? = null,
     val targetValue: Float? = null,
+    /** 목표 방향(AT_LEAST/AT_MOST). 필드가 없는 옛 파일은 AT_LEAST — formatVersion은 그대로 1. */
+    val targetType: String = "AT_LEAST",
     val createdAt: Long
 )
 
@@ -76,6 +78,7 @@ fun HabitEntity.toDto(): HabitDto = HabitDto(
     isReminderEnabled = isReminderEnabled,
     memo = memo,
     targetValue = targetValue,
+    targetType = targetType,
     createdAt = createdAt
 )
 
@@ -93,6 +96,7 @@ fun HabitDto.toEntity(habitId: Int = 0): HabitEntity = HabitEntity(
     isReminderEnabled = isReminderEnabled,
     memo = memo,
     targetValue = targetValue,
+    targetType = targetType,
     createdAt = createdAt
 )
 

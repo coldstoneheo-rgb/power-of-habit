@@ -45,6 +45,13 @@ object DatabaseModule {
         }
     }
 
+    /** v5: 수치형 목표 방향(이상/이하). 기존 습관은 모두 이상(AT_LEAST) — 동작 변화 없음. 결정 기록 2026-09-06. */
+    private val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE Habits ADD COLUMN targetType TEXT NOT NULL DEFAULT 'AT_LEAST'")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -53,7 +60,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             "power_of_habit.db"
         )
-        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+        .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
         .build()
     }
 

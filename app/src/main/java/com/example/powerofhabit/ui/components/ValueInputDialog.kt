@@ -52,7 +52,9 @@ fun ValueInputDialog(
     val parsedValue = input.replace(',', '.').toFloatOrNull()?.takeIf { it.isFinite() }
     val targetText = habit.targetValue?.let { t ->
         val v = if (t % 1f == 0f) t.toInt().toString() else t.toString()
-        "목표 $v ${habit.unit ?: ""}".trim()
+        val base = "목표 $v ${habit.unit ?: ""}".trim()
+        // 이하 목표는 방향을 말해 준다(0도 성공이라는 힌트). 이상 목표는 기존 표기 유지.
+        if (RecordOutcomes.isAtMost(habit.targetType)) "$base 이하 (0도 기록하세요)" else base
     }
 
     AlertDialog(
@@ -97,7 +99,7 @@ fun ValueInputDialog(
                 enabled = parsedValue != null,
                 onClick = {
                     val value = parsedValue ?: return@TextButton
-                    onSave(value, RecordOutcomes.of(RecordOutcomes.TYPE_VALUE, null, value, habit.targetValue))
+                    onSave(value, RecordOutcomes.of(RecordOutcomes.TYPE_VALUE, null, value, habit.targetValue, habit.targetType))
                 }
             ) {
                 Text("저장", color = if (parsedValue != null) accent else HabitTheme.colors.textDisabled, fontWeight = FontWeight.Bold)

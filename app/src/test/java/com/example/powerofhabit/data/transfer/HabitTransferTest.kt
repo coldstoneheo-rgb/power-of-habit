@@ -294,4 +294,20 @@ class HabitTransferTest {
         assertEquals(1, plan.summary.recordsSkipped)
         assertEquals(1, plan.resolveRecords(mapOf(1 to 1)).size)
     }
+
+    @Test
+    fun targetType_roundTrips_andDefaultsToAtLeastForOldFiles() {
+        val limit = habit(1, "담배", 100L, type = "VALUE").copy(targetValue = 5f, targetType = "AT_MOST")
+        val decoded = HabitTransfer.decode(HabitTransfer.encode(export(habits = listOf(limit))))
+        assertEquals("AT_MOST", decoded.habits.single().targetType)
+
+        // targetType 필드가 없는 formatVersion 1 파일(이 PR 이전 앱이 내보낸 것)은 이상 목표로 읽힌다
+        val old = """
+            {"formatVersion": 1, "exportedAt": "2026-09-05T00:00:00Z",
+             "habits": [{"habitId": 1, "title": "물", "question": "q", "frequencyType": "DAILY", "frequencyValue": "",
+                         "themeColor": "#000000", "habitType": "VALUE", "unit": "잔", "targetValue": 8.0, "createdAt": 5}],
+             "records": [], "badges": []}
+        """.trimIndent()
+        assertEquals("AT_LEAST", HabitTransfer.decode(old).habits.single().targetType)
+    }
 }

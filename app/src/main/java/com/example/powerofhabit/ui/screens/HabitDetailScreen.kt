@@ -184,7 +184,7 @@ private fun HabitDetailContent(
     val calendarRecords = remember(records, habit.habitType, habit.targetValue) {
         records.mapNotNull { r ->
             try {
-                LocalDate.parse(r.date) to RecordOutcomes.of(habit.habitType, r.status, r.inputValue, habit.targetValue).name
+                LocalDate.parse(r.date) to RecordOutcomes.of(habit.habitType, r.status, r.inputValue, habit.targetValue, habit.targetType).name
             } catch (e: Exception) {
                 null
             }
@@ -206,7 +206,7 @@ private fun HabitDetailContent(
                         val dayOfWeek = date.dayOfWeek.value % 7
                         if (week in 0..51 && dayOfWeek in 0..6) {
                             // 캘린더·위젯과 같은 판정(RecordOutcomes)을 쓴다: 성공 10 / 기준미달 6 / 건너뜀 3 / 미수행 0
-                            matrix[dayOfWeek][week] = when (RecordOutcomes.of(habit.habitType, record.status, record.inputValue, habit.targetValue)) {
+                            matrix[dayOfWeek][week] = when (RecordOutcomes.of(habit.habitType, record.status, record.inputValue, habit.targetValue, habit.targetType)) {
                                 com.example.powerofhabit.domain.RecordOutcome.SUCCESS -> 10
                                 com.example.powerofhabit.domain.RecordOutcome.PARTIAL -> 6
                                 com.example.powerofhabit.domain.RecordOutcome.SKIPPED -> 3
@@ -300,7 +300,8 @@ private fun HabitDetailContent(
             val targetText = remember(habit) {
                 if (habit.habitType == "VALUE" && habit.targetValue != null) {
                     val valStr = if (habit.targetValue % 1f == 0f) "${habit.targetValue.toInt()}" else "${habit.targetValue}"
-                    "$valStr ${habit.unit ?: ""}".trim()
+                    val suffix = if (RecordOutcomes.isAtMost(habit.targetType)) " 이하" else ""
+                    "$valStr ${habit.unit ?: ""}".trim() + suffix
                 } else null
             }
 
@@ -653,7 +654,7 @@ private fun HabitDetailContent(
                     onClick = {
                         // 수치형은 값이 곧 상태다(RecordOutcomes.statusForValue). 삭제/건너뜀 선택만 그대로 둔다.
                         val computedStatus = if (isValueRecord) {
-                            RecordOutcomes.statusForValue(value, habit.targetValue)
+                            RecordOutcomes.statusForValue(value, habit.targetValue, habit.targetType)
                         } else {
                             status
                         }

@@ -96,7 +96,7 @@ private fun CheckContent(habit: HabitEntity?, record: HabitRecordEntity?, render
 
     val accent = HabitWidgets.parseThemeColor(habit.themeColor)
     // 표시 상태는 값·목표로 판정(결정 기록 2026-09-05 결정 1). status는 캐시.
-    val outcome = RecordOutcomes.of(habit.habitType, record?.status, record?.inputValue, habit.targetValue)
+    val outcome = RecordOutcomes.of(habit.habitType, record?.status, record?.inputValue, habit.targetValue, habit.targetType)
     val completed = outcome == RecordOutcome.SUCCESS
     val isValue = habit.habitType == "VALUE"
     val action = if (isValue) {

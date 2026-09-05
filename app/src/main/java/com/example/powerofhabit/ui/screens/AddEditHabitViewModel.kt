@@ -61,7 +61,9 @@ class AddEditHabitViewModel @Inject constructor(
         habitType: String,
         unit: String?,
         memo: String? = null,
-        targetValue: Float? = null
+        targetValue: Float? = null,
+        /** 수치형 목표 방향(RecordOutcomes.TARGET_AT_LEAST / TARGET_AT_MOST). */
+        targetType: String = "AT_LEAST"
     ) {
         viewModelScope.launch {
             if (title.isBlank()) {
@@ -84,7 +86,8 @@ class AddEditHabitViewModel @Inject constructor(
                         habitType = habitType,
                         unit = unit,
                         memo = memo,
-                        targetValue = targetValue
+                        targetValue = targetValue,
+                        targetType = targetType
                     )
                     val newHabitId = repository.insertHabit(habit).toInt()
                     // Re-schedule with actual auto-generated ID
@@ -104,7 +107,8 @@ class AddEditHabitViewModel @Inject constructor(
                             habitType = habitType,
                             unit = unit,
                             memo = memo,
-                            targetValue = targetValue
+                            targetValue = targetValue,
+                            targetType = targetType
                         )
                         repository.updateHabit(updatedHabit)
                         reminderManager.scheduleReminder(updatedHabit)
