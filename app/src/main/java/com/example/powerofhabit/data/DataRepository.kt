@@ -28,6 +28,8 @@ interface DataRepository {
     suspend fun upsertValueRecord(habitId: Int, date: String, status: String, inputValue: Float): Long
     fun getRecordsBetween(startDate: String, endDate: String): Flow<List<HabitRecordEntity>>
     suspend fun insertRecord(record: HabitRecordEntity): Long
+    /** 일괄 삽입(가져오기용). 반환은 rowId 목록. */
+    suspend fun insertRecords(records: List<HabitRecordEntity>): List<Long>
     suspend fun updateRecordStatus(recordId: Int, status: String)
     suspend fun deleteRecord(record: HabitRecordEntity)
 
@@ -70,6 +72,8 @@ class DefaultDataRepository @Inject constructor(
     override fun getRecordsBetween(startDate: String, endDate: String): Flow<List<HabitRecordEntity>> = habitDao.getRecordsBetween(startDate, endDate)
 
     override suspend fun insertRecord(record: HabitRecordEntity): Long = habitDao.insertRecord(record)
+
+    override suspend fun insertRecords(records: List<HabitRecordEntity>): List<Long> = habitDao.insertRecords(records)
 
     override suspend fun updateRecordStatus(recordId: Int, status: String) = habitDao.updateRecordStatus(recordId, status)
 

@@ -17,6 +17,8 @@ import javax.inject.Inject
 import com.example.powerofhabit.data.local.SettingsManager
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
+import android.net.Uri
+import com.example.powerofhabit.data.transfer.TransferManager
 
 sealed interface MainScreenUiState {
   object Loading : MainScreenUiState
@@ -34,6 +36,8 @@ class MainScreenViewModel @Inject constructor(
     private val settingsManager: SettingsManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
+
+  private val transferManager = TransferManager(dataRepository)
 
   val isDarkMode: StateFlow<Boolean> = settingsManager.isDarkMode
   val isDateDescending: StateFlow<Boolean> = settingsManager.isDateDescending
@@ -123,6 +127,37 @@ class MainScreenViewModel @Inject constructor(
       } catch (e: Exception) {
         android.util.Log.e("MainScreenViewModel", "Failed to delete record", e)
       }
+    }
+  }
+
+  /** 습관·기록·뱃지를 JSON 파일로 내보낸다. 결과는 사용자용 한국어 메시지로 콜백(메인 스레드). */
+  fun exportTo(uri: Uri, onResult: (String) -> Unit) {
+    viewModelScope.launch {
+      val message = transferManager.exportTo(context, uri).fold(
+        onSuccess = { count -> "습관 ${count}개를 파일로 내보냈습니다." },
+        onFailure = { e ->
+          android.util.Log.e("MainScreenViewModel", "Export failed", e)
+          "내보내기에 실패했습니다: ${e.message ?: e.javaClass.simpleName}"
+        }
+      )
+      onResult(message)
+    }
+  }
+
+  /** JSON 파일을 현재 데이터에 병합한다(덮어쓰지 않음). 규칙은 data/transfer/HabitTransfer 참조. */
+  fun importFrom(uri: Uri, onResult: (String) -> Unit) {
+    viewModelScope.launch {
+      val message = transferManager.importFrom(context, uri).fold(
+        onSuccess = { s ->
+          "가져오기 완료 — 습관 +${s.habitsAdded}(기존 일치 ${s.habitsMatched}), " +
+            "기록 +${s.recordsAdded}(건너뜀 ${s.recordsSkipped}), 뱃지 +${s.badgesAdded}"
+        },
+        onFailure = { e ->
+          android.util.Log.e("MainScreenViewModel", "Import failed", e)
+          "가져오기에 실패했습니다: ${e.message ?: e.javaClass.simpleName}"
+        }
+      )
+      onResult(message)
     }
   }
 }

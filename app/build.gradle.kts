@@ -210,6 +210,9 @@ dependencies {
   implementation(libs.androidx.navigation3.runtime)
   implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
+  // JSON 내보내기/가져오기 (data/transfer)
+  implementation(libs.kotlinx.serialization.json)
+
   // Room
   implementation(libs.room.runtime)
   implementation(libs.room.ktx)
