@@ -91,8 +91,16 @@ object RecordOutcomes {
      */
     fun targetLabel(targetValue: Float?, unit: String?, targetType: String): String? {
         val t = targetValue?.takeIf { it.isFinite() } ?: return null
-        val number = if (t % 1f == 0f) t.toInt().toString() else t.toString()
-        return listOfNotNull(number, unit?.takeIf { it.isNotBlank() }, if (isAtMost(targetType)) "이하" else null)
+        return listOfNotNull(formatNumber(t), unit?.takeIf { it.isNotBlank() }, if (isAtMost(targetType)) "이하" else null)
             .joinToString(" ")
+    }
+
+    /**
+     * 수치 표기 한 곳(목표 표기·입력칸 초기값·메인 셀·위젯 타일): 정수는 소수점 없이, 지수 표기 없이, 2^31 이상도 잘리지 않게.
+     * Float.toString의 "5.0E-4"/"1.0E7" 대신 평문("0.0005"/"10000000"). 유한하지 않으면 "0".
+     */
+    fun formatNumber(value: Float): String {
+        if (!value.isFinite()) return "0"
+        return java.math.BigDecimal(value.toString()).stripTrailingZeros().toPlainString()
     }
 }
