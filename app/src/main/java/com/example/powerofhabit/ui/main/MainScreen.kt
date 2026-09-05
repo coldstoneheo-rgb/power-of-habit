@@ -349,7 +349,12 @@ internal fun MainScreenContent(
                         },
                         onCheckLongClick = { date, record ->
                             if (record != null) {
-                                val nextStatus = if (record.status == "SKIPPED") "FAILED" else "SKIPPED"
+                                // 건너뜀 해제: 수치형은 값이 상태를 결정하므로 statusForValue로 되돌린다(표시와 통계가 어긋나지 않게)
+                                val nextStatus = when {
+                                    record.status != "SKIPPED" -> "SKIPPED"
+                                    habit.habitType == "VALUE" -> RecordOutcomes.statusForValue(record.inputValue, habit.targetValue)
+                                    else -> "FAILED"
+                                }
                                 onUpdateRecordStatus(record.recordId, nextStatus, habit.habitId)
                             } else {
                                 onInsertRecord(
@@ -407,7 +412,7 @@ internal fun MainScreenContent(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val value = inputValue.toFloatOrNull()
+                        val value = inputValue.replace(',', '.').toFloatOrNull()?.takeIf { it.isFinite() }
                         if (value != null) {
                             if (existingRecord != null) {
                                 onDeleteRecord(existingRecord)

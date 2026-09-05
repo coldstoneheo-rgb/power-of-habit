@@ -73,7 +73,8 @@ fun HistoryCalendarWidget(
                         Spacer(modifier = Modifier.weight(1f))
                     } else {
                         val currentDate = yearMonth.atDay(day)
-                        val status = records[currentDate] ?: "NONE"
+                        // null = 기록 없음(빈 칸). "NONE" = 기록이 있는데 미수행(실패 표시). 둘을 섞지 않는다.
+                        val status: String? = records[currentDate]
                         
                         Box(
                             modifier = Modifier
@@ -103,7 +104,8 @@ fun HistoryCalendarWidget(
                                 text = day.toString(),
                                 color = when (status) {
                                     "SUCCESS" -> HabitTheme.colors.onAccent(themeColor)
-                                    "PARTIAL" -> HabitTheme.colors.partialAccent(themeColor)
+                                    // 35% 틴트 위에서는 같은 계열 글자가 AA에 못 미쳐 기본 잉크를 쓴다(대비 테스트 참조)
+                                    "PARTIAL" -> HabitTheme.colors.textPrimary
                                     "NONE" -> HabitTheme.colors.statusFail
                                     "SKIPPED" -> HabitTheme.colors.textPrimary.copy(alpha = 0.9f)
                                     else -> HabitTheme.colors.textPrimary.copy(alpha = 0.7f)

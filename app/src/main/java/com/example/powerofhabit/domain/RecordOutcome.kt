@@ -25,10 +25,10 @@ object RecordOutcomes {
             // 값 없이 상세 화면에서 "성공"으로 표시한 경우만 존중한다.
             return if (status == "COMPLETED") RecordOutcome.SUCCESS else RecordOutcome.NONE
         }
-        if (value <= 0f) return RecordOutcome.NONE
+        if (!value.isFinite() || value <= 0f) return RecordOutcome.NONE // NaN·Infinity는 미수행 취급
         val target = targetValue
         return when {
-            target == null || target <= 0f -> RecordOutcome.SUCCESS
+            target == null || !target.isFinite() || target <= 0f -> RecordOutcome.SUCCESS
             value >= target -> RecordOutcome.SUCCESS
             else -> RecordOutcome.PARTIAL
         }

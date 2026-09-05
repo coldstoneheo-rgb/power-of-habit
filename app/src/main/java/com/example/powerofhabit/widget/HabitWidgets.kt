@@ -7,14 +7,12 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.lerp
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import com.example.powerofhabit.MainActivity
 import com.example.powerofhabit.data.DataRepository
 import com.example.powerofhabit.ui.theme.DarkTokens
-import com.example.powerofhabit.ui.theme.HabitColorTokens
 import com.example.powerofhabit.ui.theme.HabitOrange
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
@@ -114,7 +112,7 @@ object HabitWidgets {
         val fail: Color = DarkTokens.statusFail
         val dotEmpty: Color = DarkTokens.textDisabled.copy(alpha = 0.45f)
 
-        /** 기준미달 수행: 앱과 같은 규칙(text.secondary 쪽 60%). 위젯은 항상 다크 토큰이라 고정값. */
-        fun partial(accent: Color): Color = lerp(accent, DarkTokens.textSecondary, HabitColorTokens.PARTIAL_MIX)
+        /** 기준미달 수행: 앱과 완전히 같은 함수(다크 토큰, 위젯 배경 ≈ bg.base 기준 AA 보정). */
+        fun partial(accent: Color): Color = DarkTokens.partialAccent(accent)
     }
 }
