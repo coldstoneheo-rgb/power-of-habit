@@ -46,7 +46,7 @@
 | 포그라운드 서비스 권한 | **해당 없음(추정)** | 앱 코드에 포그라운드 서비스 0. 의존성(WorkManager)이 `FOREGROUND_SERVICE`를 더할 수 있으나 유형별 권한(`FOREGROUND_SERVICE_*`)은 없을 것으로 추정 → 콘솔이 선언을 요구하면 §4-3 결과로 답한다 |
 | 정확한 알람 | 선언 대상 아님(추정) | `SCHEDULE_EXACT_ALARM`(사용자 허용형)만 사용. 제한 권한 `USE_EXACT_ALARM`은 쓰지 않음(`AndroidManifest.xml:6`) |
 
-⚠ **Android 시스템 자동 백업**: `AndroidManifest.xml:10` `android:allowBackup="true"`이고 `res/xml/backup_rules.xml`·`data_extraction_rules.xml`은 매니페스트에 연결돼 있지 않다(둘 다 샘플 그대로). 따라서 사용자가 기기 Google 백업을 켜 두면 OS가 앱 DB를 사용자 계정으로 백업한다. 이 경로는 OS·Google이 처리하며 처리방침 §5에 고지했다. 데이터 보안 폼에서 이 경로를 따로 선언해야 하는지는 **콘솔 도움말 확인 필요** — 앱 자체 Drive 백업을 이미 «수집 = 예»로 선언하므로 결과 답은 같다.
+⚠ **Android 시스템 자동 백업**: `AndroidManifest.xml:11`(11-02 `INTERNET` 추가로 :10→:11) `android:allowBackup="true"`이고 `res/xml/backup_rules.xml`·`data_extraction_rules.xml`은 매니페스트에 연결돼 있지 않다(둘 다 샘플 그대로). 따라서 사용자가 기기 Google 백업을 켜 두면 OS가 앱 DB를 사용자 계정으로 백업한다. 이 경로는 OS·Google이 처리하며 처리방침 §5에 고지했다. 데이터 보안 폼에서 이 경로를 따로 선언해야 하는지는 **콘솔 도움말 확인 필요** — 앱 자체 Drive 백업을 이미 «수집 = 예»로 선언하므로 결과 답은 같다.
 
 ## 3. 선언과 모순되면 안 되는 문구 (등록정보·처리방침 공통)
 | 쓰지 않는다 | 이유 | 대신 |
@@ -60,7 +60,7 @@
 
 ### 4-1. 측정 방법과 한계
 - 이 클라우드 VM은 그래들 빌드를 하지 않는다(HO 규약 6). 의존성 AAR 매니페스트를 직접 열어 보려 했으나 `maven.google.com`·`dl.google.com`이 프록시에서 403/연결 거부(2026-11-02 `curl` 실측) → **라이브러리 기여분은 전부 «추정»**이다.
-- 실측 가능한 것: 앱 소스 매니페스트 선언 3개, 의존성 선언 줄, 앱 코드의 네트워크 사용.
+- 실측 가능한 것: 앱 소스 매니페스트 선언 4개(11-02 `INTERNET` 추가 뒤), 의존성 선언 줄, 앱 코드의 네트워크 사용.
 
 ### 4-2. 표
 | 권한 | 출처 | 근거(파일:줄) | 판정 |
@@ -73,11 +73,11 @@
 | `FOREGROUND_SERVICE` | work-runtime(전이) | 같음 | 추정 |
 | `RECEIVE_BOOT_COMPLETED`(중복 병합) | work-runtime(전이) | 같음 | 추정 |
 | `com.woodpeckerai.powerofhabit.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`(signature, 자체 정의) | `androidx.core` 1.9+ | `app/build.gradle.kts:175` `core.ktx` | 추정 |
-| **`INTERNET`** | 앱 선언 **없음**. play-services-auth 20.7.0(`build.gradle.kts:227`) · google-api-client-android 2.2.0(`:231`) · google-api-services-drive(`:228`)가 더하는지 **미확정** | 앱 코드는 `NetHttpTransport`로 Drive REST 호출(`GoogleDriveBackupManager.kt:174-181`) → **필요** | **미확정 — 없을 수 있음**(아래 ⚠) |
+| **`INTERNET`** | 앱 선언(명시, 11-02) — `AndroidManifest.xml:7`. play-services-auth 20.7.0(`build.gradle.kts:227`) · google-api-client-android 2.2.0(`:231`) · google-api-services-drive(`:228`)가 같은 권한을 더해도 병합 시 중복은 무해 | 앱 코드는 `NetHttpTransport`로 Drive REST 호출(`GoogleDriveBackupManager.kt:174-181`) → **필요** | **선언(명시, 11-02)** — 일반 권한(위험 권한 아님)이라 데이터 보안 답 불변 |
 | `GET_ACCOUNTS` | play-services-auth | `build.gradle.kts:227` | 추정 **추가 안 함** — `GoogleSignIn` API는 계정 목록 권한이 필요 없고, `GoogleAccountCredential.setSelectedAccount(account.account)`로 계정을 직접 지정(`GoogleDriveBackupManager.kt:175-177`) |
 | `com.google.android.gms.permission.AD_ID` | (광고 식별자 라이브러리) | 의존성에 `play-services-ads*`·`-measurement` 없음 | 추정 **없음** |
 
-⚠ **`INTERNET` 위험**: 저장소 이력 전체에서 `INTERNET` 문자열은 0건(`git log --all -S INTERNET` 빈 출력, 11-02). 지금까지 Drive는 OAuth 미등록으로 로그인 단계(GMS 프로세스, 앱 권한 불필요)에서 코드 10으로 멈췄기 때문에 앱 프로세스의 HTTP 경로는 **한 번도 실행된 적이 없다**(WORKLOG 09-05·09-06 blockers). 병합 결과에 `INTERNET`이 없으면 블록 D 뒤 첫 백업이 `SecurityException`/`UnknownHostException`류로 «백업 실패»가 된다 → §4-3을 블록 A 직후 1회 실행하고, 없으면 `AndroidManifest.xml`에 1줄 추가하는 코드 PR(이 PR 범위 밖)을 연다.
+✅ **`INTERNET` 해소(11-02)**: 소스 매니페스트에 명시 선언했다(`AndroidManifest.xml:7`, 클라우드 13건째 PR). 이전에는 저장소 이력 전체에서 `INTERNET` 0건이었고 Drive HTTP 경로는 한 번도 실행된 적이 없었다(WORKLOG 09-05·09-06 blockers). 병합 결과 실측은 그대로 §4-3을 블록 A 직후 1회 실행해 «추정» 칸을 바꾼다.
 
 ### 4-3. 로컬 확인 명령 (블록 A 직후, Windows Git Bash)
 ```bash

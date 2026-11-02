@@ -11,6 +11,27 @@
 ```yaml
 date: 2026-11-02
 project: power-of-habit
+agent: claude-code (cloud 세션, LC HO origin:lc 클라우드 13건째 — #39 게이트 후속)
+summary: #39 게이트 관찰 후속 4건 — INTERNET 권한 명시 선언(매니페스트 1줄), README 목표 위젯 문구를 코드 기준으로 정정, 9건째 REPORT 모델 줄 사유 보정, AGENT_STATUS last_commit 자기참조 해소·allowBackup 결정 항목 추가
+status: at_risk
+progress: "매니페스트 INTERNET 1줄 + 문서 보정 (근거: xmllint --noout OK·python xml 파서 권한 4개, git diff --stat origin/main -- app/src/main/java 빈 출력). 그래들 빌드 미실행(클라우드 VM maven 403)"
+changes: ["cloud/habit-followup PR — fix(manifest): INTERNET 명시 + docs 보정"]
+next: 사용자 allowBackup 결정 1줄(블록 A 전) → 블록 A(키스토어, 권장 11-06) → 직후 병합 매니페스트 실측(DATA-SAFETY §4-3)
+blockers: 사용자 손 블록 A~G 전부. allowBackup 정책 미결정
+learning_need: «의존성이 병합해 줄 것» 같은 미확정 가정은 확인 비용(로컬 빌드 1회)보다 명시 선언 1줄이 싸다 — 일반 권한은 중복 병합이 무해하므로 확인을 기다리지 않고 닫는다
+synergy: 같은 패턴(네트워크 쓰는데 INTERNET 미선언)을 reading-diary·baby 매니페스트 점검 체크리스트 1행으로
+monetization: 해당 없음(무료 출시)
+idea: 출시 문서 묶음 템플릿에 «소스 매니페스트 권한 ↔ 코드 사용처» 대조표를 기본 칸으로
+```
+## 의미
+#39가 «블록 A 뒤 확인»으로 남긴 INTERNET 위험을 확인 대기 없이 명시 선언으로 닫아, 블록 D 뒤 첫 Drive 백업이 권한 때문에 실패할 경로를 없앴다.
+README의 오래된 목표 위젯 설명도 코드(단일 바 2개) 기준으로 맞췄다. allowBackup은 결정하지 않고 블록 A 전 사용자 1줄 항목으로 올렸다.
+
+---
+
+```yaml
+date: 2026-11-02
+project: power-of-habit
 agent: claude-code (cloud 세션, LC HO origin:lc 클라우드 9건째 — 코드 0)
 summary: 무료 프로덕션 출시(12-31 게시) 문서 묶음 — 출시 계획(DoD 9·블록 A~G·11-02 재역산), 등록정보 10항, 처리방침 html+Vercel 배포 문서, 데이터 보안·앱 콘텐츠·권한표, Drive OAuth 블록 D, 실기기 QA 15행, README 목적·F6
 status: at_risk
