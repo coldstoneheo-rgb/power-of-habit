@@ -15,7 +15,7 @@ agent: claude-code (cloud 세션, LC HO origin:lc 클라우드 9건째 — 코�
 summary: 무료 프로덕션 출시(12-31 게시) 문서 묶음 — 출시 계획(DoD 9·블록 A~G·11-02 재역산), 등록정보 10항, 처리방침 html+Vercel 배포 문서, 데이터 보안·앱 콘텐츠·권한표, Drive OAuth 블록 D, 실기기 QA 15행, README 목적·F6
 status: at_risk
 progress: "문서 9개 신설·README 보강, app/ 변경 0 (근거: git diff --stat origin/main -- app/ 빈 출력). 10-03 계획 뒤 흔적 0 → 11-02 착수. 블록 A~G 전부 미착수(사용자 손), 최종 마감 경로 여유 0일"
-changes: ["__PR__ docs(release): 무료 프로덕션 출시 문서 묶음 — RELEASE-PLAN·LISTING·DATA-SAFETY·처리방침·DRIVE-OAUTH·DEVICE-QA"]
+changes: ["#39 docs(release): 무료 프로덕션 출시 문서 묶음 — RELEASE-PLAN·LISTING·DATA-SAFETY·처리방침·DRIVE-OAUTH·DEVICE-QA"]
 next: 사용자 블록 A(키스토어, 권장 11-06) → 직후 병합 매니페스트 INTERNET 확인 → B(처리방침 배포·앱 만들기·선언, 11-09) → C(내부 업로드, 11-11) → D(OAuth, 11-16) → E(비공개 T0, 11-20) → F(신청, 12-05) → G(게시 12-21~24 목표)
 blockers: 사용자 손 블록 A~G 전부. 비공개 12명×14일 요건 적용 여부는 콘솔 과제 표시 뒤 확정. 병합 매니페스트 INTERNET 미확인(없으면 Drive 백업 실패 — 코드 PR 1줄)
 learning_need: 코드를 0줄 바꾸는 문서 세션도 «주장마다 파일:줄» 규율을 걸면 README의 오래된 기능 설명(목표 위젯 주/월/분/연 탭)과 매니페스트의 빠진 권한 후보(INTERNET) 같은 실제 결함이 드러난다. 클라우드 VM은 maven.google.com 403이라 AAR 매니페스트 실측이 불가 — 권한표는 «추정»으로 정직하게 표기

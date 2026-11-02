@@ -16,8 +16,8 @@
 | 6 | 실기기 QA 15행 틀 | ✅ | `docs/DEVICE-QA-2026-11.md` |
 | 7 | README 목적·F6·출시 문서 링크 | ✅ | `README.md` |
 | 8 | AGENT_STATUS.json + WORKLOG 블록 | ✅ | `AGENT_STATUS.json` · `WORKLOG.md` |
-| 9 | app/ 변경 0 · PR [cloud] · 본문 | ⬜ | PR |
-| 10 | 이 REPORT · 마지막 줄 경과·모델 | ⬜ | 이 파일 |
+| 9 | app/ 변경 0 · PR [cloud] · 본문 | ✅ (#39) | PR |
+| 10 | 이 REPORT · 마지막 줄 경과·모델 | ✅ | 이 파일 |
 
 ## 한 일
 | 산출 | 요지 | 근거 |
@@ -50,3 +50,8 @@
 - 기본값으로 진행되는 판단(막지 않음): 이메일 = 수집 아님 · AI 애셋 = 해당 없음 · 카테고리 = 생산성 · 타겟 = 18+.
 
 effort: 세션 기본값 그대로(올린 곳 없음).
+
+## 파일 목록
+`AGENT_STATUS.json`(신규) · `README.md` · `WORKLOG.md` · `docs/RELEASE-PLAN-2026-11.md` · `docs/DRIVE-OAUTH-CHECKLIST.md` · `docs/DEVICE-QA-2026-11.md` · `docs/store-listing/LISTING-2026-11.md` · `docs/store-listing/DATA-SAFETY-2026-11.md` · `docs/privacy/privacy-policy.html` · `docs/privacy/DEPLOY.md` · `docs/handoffs/CLOUD-2026-1102-habit-release-docs-REPORT.md` — `app/` 0.
+
+총 경과 11분(VM `date` 실측: 06:18:53Z 시작) · 사용 모델: 세션 설정 모델(식별자는 저장소에 적지 않는 세션 정책 — LC 창 보고에 기재)
