@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="index,follow">
+  <title>개인정보처리방침 — 습관의 힘</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #1a1a1a;
+      --muted: #5c5c5c;
+      --accent: #c25e00;
+      --border: #e5e5e5;
+      --card: #fafafa;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #121316;
+        --fg: #e8e8ea;
+        --muted: #a0a0a8;
+        --accent: #ffb74d;
+        --border: #2a2b30;
+        --card: #1a1b1f;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo",
+                   "Noto Sans KR", "Malgun Gothic", Roboto, sans-serif;
+      line-height: 1.75;
+      font-size: 16px;
+      word-break: keep-all;
+    }
+    .wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 48px 20px 80px;
+    }
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+      margin-bottom: 32px;
+    }
+    h1 {
+      font-size: 1.7rem;
+      line-height: 1.35;
+      margin: 0 0 8px;
+      letter-spacing: -0.02em;
+    }
+    .eff {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin: 0;
+    }
+    h2 {
+      font-size: 1.15rem;
+      margin: 40px 0 12px;
+      letter-spacing: -0.01em;
+    }
+    h2 .num {
+      color: var(--accent);
+      margin-right: 8px;
+    }
+    p { margin: 12px 0; }
+    ul { margin: 12px 0; padding-left: 22px; }
+    li { margin: 6px 0; }
+    a { color: var(--accent); }
+    .intro {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .contact {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    footer {
+      margin-top: 56px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-align: center;
+    }
+    strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>개인정보처리방침<br>— 습관의 힘</h1>
+<p class="eff">시행일: 2026년 11월 2일</p>
+</header>
+
+<p class="intro">
+본 방침은 Android 앱 ‘습관의 힘’(패키지 com.woodpeckerai.powerofhabit, 이하 “앱”)이 이용자의 정보를
+어떻게 다루는지 설명합니다. 앱에는 회원가입·로그인 계정이 없고, 개발자는 이용자의 습관 데이터를
+수집하거나 개발자 서버로 전송하지 않습니다.
+</p>
+
+<h2><span class="num">1.</span>앱이 다루는 정보와 저장 위치</h2>
+<p>앱은 이용자가 직접 입력한 다음 정보를 <strong>이용자의 기기 안에만</strong> 저장합니다.</p>
+<ul>
+<li>습관 정보: 이름, 질문 문구, 주기, 목표 값과 단위, 알림 시각과 사용 여부, 색상, 메모, 만든 시각</li>
+<li>기록 정보: 날짜별 수행 상태(완료·미완료·건너뛰기)와 입력한 수치</li>
+<li>획득한 뱃지와 앱 설정(테마 등)</li>
+</ul>
+<p>
+개발자는 위 정보를 수집하지 않으며, 앱에는 광고·분석·크래시 보고 도구가 들어 있지 않습니다.
+위치정보, 연락처, 사진, 기기 식별자를 수집하지 않습니다.
+</p>
+
+<h2><span class="num">2.</span>앱이 요청하는 권한과 용도</h2>
+<ul>
+<li><strong>알림</strong>(Android 13 이상에서 요청): 이용자가 습관에 알림을 켰을 때, 정해 둔 시각에 습관 알림을 보여 주기 위해 사용합니다. 거부해도 알림 외의 기능은 그대로 쓸 수 있습니다.</li>
+<li><strong>정확한 알람 예약</strong>: 알림이 기기의 절전 상태와 상관없이 이용자가 정한 시각에 맞춰 울리도록 하기 위해 사용합니다. 허용하지 않으면 알림 시각이 조금 늦어질 수 있습니다.</li>
+<li><strong>기기 부팅 완료 수신</strong>: 기기를 다시 켠 뒤 예약해 둔 습관 알림을 다시 등록하기 위해 사용합니다.</li>
+<li><strong>네트워크 연결</strong>: 이용자가 Google Drive 백업·복원을 사용할 때 Google 로그인과 Google Drive 통신에만 사용합니다.</li>
+</ul>
+
+<h2><span class="num">3.</span>파일로 내보내기·가져오기 (이용자 선택)</h2>
+<p>
+이용자가 직접 실행하는 경우에만, 습관·기록·뱃지를 JSON 파일로, 습관별 기록을 CSV 파일로 내보낼 수 있습니다.
+파일을 저장할 위치나 보낼 앱은 Android의 파일 선택기·공유 화면에서 <strong>이용자가 고르며</strong>,
+앱이나 개발자가 그 파일을 따로 전송하거나 보관하지 않습니다. 내보낸 파일에는 1항의 정보가 들어 있으므로
+보관과 전달에 유의해 주십시오. 가져오기는 이용자가 고른 파일만 읽습니다.
+</p>
+
+<h2><span class="num">4.</span>Google Drive 백업 (이용자 선택)</h2>
+<p>
+앱 설정의 ‘백업하기’·‘복원하기’를 이용자가 누른 경우에만 동작하는 선택 기능입니다.
+</p>
+<ul>
+<li><strong>로그인과 권한 범위</strong>: Google 계정 로그인을 요청하며, Google Drive 전체가 아닌
+<strong>이 앱 전용 숨김 공간(appDataFolder)에만</strong> 접근하는 권한(drive.appdata)만 요청합니다.
+이용자의 다른 Drive 파일은 읽거나 바꿀 수 없습니다.</li>
+<li><strong>저장 위치</strong>: 백업 파일은 <strong>이용자 본인 Google 계정의 Drive</strong>에 저장됩니다.
+개발자 서버를 거치지 않으며, 개발자는 이 파일에 접근할 수 없습니다.</li>
+<li><strong>백업 내용</strong>: 1항의 정보가 담긴 앱 데이터베이스 파일(압축본) 1개입니다.</li>
+<li><strong>자동 백업</strong>: Google 계정이 연결된 동안에는 기록을 바꿀 때마다 몇 초 뒤 같은 위치로 자동 백업합니다.
+연결을 해제하면 자동 백업도 멈춥니다.</li>
+<li><strong>전송 보호</strong>: Google Drive와의 통신은 암호화된 연결(HTTPS)로 이루어집니다.</li>
+<li><strong>계정 정보</strong>: 연결된 Google 계정의 이메일 주소는 설정 화면에 “연결된 계정”으로 표시하는 데에만 쓰며,
+기기 밖으로 보내거나 백업 파일에 넣지 않습니다.</li>
+<li><strong>제3자 공유 없음</strong>: 백업 파일은 이용자 본인 계정에만 저장되며, 앱은 이를 다른 사람이나
+다른 서비스와 공유하지 않습니다. Drive에 저장된 파일의 처리에는
+<a href="https://policies.google.com/privacy?hl=ko">Google 개인정보처리방침</a>이 적용됩니다.</li>
+<li><strong>연결 해제</strong>: 앱 설정의 ‘연결 해제’로 Google 계정 연결을 끊을 수 있습니다.
+Google 계정의 <a href="https://myaccount.google.com/connections">서드 파티 연결 관리</a>에서도 권한을 회수할 수 있습니다.</li>
+<li><strong>백업 삭제</strong>: Google Drive 웹에서 설정 → 앱 관리 → ‘습관의 힘’ → 옵션 → ‘숨겨진 앱 데이터 삭제’로
+백업 파일을 지울 수 있습니다.</li>
+</ul>
+
+<h2><span class="num">5.</span>Android 기기 백업</h2>
+<p>
+이용자가 기기 설정에서 Google 백업(Android 시스템 백업)을 켜 둔 경우, Android가 앱 데이터를 이용자의
+Google 계정에 백업할 수 있습니다. 이 백업은 Android와 Google이 처리하며 개발자는 접근할 수 없습니다.
+기기 설정의 백업 메뉴에서 끌 수 있습니다.
+</p>
+
+<h2><span class="num">6.</span>보관 기간과 삭제</h2>
+<ul>
+<li>기기 안의 정보는 이용자가 습관을 삭제하거나 앱을 삭제할 때 함께 삭제됩니다.</li>
+<li>내보낸 파일과 Google Drive 백업은 이용자가 직접 관리하며, 3항·4항의 방법으로 삭제할 수 있습니다.</li>
+<li>개발자는 이용자 정보를 보관하지 않으므로 개발자 측에서 삭제할 정보가 없습니다.</li>
+</ul>
+
+<h2><span class="num">7.</span>제3자 제공 및 처리 위탁</h2>
+<p>
+개발자는 이용자 정보를 제3자에게 제공하거나 처리를 위탁하지 않습니다. 4항의 Google Drive 저장은
+이용자가 선택해 본인 Google 계정으로 보관하는 것이며, 개발자가 정보를 받아 Google에 넘기는 것이 아닙니다.
+</p>
+
+<h2><span class="num">8.</span>아동의 개인정보</h2>
+<p>
+앱은 만 14세 미만 아동을 대상으로 하지 않으며, 아동의 정보를 알면서 수집하지 않습니다.
+</p>
+
+<h2><span class="num">9.</span>방침의 변경</h2>
+<p>
+이 방침이 바뀌면 이 페이지에 새 시행일과 함께 게시합니다. 앱이 다루는 정보의 범위가 넓어지는 변경은
+시행 전에 이 페이지와 앱 스토어 설명에 알립니다.
+</p>
+
+<div class="contact">
+<h2><span class="num">10.</span>문의</h2>
+<p>
+개인정보 관련 문의: <a href="mailto:__CONTACT_EMAIL__">__CONTACT_EMAIL__</a><br>
+개발자: Woodpecker AI
+</p>
+</div>
+
+<footer>
+© 2026 Woodpecker AI · 습관의 힘
+</footer>
+</div>
+</body>
+</html>

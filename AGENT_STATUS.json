@@ -1,0 +1,40 @@
+{
+  "project": "power-of-habit",
+  "as_of": "2026-11-02T15:30:04+09:00",
+  "phase": "release-prep (무료 프로덕션 출시, 12-31 게시 시한) — 문서 묶음 착수, 사용자 손 블록 A~G 전부 미착수",
+  "current_task": "[cloud] 출시 문서 묶음 PR(cloud/habit-release-docs) — 머지 대기(LC 게이트 뒤 사용자 1줄)",
+  "waiting_on": [
+    "[LC] 문서 PR 게이트",
+    "[사용자] 블록 A 키스토어 생성 + 서명 bundleRelease (권장 11-06, 최종 11-13)",
+    "[사용자] 블록 A 직후 병합 매니페스트 INTERNET 확인 (docs/store-listing/DATA-SAFETY-2026-11.md §4-3)",
+    "[사용자] 블록 B 처리방침 Vercel 배포 + Play 콘솔 앱 만들기 + 앱 콘텐츠 선언 (권장 11-09, 최종 11-16)",
+    "[사용자] 콘솔 «프로덕션 액세스» 과제 표시 여부 → 12명×14일 요건 적용 확정"
+  ],
+  "next_actions": [
+    "A 키스토어·서명 AAB (RELEASE.md §0-1)",
+    "INTERNET 권한 확인 → 없으면 AndroidManifest 1줄 코드 PR",
+    "B 처리방침 배포(docs/privacy/DEPLOY.md) → 앱 만들기 → 선언(DATA-SAFETY) → 등록정보(LISTING)",
+    "아이콘 512·피처 1024×500 렌더(로컬 세션, LISTING §6·§7)",
+    "C 내부 테스트 첫 수동 업로드 → DEVICE-QA 13행 제외 전부",
+    "D Drive OAuth (DRIVE-OAUTH-CHECKLIST) → DEVICE-QA 13행",
+    "E 비공개 트랙 T0 12명 (권장 11-20, 최종 11-27)",
+    "F 프로덕션 액세스 신청 (권장 12-05, 최종 12-12)",
+    "G 프로덕션 제출 → 게시 (목표 12-21~24, 최종 12-31)"
+  ],
+  "metrics": {
+    "dod_done": 0,
+    "dod_total": 9,
+    "user_blocks_done": 0,
+    "user_blocks_total": 7,
+    "device_qa_pass": 0,
+    "device_qa_total": 15,
+    "slip_days_vs_plan_recommended": 20,
+    "slip_days_vs_plan_latest": 27,
+    "schedule_slack_days_latest_path": 0,
+    "unit_tests_last_known": "116/116 (WORKLOG 2026-09-06)",
+    "listing_short_desc_chars": 52,
+    "listing_full_desc_chars": 1171,
+    "app_changes_this_pr": 0
+  },
+  "last_commit": "__SHA__"
+}
