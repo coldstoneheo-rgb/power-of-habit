@@ -98,3 +98,30 @@ SQLite / Room DB 스키마 구조는 다음과 같이 긴밀하게 설계되었�
 * 서명 키·Play 서비스 계정 준비와 배포 절차는 [`docs/RELEASE.md`](docs/RELEASE.md)를 따릅니다.
 * Google Drive 복사는 **옵트인**입니다. `local.properties`에 `google.drive.apk.dir=<동기화 폴더>`를 넣은 머신에서만 `assembleDebug`/`assembleRelease` 뒤에 `power-of-habit-v<버전>_<시각>-debug.apk` 이름으로 복사됩니다.
 * 명령·조건의 정본은 `docs/RELEASE.md` §2 입니다. 이 표는 요약이며 어긋나면 RELEASE.md를 따릅니다.
+
+---
+
+## 🎯 프로젝트 목적
+
+이 앱은 **무료 프로덕션 출시(수익 0)** 를 목표로 하며(2026-10-03 결정, 시한 2026-12-31 게시), 다음 네 가지를 위해 만든다.
+
+1. **포트폴리오** — Kotlin·Compose·Room·Hilt로 기획부터 스토어 게시까지 끝낸 Android 앱 1건.
+2. **L2C(블로그) 소재** — 에이전트 하네스로 개발·출시한 과정(결정 기록·실기기 피드백 루프·출시 체크리스트)을 콘텐츠로 남긴다.
+3. **reading-diary 이식** — 위젯·통계 엔진·백업/이전 구조를 다음 앱(reading-diary)에 옮겨 쓸 기반으로 삼는다.
+4. **본인 실사용** — 개발자가 매일 쓰는 습관 기록 앱.
+
+### 재검토 조항 (F6)
+- 게시 **+90일** 시점에 **설치 ≥ 300 그리고 평점 ≥ 4.0** 이면 다음 단계(기능 추가·수익화 여부)를 정하는 회의를 연다.
+- 회의 선택지에는 언제나 **«추가 없음(현 상태 유지)»** 을 포함한다. 조건에 못 미치면 회의 없이 유지·실사용만 계속한다.
+
+## 🚢 출시 문서
+
+| 문서 | 내용 |
+|---|---|
+| [`docs/RELEASE-PLAN-2026-11.md`](docs/RELEASE-PLAN-2026-11.md) | DoD 9항 · 사용자 손 블록 A~G · 12-31 역산 일정 · 프로덕션 액세스 신청서 답안 틀 |
+| [`docs/RELEASE.md`](docs/RELEASE.md) | 키스토어·Play Console·OAuth·빌드·배포 절차 정본 |
+| [`docs/store-listing/LISTING-2026-11.md`](docs/store-listing/LISTING-2026-11.md) | 스토어 등록정보 10항 초안 |
+| [`docs/store-listing/DATA-SAFETY-2026-11.md`](docs/store-listing/DATA-SAFETY-2026-11.md) | 데이터 보안 폼 답안 · 앱 콘텐츠 선언 · 권한 실측표 |
+| [`docs/privacy/privacy-policy.html`](docs/privacy/privacy-policy.html) · [`DEPLOY.md`](docs/privacy/DEPLOY.md) | 개인정보처리방침(정적) · Vercel 배포 절차 |
+| [`docs/DRIVE-OAUTH-CHECKLIST.md`](docs/DRIVE-OAUTH-CHECKLIST.md) | Google Drive 백업 OAuth 등록(블록 D) |
+| [`docs/DEVICE-QA-2026-11.md`](docs/DEVICE-QA-2026-11.md) | 릴리스 빌드 실기기 체크표 15행 |

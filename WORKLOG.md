@@ -9,6 +9,29 @@
 ---
 
 ```yaml
+date: 2026-11-02
+project: power-of-habit
+agent: claude-code (cloud 세션, LC HO origin:lc 클라우드 9건째 — 코드 0)
+summary: 무료 프로덕션 출시(12-31 게시) 문서 묶음 — 출시 계획(DoD 9·블록 A~G·11-02 재역산), 등록정보 10항, 처리방침 html+Vercel 배포 문서, 데이터 보안·앱 콘텐츠·권한표, Drive OAuth 블록 D, 실기기 QA 15행, README 목적·F6
+status: at_risk
+progress: "문서 9개 신설·README 보강, app/ 변경 0 (근거: git diff --stat origin/main -- app/ 빈 출력). 10-03 계획 뒤 흔적 0 → 11-02 착수. 블록 A~G 전부 미착수(사용자 손), 최종 마감 경로 여유 0일"
+changes: ["#39 docs(release): 무료 프로덕션 출시 문서 묶음 — RELEASE-PLAN·LISTING·DATA-SAFETY·처리방침·DRIVE-OAUTH·DEVICE-QA"]
+next: 사용자 블록 A(키스토어, 권장 11-06) → 직후 병합 매니페스트 INTERNET 확인 → B(처리방침 배포·앱 만들기·선언, 11-09) → C(내부 업로드, 11-11) → D(OAuth, 11-16) → E(비공개 T0, 11-20) → F(신청, 12-05) → G(게시 12-21~24 목표)
+blockers: 사용자 손 블록 A~G 전부. 비공개 12명×14일 요건 적용 여부는 콘솔 과제 표시 뒤 확정. 병합 매니페스트 INTERNET 미확인(없으면 Drive 백업 실패 — 코드 PR 1줄)
+learning_need: 코드를 0줄 바꾸는 문서 세션도 «주장마다 파일:줄» 규율을 걸면 README의 오래된 기능 설명(목표 위젯 주/월/분/연 탭)과 매니페스트의 빠진 권한 후보(INTERNET) 같은 실제 결함이 드러난다. 클라우드 VM은 maven.google.com 403이라 AAR 매니페스트 실측이 불가 — 권한표는 «추정»으로 정직하게 표기
+synergy: baby-naming-ai 출시 문서(처리방침 html·프로덕션 액세스 3부 답안·등록정보 원칙·AI 애셋 선언)를 틀로 재사용 — 두 번째 앱부터 출시 문서 묶음이 반나절 작업이 됨. L2C «두 번째 앱 출시는 틀 재사용으로» 원재료
+monetization: 수익 0(무료 출시 결정 10-03). F6 재검토 = 게시+90일 설치≥300 ∧ 평점≥4.0 → 회의(«추가 없음» 상시)
+idea: 출시 문서 묶음(계획·등록정보·데이터 보안·처리방침·QA 틀)을 LC 공용 템플릿으로 올려 reading-diary 출시에 그대로 쓰기
+```
+## 의미
+10-03 LC 계획 뒤 한 달 가까이 아무 흔적이 없던 출시 트랙을 문서로 착수했다. 12-31 게시에서 거꾸로 세면 비공개 테스트는 늦어도
+11-27에 시작해야 하고(원계획 10-31 대비 +27일), 그 경로는 여유가 0일이라 권장 일정(11-20 시작)으로 움직여야 한다. 데이터 보안은
+Drive 백업 포함 기준으로 «수집 = 예(선택)·공유 = 아니요»로 보수 답했고, 그 과정에서 Drive HTTP 경로가 한 번도 실행된 적이 없어
+INTERNET 권한 유무를 블록 A 직후 확인해야 한다는 것이 드러났다.
+
+---
+
+```yaml
 date: 2026-09-06
 project: power-of-habit
 agent: claude-code (harness-loop-engine, 야간 자율 루프 — 사용자 사전 승인 1~6)
