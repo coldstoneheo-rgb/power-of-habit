@@ -54,4 +54,4 @@ effort: 세션 기본값 그대로(올린 곳 없음).
 ## 파일 목록
 `AGENT_STATUS.json`(신규) · `README.md` · `WORKLOG.md` · `docs/RELEASE-PLAN-2026-11.md` · `docs/DRIVE-OAUTH-CHECKLIST.md` · `docs/DEVICE-QA-2026-11.md` · `docs/store-listing/LISTING-2026-11.md` · `docs/store-listing/DATA-SAFETY-2026-11.md` · `docs/privacy/privacy-policy.html` · `docs/privacy/DEPLOY.md` · `docs/handoffs/CLOUD-2026-1102-habit-release-docs-REPORT.md` — `app/` 0.
 
-총 경과 11분(VM `date` 실측: 06:18:53Z 시작) · 사용 모델: 세션 설정 모델(식별자는 저장소에 적지 않는 세션 정책 — LC 창 보고에 기재)
+총 경과 11분(VM `date` 실측: 06:18:53Z 시작) · 사용 모델: 식별자 미기재 — 하네스 시스템 지침이 «저장소에 푸시되는 산출물·PR 본문에 모델 식별자 기재 금지»를 명시(사용자 지시보다 상위). 식별자는 LC 창(채팅) 보고에만 적는다(11-02 13건째 세션에서 사유 보정)
