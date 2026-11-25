@@ -38,7 +38,7 @@ Google Auth Platform(구 «OAuth 동의 화면/사용자 인증 정보») → **
 | # | 이름(권장) | 패키지 이름 | SHA-1 |
 |---|---|---|---|
 | 1 | `poh-android-upload` | `com.woodpeckerai.powerofhabit` | 업로드 키 SHA-1 |
-| 2 | `poh-android-play-signing` | `com.woodpeckerai.powerofhabit` | **Play 앱 서명 키 SHA-1** |
+| 2 | `poh-android-play-signing`(새 앱은 지문 3개 → 3개 만들기) | `com.woodpeckerai.powerofhabit` | **Play 앱 서명 키 SHA-1 전부** |
 | 3 | `poh-android-debug`(선택) | `com.woodpeckerai.powerofhabit` | 디버그 키 SHA-1 |
 - [ ] 3개(최소 1·2)가 목록에 보이는 화면 캡처 → `D-1-oauth-clients.png`.
 - 클라이언트 ID·시크릿을 앱에 넣을 필요는 없다(Android 클라이언트는 패키지+SHA-1로 매칭).
@@ -50,9 +50,9 @@ Google Auth Platform(구 «OAuth 동의 화면/사용자 인증 정보») → **
 | 사용자 지원 이메일 | Play 콘솔 개발자 연락처와 같은 이메일 |
 | 앱 로고 | **올리지 않는다**(로고를 올리면 브랜드 확인 심사가 붙을 수 있다 — 추정, 콘솔 안내 우선) |
 | 앱 홈페이지 | 비움(또는 처리방침 URL) |
-| 개인정보처리방침 링크 | `docs/privacy/DEPLOY.md` §4에서 200을 확인한 실측 URL |
+| 개인정보처리방침 링크 | `docs/privacy/DEPLOY.md` §3에서 200을 확인한 실측 URL |
 | 서비스 약관 링크 | 비움 |
-| 승인된 도메인 | 처리방침 링크를 넣으면 콘솔이 요구하는 도메인(예: `vercel.app` 하위 도메인)을 넣는다. 도메인 소유 확인을 요구하면 처리방침 링크를 비우고 진행(비민감 범위만 쓰는 앱은 링크 없이도 게시 가능 — 추정) |
+| 승인된 도메인 | 처리방침 링크를 넣으면 콘솔이 요구하는 도메인(예: `coldstoneheo-rgb.github.io`)을 넣는다. 도메인 소유 확인을 요구하면 처리방침 링크를 비우고 진행(비민감 범위만 쓰는 앱은 링크 없이도 게시 가능 — 추정) |
 | 개발자 연락처 | 위와 같은 이메일 |
 | 데이터 액세스(범위) | `…/auth/drive.appdata` 추가 — 콘솔 분류가 **비민감**인지 확인(RELEASE.md §0-4-5 «비민감 범위») |
 
@@ -65,7 +65,7 @@ Google Auth Platform(구 «OAuth 동의 화면/사용자 인증 정보») → **
   - 비민감 범위(`drive.appdata`)만 쓰고 로고가 없으면 확인(verification) 심사 없이 바로 «프로덕션»이 된다(추정 — 콘솔이 «확인 필요»를 띄우면 [BLOCKED]로 LC에 보고).
 - [ ] «게시 상태: 프로덕션» 화면 캡처 → `D-2-consent-production.png`.
 
-## 6. 동작 확인 (내부 테스트 설치본 = Play 앱 서명 키로 서명된 빌드)
+## 6. 동작 확인 (비공개 테스트 설치본 = Play 앱 서명 키로 서명된 빌드)
 - [ ] 앱 → 설정(홈 우상단 톱니) → **백업하기** → Google 계정 선택 → 권한 동의 → 토스트 «백업이 완료되었습니다.»(`ui/main/MainScreenViewModel.kt:225`).
 - [ ] 같은 화면에 «연결된 계정: …» 표시.
 - [ ] **복원하기** → «백업에서 복원할까요?» 다이얼로그 → 복원 → 앱 재시작 → 기록 그대로.

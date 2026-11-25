@@ -2,7 +2,7 @@
 
 > DoD ③ = [`docs/RELEASE.md`](RELEASE.md) §5 스모크(습관 추가·체크·상세·위젯·CSV·JSON) + 알림·정확한 알람·재부팅 복원·Drive 백업/복원·테마·마이그레이션.
 > 기대값은 결정 기록 3건 기준: [`2026-09-05 수치형 3상태·위젯 탭·데이터 이전`](decisions/2026-09-05-value-3state-widget-tap-migration.md) · [`2026-09-06 이하 목표`](decisions/2026-09-06-at-most-goal-type.md) · [`2026-09-06 뱃지 스트릭`](decisions/2026-09-06-badge-streak-frequency-aware.md).
-> 대상 빌드: 블록 C의 **내부 테스트 설치본**(Play 앱 서명 키 서명, R8 축소). 디버그 APK로 대신하지 않는다(R8 규칙·서명 SHA-1 차이가 이 체크표의 목적이다).
+> 대상 빌드: **비공개 테스트 설치본**(Play 앱 서명 키 서명, R8 축소). 디버그 APK로 대신하지 않는다(R8 규칙·서명 SHA-1 차이가 이 체크표의 목적이다).
 > 실행: 사용자. 결과 칸 = `PASS` / `FAIL: <한 줄>` / `N/A: <이유>`. 캡처 = `NN.png`(NN = 행 번호).
 
 | 기기·OS | 설치 버전(versionName/Code) | 날짜 | 실행자 |

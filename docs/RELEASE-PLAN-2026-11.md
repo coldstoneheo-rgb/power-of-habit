@@ -3,8 +3,8 @@
 > **2026-11-25 갱신**: 목표가 «새해 공개(늦어도 2027-01-01)»로 바뀌었다(사용자 11-25). 사용자 순서의 정본 = [`store-listing/FIRST-UPLOAD-2026-11.md`](store-listing/FIRST-UPLOAD-2026-11.md), 사실 · 일정 · 준비물의 정본 = [`store-listing/CLOSED-TEST-2026-11.md`](store-listing/CLOSED-TEST-2026-11.md). 아래 블록 표의 소요 · 증거 이름은 참고로 남긴다.
 
 > 작성 2026-11-02(클라우드 세션, 코드 0). 정본 결정: LC `PLAN-2026-1003-portfolio-implementation.md` §5 · `MEETING-2026-1003-power-of-habit.md`(이 문서에는 HO 인라인으로 받은 결정만 옮겼다).
-> 이 문서는 **계획·체크리스트**다. 콘솔·키스토어·Cloud Console·Vercel 조작은 전부 사용자 손이다.
-> 절차의 정본은 [`docs/RELEASE.md`](RELEASE.md)이며, 어긋나면 RELEASE.md를 따른다.
+> 이 문서는 **계획·체크리스트**다. 콘솔·키스토어·Cloud Console·GitHub Pages 조작은 전부 사용자 손이다.
+> 절차의 정본은 [`docs/RELEASE.md`](RELEASE.md)이며, 첫 올리기는 FIRST-UPLOAD가, 그 밖은 RELEASE.md가 우선한다.
 
 ## 0. 이미 결정된 것 (다시 묻지 않는다)
 
@@ -81,8 +81,8 @@
 
 ### 3-3. 슬립
 - 11-02판 대비 23일 동안 착수 0. 블록 C(내부 테스트)는 건너뛰고 첫 AAB를 비공개 트랙에 바로 올린다(14151465 «Internal testing is optional»).
-- 하루 늦게 보낼 때마다 최악 공개일이 하루 밀린다. 검토마다 7일로 잡아 여유는 0일이다.
-- §3-1의 baby 실측(첫 심사 12일)이 이번에도 나오면 01-01은 넘는다 — 공식 문서는 «up to seven days or longer in exceptional cases»다.
+- 하루 늦게 보낼 때마다 날짜가 하루 밀린다. 검토마다 7일로 잡으면 모집에 쓸 날이 0일이다.
+- 01-01은 보장선이 아니다 — 조건은 CLOSED-TEST §2 첫 문단.
 
 ## 4. 리스크
 
@@ -91,7 +91,7 @@
 | ~~병합 매니페스트에 `INTERNET`이 없을 가능성~~ → **해소(11-02)**: 소스 매니페스트에 명시 선언(`AndroidManifest.xml:7`) | 병합 결과에 반드시 포함 | 블록 A 직후 `DATA-SAFETY-2026-11.md` §4-3으로 나머지 «추정» 권한 실측 |
 | ⑥ 적용 여부 미확정 | 일정 22일 차이 | B 직후 앱 대시보드에서 «프로덕션 액세스» 과제 표시 여부 확인 → 이 문서 ⑥ 상태 갱신 |
 | 테스터 12명 모집 | T0 지연 = 게시 지연 1:1 | baby와 같은 Google 그룹 + 품앗이 경로. 사용자 손 |
-| 연말 심사 지연 | 12-31 미달 | 권장 열 준수(게시 12-21~24 목표) |
+| 연말 심사 지연 | 새해 공개 미달 | 첫 제출을 하루라도 앞당긴다(수치 근거 없음) |
 | `android:allowBackup="true"` + 규칙 파일 미연결 | Android 자동 백업이 DB를 사용자 Google 계정으로 복사(OS 기능) | `DATA-SAFETY-2026-11.md` §2 주석 · 결정 필요 시 별도 PR |
 
 ## 5. 프로덕션 액세스 신청서 3부 답안 틀 (블록 F용)

@@ -23,25 +23,28 @@
 | 앱 확인(OAuth) | «If your app utilizes only non-sensitive scopes, it is not mandatory for your app to complete the app verification process.» 이름 · 로고 표시는 «brand-verification» | support.google.com/cloud/answer/13463073 |
 | 동의 화면 «테스트» | «limited to up to 100 test users» · «Authorizations by a test user will expire seven days» → 프로덕션으로 게시 | support.google.com/cloud/answer/15549945 |
 | Drive 비용 | «Standard Tier: Enabled by default at no cost» · «Usage on this tier never produces charges on a Google Cloud bill» | developers.google.com/workspace/drive/api/guides/limits |
-| 서명 지문 | «you must register the Google-held app signing key fingerprint with your API providers, not just your local upload key» · hybrid signing이면 지문 3개 | 9842756 |
+| 서명 지문 | «you must register the Google-held app signing key fingerprint with your API providers, not just your local upload key» · 새 앱은 «automatically enrolled in quantum-ready, hybrid signing» → **지문 3개가 기본** | 9842756 |
 | 정확한 알람 | 안드로이드 14+ 새 설치에서 `SCHEDULE_EXACT_ALARM` «denied by default» | developer.android.com/about/versions/14/changes/schedule-exact-alarms |
 | 기기 자동 백업 | «Every app can allocate up to 25 MB» · «does not count toward the user's personal Google Drive quota» | developer.android.com/identity/data/autobackup |
 
-못 찾은 것: 연말 검토 지연 · 초안 상태에서 앱 서명 지문이 보이는지 · 프로덕션 첫 출시에 관리형 게시를 쓸 수 있는지(9859654 «You can't use it when publishing an app for the first time»).
+못 찾은 것: 연말 검토 지연 · 초안 상태에서 앱 서명 지문이 보이는지. 관리형 게시는 첫 공개에 쓸 수 없다(9859654 «You can't use it when publishing an app for the first time») — 비공개로 먼저 공개한 뒤의 프로덕션에서 되는지만 콘솔에서 확인.
 
-## 2. 역산 일정표(검토마다 7일 가정 · 여유 0)
+## 2. 역산 일정표(검토마다 7일 · 모집 0일 가정)
+
+**01-01은 보장선이 아니다.** 이 표는 검토가 각각 7일 안에 끝나고 12명이 검토 통과 당일에 모두 옵트인할 때만 맞는다. 모집에 하루 걸리면 01-02, 사흘 걸리면 01-04가 된다. 문서는 검토가 7일보다 더 걸릴 수 있다고 한다(9859654 «or longer in exceptional cases»). 01-01에 닿으려면 세 번의 검토 가운데 어디선가 모집에 쓸 날만큼 빨리 끝나야 한다.
+
 | 늦어도 | 단계 | 누가 |
 |---|---|---|
 | 11-26 | 키 · 콘솔 앱 · Cloud 프로젝트 / 처리방침 게시 승인 | 사용자 |
 | 11-26 | 수리 PR · 앱 안 주소 PR · 그림 | 워커 |
-| **11-27** | 등록정보 · 앱 콘텐츠 · 서명 빌드 · Drive 등록 · **«검토로 보내기»** | 사용자(약 2시간) |
-| 12-04 | 12명 옵트인 끝(15 ~ 18명 모집) | 사용자 |
+| **11-27** | 등록정보 · 앱 콘텐츠 · 서명 빌드 · Drive 등록 · **«검토로 보내기»** | 사용자(FIRST-UPLOAD 7 ~ 12 = 95분) |
+| 12-04 | 검토 통과(최대 7일) → 본인 휴대폰 확인 → 모집 글 → **같은 날** 12명 옵트인(15 ~ 18명 모집) — 모집에 쓸 날이 0일 | 사용자 |
 | 12-18 | 프로덕션 접근 신청(답안 틀 = RELEASE-PLAN §5) | 사용자 · 초안 워커 |
 | 12-25 | 접근 승인 → 프로덕션 제출 | 사용자 |
 | **01-01** | 공개 | |
 
 - 보낼 수 있는 가장 이른 날은 11-26 밤이다(위 11-26 두 줄이 모두 끝날 때).
-- 하루 늦게 보낼 때마다 최악 공개일도 하루 밀린다. 검토가 실제로 1 ~ 3일이면 그만큼 여유가 된다(보장 없음).
+- 하루 늦게 보낼 때마다 이 표의 날짜도 하루 밀린다. 검토가 7일보다 빨리 끝난 만큼만 모집에 쓸 날이 생긴다(보장 없음).
 - 가장 먼저 밀리는 단계 = 앱 설정 · 첫 제출(처리방침 주소가 맨 앞). 그때 버릴 것 = 실기기 15행 완주(테스트 기간으로) · 스크린샷 7장 → 4장 · 동의 화면 로고. 버리지 않을 것 = 처리방침 · 데이터 보안 · Drive 등록.
 - 01-01을 놓치면 접근 승인 뒤 바로 프로덕션 검토를 보내고 통과하는 날 공개한다.
 
@@ -51,7 +54,7 @@
 | 앱 이름 | **사용자 결정**(§6) | 사용자 |
 | 짧은 설명 · 자세한 설명 | 준비됨(처리방침 줄 1곳은 게시 뒤 확인) | `LISTING-2026-11.md` §2 · §3 |
 | 카테고리 · 연락처 | 준비됨 — 생산성 · report@woodpecker-ai.com | `LISTING-2026-11.md` §4 · §5 |
-| 아이콘 512 · 1024×500 · 스크린샷 4장 이상 | 워커가 만듦 | 사용자 PC 그림 폴더(레포에 두지 않음) |
+| 아이콘 512 · 1024×500 · 스크린샷 4장 이상 | 아이콘과 이름 없는 1024×500은 만듦, 나머지는 이름 · 시험 뒤 | 사용자 PC 그림 폴더(레포에 커밋하지 않는다 — LISTING §6 · §7의 커밋 경로 대신) |
 | 처리방침 본문 | 준비됨(시행일은 게시하는 날) | `docs/privacy/privacy-policy.html` |
 | 처리방침 공개 주소 | **사용자 승인 대기** → 워커 게시 | `docs/privacy/DEPLOY.md` |
 | 앱 안 처리방침 링크 | 링크는 수리 PR · 주소 1줄은 게시 뒤 PR | 워커 |
@@ -91,7 +94,7 @@
 | 테스트 중 | 라이트 테마 오렌지 글자 대비(2.1:1 관찰) | 남음(DEVICE-QA 15행) |
 | 1.0 뒤 | GoogleSignIn → Credential Manager 이전 · Compose 낡은 API(Divider 등) | 남음 |
 
-**DEVICE-QA 15행(닫힌 것 0):** 01 · 02 · 03 · 04 · 05 · 08 · 09 · 15 = 테스트 첫날 본인 휴대폰 / 06 · 07 위젯 · 10 · 11 · 12 알림 = 테스트 첫날(FIRST-UPLOAD 13의 3) / 13 Drive = 모집 글 전 필수 / 14 마이그레이션 = 2번째 빌드 때.
+**DEVICE-QA 15행(닫힌 것 0):** 01 · 02 · 03 · 04 · 05 · 08 · 09 · 15 = 테스트 첫날 본인 휴대폰 / 06 · 07 위젯 · 10 · 11 · 12 알림 = 일부만 FIRST-UPLOAD 13의 3(위젯 1개 · 알림 1번)에서 보고 나머지는 테스트 기간 / 13 Drive = 모집 글 전 필수 / 14 마이그레이션 = 2번째 빌드 때.
 
 ## 5. 출시 노트(첫 비공개 빌드)
 ```

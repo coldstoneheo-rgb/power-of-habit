@@ -10,7 +10,7 @@ applicationId **`com.woodpeckerai.powerofhabit`** (2026-09-05 확정, 변경 불
 keytool -genkeypair -v -keystore release.jks -alias powerofhabit -keyalg RSA -keysize 2048 -validity 10000
 ```
 - `release.jks`는 gitignore 대상이다. 업로드 키다 — 잃으면 Google에 재설정을 요청해야 하므로(9842756 «If compromised or lost, Google can reset it for you») 비밀번호와 함께 안전한 곳(비밀 관리자·오프라인 백업)에 보관한다.
-- `keystore.properties.example`을 `keystore.properties`로 복사해 값을 채운다(gitignore 대상). CI에서는 환경변수 `POH_STORE_FILE / POH_STORE_PASSWORD / POH_KEY_ALIAS / POH_KEY_PASSWORD`로 대체할 수 있다.
+- 첫 올리기는 비밀번호를 파일에 남기지 않는 방법(`docs/store-listing/FIRST-UPLOAD-2026-11.md` 9단계)을 쓴다. 파일로 두려면 `keystore.properties.example`을 `keystore.properties`로 복사해 값을 채운다(gitignore 대상). CI에서는 환경변수 `POH_STORE_FILE / POH_STORE_PASSWORD / POH_KEY_ALIAS / POH_KEY_PASSWORD`로 대체할 수 있다.
 
 ### 0-2. Play Console
 1. Play Console → 앱 만들기: 이름 "습관의 힘", 기본 언어 한국어, 앱, 무료.
