@@ -70,6 +70,7 @@ class CurrentDateTest {
                 }
             }
         }
+        rule.onNodeWithText("수").assertIsDisplayed() // 2026-11-25 수요일 — 요일은 한국어
         rule.onAllNodesWithContentDescription("미완료").onFirst().performClick()
         rule.activityRule.scenario.moveToState(Lifecycle.State.CREATED)
         now = LocalDateTime.of(2026, 11, 26, 7, 0)

@@ -467,7 +467,7 @@ internal fun MainScreenContent(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.ENGLISH).uppercase(),
+                                text = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.KOREAN),
                                 color = HabitTheme.colors.textSecondary,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold
