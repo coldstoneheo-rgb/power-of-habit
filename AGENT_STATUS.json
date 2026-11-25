@@ -23,7 +23,8 @@
     "user_blocks_total": 7,
     "device_qa_pass": 0,
     "device_qa_total": 15,
-    "schedule_slack_days_worst_case": 0,
+    "schedule_slack_days_7day_reviews_0_recruit": 0,
+    "schedule_slack_days_7day_reviews_3_recruit": -3,
     "listing_short_desc_chars": 52,
     "listing_full_desc_chars": 1214
   },
