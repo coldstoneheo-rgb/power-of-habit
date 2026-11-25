@@ -1,14 +1,12 @@
 {
   "project": "power-of-habit",
-  "as_of": "2026-11-25T21:56:00+09:00",
+  "as_of": "2026-11-25T23:40:00+09:00",
   "phase": "release-prep (무료 프로덕션 출시, 새해 공개 — 늦어도 2027-01-01) — 첫 비공개 빌드를 11-27에 검토로 보내는 것이 목표",
-  "current_task": "#41 ~ #44 · #46 머지 완료 · 게시 준비(#45 draft) · 앱 이름 «습관의 힘» 확정 — 처리방침 게시 확인 대기",
+  "current_task": "처리방침 게시(200) · #41 ~ #48 머지 완료 — 사용자 FIRST-UPLOAD 9단계(서명 빌드, 커밋 8b902f2) 대기",
   "waiting_on": [
-    "[사용자] 처리방침 GitHub Pages 게시 — 워커 창에서 직접 확인 1줄 (이 레포)",
     "[사용자] 업로드 키 · 키 사본 · 콘솔 앱 · Cloud 프로젝트 (FIRST-UPLOAD 1~4)"
   ],
   "next_actions": [
-    "처리방침 게시 승인 → 게시 → 앱 안 주소 1줄 PR(비면 서명 번들이 막힘)",
     "부제 «- 하루 한 번 기록»은 LC 가정 — 사용자가 «부제 없이»라고 하면 되돌림",
     "사용자 FIRST-UPLOAD 7~12 (11-27)",
     "검토 통과 뒤 본인 휴대폰 확인 → 모집 글",
@@ -26,5 +24,5 @@
     "listing_short_desc_chars": 52,
     "listing_full_desc_chars": 1213
   },
-  "last_commit": "6e1fbc0 (main, PR #46 squash 머지 커밋)"
+  "last_commit": "8b902f2 (main, PR #45 squash 머지 커밋)"
 }
