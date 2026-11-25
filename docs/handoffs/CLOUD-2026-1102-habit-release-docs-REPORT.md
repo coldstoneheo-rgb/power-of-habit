@@ -22,9 +22,9 @@
 ## 한 일
 | 산출 | 요지 | 근거 |
 |---|---|---|
-| `docs/RELEASE-PLAN-2026-11.md` | DoD 9항(현재 상태 칸) · 블록 A~G(선행·소요·증거 파일명) · 12-31 역산 일정(권장/최종 마감 2열) · 리스크 · 신청서 3부 답안 틀 | baby 실측: 첫 심사 12일(`POST-LAUNCH-vc19-2026-1002.md:46,56`) · 신청→승인 4일(`PLAY-PRODUCTION-ACCESS-2026-0916.md:141`) · 콘솔 14일 카운터 1일 지연(같은 문서 §0) |
+| `docs/RELEASE-PLAN-2026-11.md` | DoD 9항(현재 상태 칸) · 블록 A~G(선행·소요·증거 파일명) · 12-31 역산 일정(권장/최종 마감 2열) · 리스크 · 신청서 3부 답안 틀 | 같은 개발자 계정의 다른 앱 선례 (수치 · 문서 이름은 2026-11-25에 지움 — 공개 레포) |
 | `docs/store-listing/LISTING-2026-11.md` | 10항 + 원칙 2 + 기능 문장별 코드 근거 부록 | 짧은 설명 52/80 · 자세한 설명 1171/4000(Python `len`) · 꺾쇠 URL 0 |
-| `docs/privacy/privacy-policy.html` · `DEPLOY.md` | baby 틀(스타일 블록) 재사용, 내용 전면 교체 · 외부 리소스 0 · 이메일은 `__CONTACT_EMAIL__` 치환 토큰(배포 전 grep 0 확인 단계 포함) | `grep -c "<script\|src=\|<link"` = 0 · HTMLParser 태그 짝 오류 0 · 9,260 B |
+| `docs/privacy/privacy-policy.html` · `DEPLOY.md` | 같은 개발자 계정의 다른 앱 선례의 틀(스타일 블록) 재사용, 내용 전면 교체 · 외부 리소스 0 · 이메일은 `__CONTACT_EMAIL__` 치환 토큰(배포 전 grep 0 확인 단계 포함) | `grep -c "<script\|src=\|<link"` = 0 · HTMLParser 태그 짝 오류 0 · 9,260 B |
 | `docs/store-listing/DATA-SAFETY-2026-11.md` | 데이터 보안 답안(수집=예·선택 / 공유=아니요 / 전송 암호화=예 / 삭제 경로) · 앱 콘텐츠 선언표 · 권한 실측표(실측 3 + 추정 8 + 미확정 1) | `AndroidManifest.xml:4-6` · `app/build.gradle.kts:175,206,227-233` · `GoogleDriveBackupManager.kt:59-60,174-181,191-237` |
 | `docs/DRIVE-OAUTH-CHECKLIST.md` | RELEASE §0-4 → 블록 D 실행 순서 · SHA-1 3종 · 같은 Cloud 프로젝트 · 동의 화면 문안 · «프로덕션» 전환 · 실패 토스트↔원인표 | 토스트 원문 `MainScreenViewModel.kt:225,228` · `GoogleDriveBackupManager.kt:149-150` |
 | `docs/DEVICE-QA-2026-11.md` | 15행(RELEASE §5 스모크 + 알림·정확한 알람·재부팅·Drive·마이그레이션·테마), 결정 기록 3건 기대값 | 뱃지 10종 = `BadgeRules.kt` 1+6+3 |
@@ -39,8 +39,8 @@
 5. **AI 애셋 선언 판단 지점** — 아이콘 벡터 XML은 코딩 에이전트가 #32(77710a7)에서 작성. 이미지 생성 모델 출력이 아니므로 HO 기준 «해당 없음»으로 적되, 콘솔 정의가 코드 보조까지 포함하면 라벨로 바꾸도록 LISTING §11에 명시.
 6. **레거시 Google 로그인 API** — `play-services-auth:20.7.0` `GoogleSignIn` 사용(`build.gradle.kts:227`). 지금은 동작, 출시 후 백로그 후보.
 7. **Drive 자동 백업** — 연결된 동안 기록 변경 5초 뒤 자동 업로드(`GoogleDriveBackupManager.kt:159-170`). 처리방침 §4·데이터 보안 메모에 반영.
-8. **baby clone 경로** — `gh repo clone` = GraphQL 403, `git clone` = 인증 프롬프트 실패 → 세션에 저장소 추가 뒤 `git clone --depth 1` 성공(`05c431d`, 읽기 전용).
-9. **12명×14일 요건** — baby가 같은 개인 개발자 계정이면(추정) 이 앱에도 적용될 가능성이 높다. 확정은 콘솔 과제 표시 뒤.
+8. (2026-11-25에 지움 — 비공개 레포 경로)
+9. **12명×14일 요건** — 같은 개발자 계정의 다른 앱이 있으면(추정) 이 앱에도 적용될 가능성이 높다. 확정은 콘솔 과제 표시 뒤.
 
 ## LC·사용자에게 필요한 것
 - **LC**: 이 PR 게이트 → 통과 시 사용자 머지 1줄.

@@ -19,7 +19,7 @@
 | 데이터 유형(콘솔 분류) | 수집 | 공유 | 일시 처리 | 필수/선택 | 목적 | 근거·메모 |
 |---|---|---|---|---|---|---|
 | 앱 활동 → **기타 사용자 생성 콘텐츠**(습관·기록·뱃지 DB) | **예** | **아니요** | 아니요 | **선택**(사용자가 Drive 백업을 켤 때만) | **앱 기능**(백업·복원) | 저장 위치 = 사용자 본인 Google 계정 Drive `appDataFolder`(`GoogleDriveBackupManager.kt:59-60, 211-221`). 개발자 접근 불가. 연결된 동안 기록 변경 5초 뒤 자동 백업(`:159-170`) — 처리방침 §4에 명시 |
-| 개인 정보 → 이메일 주소 | **아니요** | 아니요 | — | — | — | Google 로그인 결과의 이메일을 설정 화면 표시(`GoogleDriveBackupManager.kt:94` `signedInEmail`)에만 쓰고 앱이 기기 밖으로 보내지 않는다. 백업 zip에도 없다. ⚠ 판정이 갈릴 수 있음 — 콘솔 도움말이 «Google 로그인으로 받은 이메일»을 수집으로 본다고 하면 «예·선택·앱 기능»으로 바꾼다 |
+| 개인 정보 → 이메일 주소 · 이름 · 사용자 ID, 사진 | **아니요** | 아니요 | — | — | — | 로그인은 `DEFAULT_SIGN_IN` + `requestEmail`이라(`GoogleDriveBackupManager.kt:104`) 이메일과 기본 프로필(이름 · 사진 · ID)을 요청한다. 앱은 그중 이메일만 쓴다. Google 로그인 결과의 이메일을 설정 화면 표시(`GoogleDriveBackupManager.kt:94` `signedInEmail`)에만 쓰고 앱이 기기 밖으로 보내지 않는다. 백업 zip에도 없다. ⚠ 판정이 갈릴 수 있음 — 콘솔 도움말이 «Google 로그인으로 받은 이메일»을 수집으로 본다고 하면 «예·선택·앱 기능»으로 바꾼다 |
 | 위치·연락처·사진·건강·금융·메시지·기기 ID·앱 정보와 성능(크래시 로그)·웹 기록 | 아니요 | 아니요 | — | — | — | 해당 권한·SDK 없음(§4 권한표, `app/build.gradle.kts:170-234` 의존성에 분석·광고·크래시 SDK 0) |
 
 ### 1-3. «공유 = 아니요»의 근거
@@ -31,7 +31,7 @@
 
 | 선언 | 답 | 근거·메모 |
 |---|---|---|
-| 개인정보처리방침 | Vercel 실측 URL(`docs/privacy/DEPLOY.md` §4) | 꺾쇠 금지 · 배포 후 200 확인 |
+| 개인정보처리방침 | GitHub Pages 주소(`docs/privacy/DEPLOY.md` §3에서 200 확인) | 꺾쇠 금지 · 배포 후 200 확인 |
 | **광고** | **아니요, 광고 없음** | 광고 SDK 0(`app/build.gradle.kts` 의존성) |
 | 광고 ID(AD_ID) | **사용 안 함** | 광고·분석 SDK 0. 병합 매니페스트에 `com.google.android.gms.permission.AD_ID`가 없는지 §4-3 명령으로 확인(있으면 별도 코드 PR로 제거) |
 | **앱 액세스** | **모든 기능을 특별한 액세스 없이 이용 가능**(제한 없음) | 로그인 없이 전 기능 사용. Drive 백업은 **아무 Google 계정**으로나 검토 가능하므로 심사용 자격 증명 불필요 |
@@ -78,6 +78,8 @@
 | `com.google.android.gms.permission.AD_ID` | (광고 식별자 라이브러리) | 의존성에 `play-services-ads*`·`-measurement` 없음 | 추정 **없음** |
 
 ✅ **`INTERNET` 해소(11-02)**: 소스 매니페스트에 명시 선언했다(`AndroidManifest.xml:7`, 클라우드 13건째 PR). 이전에는 저장소 이력 전체에서 `INTERNET` 0건이었고 Drive HTTP 경로는 한 번도 실행된 적이 없었다(WORKLOG 09-05·09-06 blockers). 병합 결과 실측은 그대로 §4-3을 블록 A 직후 1회 실행해 «추정» 칸을 바꾼다.
+
+**2026-11-25 실측(디버그 병합 매니페스트 · 로컬 빌드)**: 권한 8개 = 앱 선언 4개 + `WAKE_LOCK` · `ACCESS_NETWORK_STATE` · `FOREGROUND_SERVICE` · `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`(위 «추정»과 같음). `AD_ID` **0건** · `GET_ACCOUNTS` 없음 · `FOREGROUND_SERVICE_*` 없음 → 광고 ID «아니요»로 답한다. 릴리스 매니페스트는 R8 빌드 때 1회 더 본다.
 
 ### 4-3. 로컬 확인 명령 (블록 A 직후, Windows Git Bash)
 ```bash

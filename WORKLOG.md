@@ -9,6 +9,26 @@
 ---
 
 ```yaml
+date: 2026-11-25
+project: power-of-habit
+agent: claude-code (LC HO-2026-1125-habit-newyear-launch)
+summary: 새해 공개(늦어도 2027-01-01)로 출시 계획을 다시 세움 — 첫 올리기 13단계, Play/Drive 요건 사실표, 역산 일정, 등록 준비물 · 완성도 목록, 모집 글, 처리방침을 GitHub Pages 기준으로
+status: at_risk
+progress: "문서만(근거: Play 도움말 8개 중 7개 curl 200과 문장 대조, 이 PR이 건드린 문서에서 절대경로 0건). 앱 수리는 별도 PR(fix/newyear-prelaunch)이고 이 블록을 쓸 때 시험이 아직 돌고 있었다"
+changes: ["chore/newyear-launch-docs PR"]
+next: 사용자 키 · 콘솔 앱 · Cloud 프로젝트 → 처리방침 게시 승인 → 11-27 비공개 «검토로 보내기» → 12-04 옵트인 12명
+blockers: 사용자 처리방침 게시 승인 · 앱 이름 결정 · 블록 A~G. 01-01은 보장선이 아님(검토 7일씩 · 모집 3일이면 01-04)
+learning_need: 내부 문서의 날짜는 멈춘 23일 동안 아무도 고치지 않았다 — 날짜가 지난 계획은 상태줄에서 먼저 낡았다고 보여야 한다
+synergy: reading-diary의 사실표 · 첫 올리기 순서 꼴을 재사용, 다른 점(Drive OAuth)만 새로 대조
+monetization: 해당 없음(무료 출시)
+idea: OAuth 지문 등록을 «검토로 보내기» 앞에 두는 순서를 안드로이드 앱 공통 절차로
+```
+## 의미
+멈춰 있던 출시 계획을 오늘 기준 사실과 날짜로 바꾸고, 사용자가 키 만들기부터 한 단계씩 따라 할 순서를 냈다.
+
+---
+
+```yaml
 date: 2026-11-02
 project: power-of-habit
 agent: claude-code (cloud 세션, LC HO origin:lc 클라우드 13건째 — #39 게이트 후속)

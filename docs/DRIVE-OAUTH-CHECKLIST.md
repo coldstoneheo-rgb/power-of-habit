@@ -2,8 +2,9 @@
 
 > 원문: [`docs/RELEASE.md`](RELEASE.md) §0-4. 이 문서는 그 절을 **블록 D(사용자 손, ≤25분)** 실행 순서로 옮긴 것이다. 어긋나면 RELEASE.md를 고치고 이 문서를 맞춘다.
 > 선행: 블록 C(첫 AAB 수동 업로드) — **Play 앱 서명 키 SHA-1은 첫 업로드 뒤에야 콘솔에 보인다.**
+> **순서 변경(2026-11-25)**: 첫 AAB를 비공개 트랙 **초안**에 올린 뒤, «검토로 보내기» 전에 이 등록을 한다. 사용자 순서 · 2026-11-25에 대조한 근거는 [`FIRST-UPLOAD-2026-11.md`](store-listing/FIRST-UPLOAD-2026-11.md) 11단계와 `CLOSED-TEST-2026-11.md` §1이 우선한다.
 > 결정: Drive 백업 **v1 포함**(LC 10-03, 회의 F4 기각). 이 블록 없이는 Drive 백업/복원이 코드 10(DEVELOPER_ERROR)으로 실패한다(RELEASE.md §0-4 «현재 상태»).
-> 증거 폴더: `D:\사진\power-of-habit\release\` (`D-1-oauth-clients.png` · `D-2-consent-production.png` · `D-3-drive-backup-ok.png`).
+> 증거 폴더: «사용자 PC 그림 폴더» (`D-1-oauth-clients.png` · `D-2-consent-production.png` · `D-3-drive-backup-ok.png`).
 
 ## 0. 앱이 요구하는 것 (코드 기준 — 바꾸지 않는다)
 | 항목 | 값 | 근거 |
@@ -19,7 +20,7 @@
   keytool -list -v -keystore release.jks -alias powerofhabit
   ```
   → `SHA1:` 줄만 메모(비밀번호 화면은 캡처하지 않는다).
-- [ ] **Play 앱 서명 키 SHA-1**: Play 콘솔 → 습관의 힘 → 테스트 및 출시 → 설정 → **앱 무결성** → «앱 서명» 탭 → «앱 서명 키 인증서»의 SHA-1.
+- [ ] **Play 앱 서명 키 SHA-1**: Play 콘솔 → 습관의 힘 → Protected with Play > Play Store protection > Manage Play app signing(9842756) → «App signing key»의 SHA-1 **3개 전부**.
   - Play에서 설치한 앱(내부·비공개·프로덕션 전부)은 이 키로 서명된다 → **이게 빠지면 스토어 설치본만 코드 10**으로 실패한다.
 - [ ] (선택, 개발용) 디버그 키 SHA-1:
   ```
@@ -37,7 +38,7 @@ Google Auth Platform(구 «OAuth 동의 화면/사용자 인증 정보») → **
 | # | 이름(권장) | 패키지 이름 | SHA-1 |
 |---|---|---|---|
 | 1 | `poh-android-upload` | `com.woodpeckerai.powerofhabit` | 업로드 키 SHA-1 |
-| 2 | `poh-android-play-signing` | `com.woodpeckerai.powerofhabit` | **Play 앱 서명 키 SHA-1** |
+| 2 | `poh-android-play-signing`(새 앱은 지문 3개 → 3개 만들기) | `com.woodpeckerai.powerofhabit` | **Play 앱 서명 키 SHA-1 전부** |
 | 3 | `poh-android-debug`(선택) | `com.woodpeckerai.powerofhabit` | 디버그 키 SHA-1 |
 - [ ] 3개(최소 1·2)가 목록에 보이는 화면 캡처 → `D-1-oauth-clients.png`.
 - 클라이언트 ID·시크릿을 앱에 넣을 필요는 없다(Android 클라이언트는 패키지+SHA-1로 매칭).
@@ -49,9 +50,9 @@ Google Auth Platform(구 «OAuth 동의 화면/사용자 인증 정보») → **
 | 사용자 지원 이메일 | Play 콘솔 개발자 연락처와 같은 이메일 |
 | 앱 로고 | **올리지 않는다**(로고를 올리면 브랜드 확인 심사가 붙을 수 있다 — 추정, 콘솔 안내 우선) |
 | 앱 홈페이지 | 비움(또는 처리방침 URL) |
-| 개인정보처리방침 링크 | `docs/privacy/DEPLOY.md` §4에서 200을 확인한 실측 URL |
+| 개인정보처리방침 링크 | `docs/privacy/DEPLOY.md` §3에서 200을 확인한 실측 URL |
 | 서비스 약관 링크 | 비움 |
-| 승인된 도메인 | 처리방침 링크를 넣으면 콘솔이 요구하는 도메인(예: `vercel.app` 하위 도메인)을 넣는다. 도메인 소유 확인을 요구하면 처리방침 링크를 비우고 진행(비민감 범위만 쓰는 앱은 링크 없이도 게시 가능 — 추정) |
+| 승인된 도메인 | 처리방침 링크를 넣으면 콘솔이 요구하는 도메인(예: `coldstoneheo-rgb.github.io`)을 넣는다. 도메인 소유 확인을 요구하면 처리방침 링크를 비우고 진행(비민감 범위만 쓰는 앱은 링크 없이도 게시 가능 — 추정) |
 | 개발자 연락처 | 위와 같은 이메일 |
 | 데이터 액세스(범위) | `…/auth/drive.appdata` 추가 — 콘솔 분류가 **비민감**인지 확인(RELEASE.md §0-4-5 «비민감 범위») |
 
@@ -64,7 +65,7 @@ Google Auth Platform(구 «OAuth 동의 화면/사용자 인증 정보») → **
   - 비민감 범위(`drive.appdata`)만 쓰고 로고가 없으면 확인(verification) 심사 없이 바로 «프로덕션»이 된다(추정 — 콘솔이 «확인 필요»를 띄우면 [BLOCKED]로 LC에 보고).
 - [ ] «게시 상태: 프로덕션» 화면 캡처 → `D-2-consent-production.png`.
 
-## 6. 동작 확인 (내부 테스트 설치본 = Play 앱 서명 키로 서명된 빌드)
+## 6. 동작 확인 (비공개 테스트 설치본 = Play 앱 서명 키로 서명된 빌드)
 - [ ] 앱 → 설정(홈 우상단 톱니) → **백업하기** → Google 계정 선택 → 권한 동의 → 토스트 «백업이 완료되었습니다.»(`ui/main/MainScreenViewModel.kt:225`).
 - [ ] 같은 화면에 «연결된 계정: …» 표시.
 - [ ] **복원하기** → «백업에서 복원할까요?» 다이얼로그 → 복원 → 앱 재시작 → 기록 그대로.
