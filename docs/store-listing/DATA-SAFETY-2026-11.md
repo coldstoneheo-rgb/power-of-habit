@@ -9,18 +9,18 @@
 ### 1-1. 개요 문항
 | 문항 | 답 | 근거 |
 |---|---|---|
-| 앱이 필수 사용자 데이터 유형을 수집하거나 공유하나요? | **예** | Drive 백업 시 습관 DB가 기기 밖(사용자 본인 Drive)으로 전송됨 — `backup/GoogleDriveBackupManager.kt:191-237`(`backupDatabase`: DB zip → `files().create/update`) |
-| 수집한 모든 사용자 데이터가 전송 중에 암호화되나요? | **예** | Drive API 클라이언트가 `https://www.googleapis.com`로만 통신(`NetHttpTransport`, `GoogleDriveBackupManager.kt:174-181`). 개발자 서버 통신 없음 |
+| 앱이 필수 사용자 데이터 유형을 수집하거나 공유하나요? | **예** | Drive 백업 시 습관 DB가 기기 밖(사용자 본인 Drive)으로 전송됨 — `backup/GoogleDriveBackupManager.kt`(`backupDatabase`: DB zip → `files().create/update`) |
+| 수집한 모든 사용자 데이터가 전송 중에 암호화되나요? | **예** | Drive API 클라이언트가 `https://www.googleapis.com`로만 통신(`NetHttpTransport`, `GoogleDriveBackupManager.kt`). 개발자 서버 통신 없음 |
 | 사용자가 데이터 삭제를 요청할 수 있는 방법을 제공하나요? | **예** | 사용자가 직접 삭제: ① 앱에서 습관 삭제 ② Google Drive 웹 → 설정 → 앱 관리 → «습관의 힘» → 옵션 → «숨겨진 앱 데이터 삭제» ③ 앱 삭제 시 기기 데이터 삭제. 처리방침 §4·§6에 같은 경로 |
-| 앱에서 계정을 만들 수 있나요? | **아니요**(계정 삭제 URL 해당 없음) | 회원가입·앱 계정 없음. Google 로그인은 Drive `drive.appdata` 권한 승인용(`GoogleDriveBackupManager.kt:101-108`)이며 앱 계정을 만들지 않는다 |
+| 앱에서 계정을 만들 수 있나요? | **아니요**(계정 삭제 URL 해당 없음) | 회원가입·앱 계정 없음. Google 로그인은 Drive `drive.appdata` 권한 승인용(`GoogleDriveBackupManager.kt`)이며 앱 계정을 만들지 않는다 |
 | 독립 보안 검토(MASA) | 아니요 | — |
 
 ### 1-2. 데이터 유형별
 | 데이터 유형(콘솔 분류) | 수집 | 공유 | 일시 처리 | 필수/선택 | 목적 | 근거·메모 |
 |---|---|---|---|---|---|---|
-| 앱 활동 → **기타 사용자 생성 콘텐츠**(습관·기록·뱃지 DB) | **예** | **아니요** | 아니요 | **선택**(사용자가 Drive 백업을 켤 때만) | **앱 기능**(백업·복원) | 저장 위치 = 사용자 본인 Google 계정 Drive `appDataFolder`(`GoogleDriveBackupManager.kt:59-60, 211-221`). 개발자 접근 불가. 연결된 동안 기록 변경 5초 뒤 자동 백업(`:159-170`) — 처리방침 §4에 명시 |
-| 개인 정보 → 이메일 주소 · 이름 · 사용자 ID, 사진 | **아니요** | 아니요 | — | — | — | 로그인은 `DEFAULT_SIGN_IN` + `requestEmail`이라(`GoogleDriveBackupManager.kt:104`) 이메일과 기본 프로필(이름 · 사진 · ID)을 요청한다. 앱은 그중 이메일만 쓴다. Google 로그인 결과의 이메일을 설정 화면 표시(`GoogleDriveBackupManager.kt:94` `signedInEmail`)에만 쓰고 앱이 기기 밖으로 보내지 않는다. 백업 zip에도 없다. ⚠ 판정이 갈릴 수 있음 — 콘솔 도움말이 «Google 로그인으로 받은 이메일»을 수집으로 본다고 하면 «예·선택·앱 기능»으로 바꾼다 |
-| 위치·연락처·사진·건강·금융·메시지·기기 ID·앱 정보와 성능(크래시 로그)·웹 기록 | 아니요 | 아니요 | — | — | — | 해당 권한·SDK 없음(§4 권한표, `app/build.gradle.kts:170-234` 의존성에 분석·광고·크래시 SDK 0) |
+| 앱 활동 → **기타 사용자 생성 콘텐츠**(습관·기록·뱃지 DB) | **예** | **아니요** | 아니요 | **선택**(사용자가 Drive 백업을 켤 때만) | **앱 기능**(백업·복원) | 저장 위치 = 사용자 본인 Google 계정 Drive `appDataFolder`(`GoogleDriveBackupManager.kt`). 개발자 접근 불가. 연결된 동안 기록 변경 5초 뒤 자동 백업(`:159-170`) — 처리방침 §4에 명시 |
+| 개인 정보 → 이메일 주소 · 이름 · 사용자 ID, 사진 | **아니요** | 아니요 | — | — | — | 로그인은 `DEFAULT_SIGN_IN` + `requestEmail`이라(`GoogleDriveBackupManager.kt`) 이메일과 기본 프로필(이름 · 사진 · ID)을 요청한다. 앱은 그중 이메일만 쓴다. Google 로그인 결과의 이메일을 설정 화면 표시(`GoogleDriveBackupManager.kt` `signedInEmail`)에만 쓰고 앱이 기기 밖으로 보내지 않는다. 백업 zip에도 없다. ⚠ 판정이 갈릴 수 있음 — 콘솔 도움말이 «Google 로그인으로 받은 이메일»을 수집으로 본다고 하면 «예·선택·앱 기능»으로 바꾼다 |
+| 위치·연락처·사진·건강·금융·메시지·기기 ID·앱 정보와 성능(크래시 로그)·웹 기록 | 아니요 | 아니요 | — | — | — | 해당 권한·SDK 없음(§4 권한표, `app/build.gradle.kts` 의존성에 분석·광고·크래시 SDK 0) |
 
 ### 1-3. «공유 = 아니요»의 근거
 - Play 예외: **사용자가 시작한 동작**으로 사용자가 예상하는 곳에 보내는 전송은 공유가 아니다. Drive 백업은 사용자가 버튼으로 켜고, 목적지가 **사용자 본인 계정**이다.
@@ -66,15 +66,15 @@
 | 권한 | 출처 | 근거(파일:줄) | 판정 |
 |---|---|---|---|
 | `RECEIVE_BOOT_COMPLETED` | 앱 선언 | `app/src/main/AndroidManifest.xml:4` · 사용처 `reminder/BootReceiver.kt` | **실측** |
-| `POST_NOTIFICATIONS` | 앱 선언 | `AndroidManifest.xml:5` · 런타임 요청 `ui/screens/AddEditHabitScreen.kt:550-554` | **실측** |
+| `POST_NOTIFICATIONS` | 앱 선언 | `AndroidManifest.xml:5` · 런타임 요청 `ui/screens/AddEditHabitScreen.kt` | **실측** |
 | `SCHEDULE_EXACT_ALARM` | 앱 선언 | `AndroidManifest.xml:6` · `reminder/HabitReminderManager.kt`의 `scheduleReminder`(`canScheduleExactAlarms` 확인 후 `setExactAndAllowWhileIdle`, 없으면 `setAndAllowWhileIdle`) | **실측** |
-| `WAKE_LOCK` | `androidx.work:work-runtime`(Glance 전이 의존) | `app/build.gradle.kts:206` `glance.appwidget` · `gradle/libs.versions.toml:21` glance 1.2.0 | 추정 |
+| `WAKE_LOCK` | `androidx.work:work-runtime`(Glance 전이 의존) | `app/build.gradle.kts` `glance.appwidget` · `gradle/libs.versions.toml` glance 1.2.0 | 추정 |
 | `ACCESS_NETWORK_STATE` | work-runtime(전이) | 같음 | 추정 |
 | `FOREGROUND_SERVICE` | work-runtime(전이) | 같음 | 추정 |
 | `RECEIVE_BOOT_COMPLETED`(중복 병합) | work-runtime(전이) | 같음 | 추정 |
-| `com.woodpeckerai.powerofhabit.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`(signature, 자체 정의) | `androidx.core` 1.9+ | `app/build.gradle.kts:175` `core.ktx` | 추정 |
-| **`INTERNET`** | 앱 선언(명시, 11-02) — `AndroidManifest.xml:7`. play-services-auth 20.7.0(`build.gradle.kts:227`) · google-api-client-android 2.2.0(`:231`) · google-api-services-drive(`:228`)가 같은 권한을 더해도 병합 시 중복은 무해 | 앱 코드는 `NetHttpTransport`로 Drive REST 호출(`GoogleDriveBackupManager.kt:174-181`) → **필요** | **선언(명시, 11-02)** — 일반 권한(위험 권한 아님)이라 데이터 보안 답 불변 |
-| `GET_ACCOUNTS` | play-services-auth | `build.gradle.kts:227` | 추정 **추가 안 함** — `GoogleSignIn` API는 계정 목록 권한이 필요 없고, `GoogleAccountCredential.setSelectedAccount(account.account)`로 계정을 직접 지정(`GoogleDriveBackupManager.kt:175-177`) |
+| `com.woodpeckerai.powerofhabit.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`(signature, 자체 정의) | `androidx.core` 1.9+ | `app/build.gradle.kts` `core.ktx` | 추정 |
+| **`INTERNET`** | 앱 선언(명시, 11-02) — `AndroidManifest.xml:7`. play-services-auth 20.7.0(`build.gradle.kts`) · google-api-client-android 2.2.0 · google-api-services-drive가 같은 권한을 더해도 병합 시 중복은 무해 | 앱 코드는 `NetHttpTransport`로 Drive REST 호출(`GoogleDriveBackupManager.kt`) → **필요** | **선언(명시, 11-02)** — 일반 권한(위험 권한 아님)이라 데이터 보안 답 불변 |
+| `GET_ACCOUNTS` | play-services-auth | `build.gradle.kts` | 추정 **추가 안 함** — `GoogleSignIn` API는 계정 목록 권한이 필요 없고, `GoogleAccountCredential.setSelectedAccount(account.account)`로 계정을 직접 지정(`GoogleDriveBackupManager.kt`) |
 | `com.google.android.gms.permission.AD_ID` | (광고 식별자 라이브러리) | 의존성에 `play-services-ads*`·`-measurement` 없음 | 추정 **없음** |
 
 ✅ **`INTERNET` 해소(11-02)**: 소스 매니페스트에 명시 선언했다(`AndroidManifest.xml:7`, 클라우드 13건째 PR). 이전에는 저장소 이력 전체에서 `INTERNET` 0건이었고 Drive HTTP 경로는 한 번도 실행된 적이 없었다(WORKLOG 09-05·09-06 blockers). 병합 결과 실측은 그대로 §4-3을 블록 A 직후 1회 실행해 «추정» 칸을 바꾼다.

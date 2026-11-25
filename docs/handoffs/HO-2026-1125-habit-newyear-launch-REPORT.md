@@ -39,9 +39,20 @@
 ## gradle 기록(로컬 · CI 없음)
 `--no-daemon --max-workers=1 -Dorg.gradle.jvmargs=-Xmx1536m`. 18:16의 R8 빌드는 PC 메모리 부족으로 도구가 중단(결과 없음) → LC가 재개를 요청해 18:26 재실행(시작 전 여유 7.4GB).
 
+| 시각 | 명령 | 결과 |
+|---|---|---|
+| 18:06 | `testDebugUnitTest` | 실패 3 |
+| 18:13 | `testDebugUnitTest` | 125/0 |
+| 18:26 | `bundleRelease` | exit 0(R8 단계는 앞 실행이 남긴 결과 재사용) |
+| 18:29 · 18:33 | 되돌림 A · B | 실패 3 · 2(의도한 시험) |
+| 18:36 | `testDebugUnitTest`(92007d6) | 125/0 |
+| 18:38 | `bundleRelease`(92007d6) | exit 0(R8 실제 실행) |
+| 18:52 | `testDebugUnitTest`(#43) | 126 중 실패 1 |
+| 18:55 | `testDebugUnitTest`(#43) | 126/0 |
+
 ## 다음 창이 이어받을 것
 1. 사용자 «처리방침 게시해도 됨» → 시행일을 채워 `gh-pages` 한 파일 → 200 확인 → `PrivacyPolicy.URL` 1줄 PR(비어 있으면 서명 번들이 막힌다).
-2. 앱 이름이 정해지면 CLOSED-TEST §6의 목록을 한 번에 바꾸고 `StoreShotsTest`로 스크린샷을 다시 그린다(요일 표기 PR에 있음).
+2. 앱 이름이 정해지면 CLOSED-TEST §6의 목록을 한 번에 바꾸고 `StoreShotsTest`(#43)로 스크린샷을 다시 그린다 — 32비트로 나오므로 24비트(투명 없음)로 바꿔 올린다.
 3. 사용자 FIRST-UPLOAD 7 ~ 12단계 → 검토 통과 뒤 13단계.
 
 ## effort
