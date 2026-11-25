@@ -43,10 +43,10 @@
 | **금융 기능** | **해당 없음**(금융 기능 없음) | 결제·대출·투자 기능 0 |
 | **건강** | **해당 없음**(건강 앱 아님) | 건강·의료 데이터·센서 0. 카테고리를 «생산성»으로 두는 이유(`LISTING-2026-11.md` §4) |
 | 코로나19 접촉 추적 | 해당 없음(문항이 보이면) | |
-| 포그라운드 서비스 권한 | **해당 없음(추정)** | 앱 코드에 포그라운드 서비스 0. 의존성(WorkManager)이 `FOREGROUND_SERVICE`를 더할 수 있으나 유형별 권한(`FOREGROUND_SERVICE_*`)은 없을 것으로 추정 → 콘솔이 선언을 요구하면 §4-3 결과로 답한다 |
+| 포그라운드 서비스 권한 | **해당 없음** | 앱 코드에 포그라운드 서비스 0. 릴리스 병합 매니페스트(11-25)에 WorkManager의 `FOREGROUND_SERVICE`만 있고 유형별 권한(`FOREGROUND_SERVICE_*`)은 0건 |
 | 정확한 알람 | 선언 대상 아님(추정) | `SCHEDULE_EXACT_ALARM`(사용자 허용형)만 사용. 제한 권한 `USE_EXACT_ALARM`은 쓰지 않음(`AndroidManifest.xml:6`) |
 
-⚠ **Android 시스템 자동 백업**: `AndroidManifest.xml:11`(11-02 `INTERNET` 추가로 :10→:11) `android:allowBackup="true"`이고 `res/xml/backup_rules.xml`·`data_extraction_rules.xml`은 매니페스트에 연결돼 있지 않다(둘 다 샘플 그대로). 따라서 사용자가 기기 Google 백업을 켜 두면 OS가 앱 DB를 사용자 계정으로 백업한다. 이 경로는 OS·Google이 처리하며 처리방침 §5에 고지했다. Google 로그인 라이브러리의 저장소(SharedPreferences `com.google.android.gms.signin` — 이메일 · 이름 · 사진 주소 · 계정 ID)도 이 OS 백업에 들어간다(연결 해제 시 지워짐). 도움말 10787469에서 OS 자동 백업을 콕 집어 다루는 문장은 찾지 못했고(2026-11-25 curl), «기기 밖으로 보내지 않는 기기 내 처리는 수집이 아니다»와 «사용자가 자기 클라우드에 올리고 앱이 접근하지 않으면 선언할 필요 없음»만 있다 → 답은 바꾸지 않는다(앱 자체 Drive 백업은 이미 «수집 = 예»). 콘솔이 «Google 로그인으로 받은 이메일»을 묻는다면 §1-2 이메일 행의 ⚠대로 «예 · 선택 · 앱 기능».
+⚠ **Android 시스템 자동 백업**: `AndroidManifest.xml:11`(11-02 `INTERNET` 추가로 :10→:11) `android:allowBackup="true"`이고 `res/xml/backup_rules.xml`·`data_extraction_rules.xml`은 매니페스트에 연결돼 있지 않다(둘 다 샘플 그대로). 따라서 사용자가 기기 Google 백업을 켜 두면 OS가 앱 DB를 사용자 계정으로 백업한다. 이 경로는 OS·Google이 처리하며 처리방침 §5에 고지했다. Google 로그인 라이브러리의 저장소(SharedPreferences `com.google.android.gms.signin` — 이메일 · 이름 · 사진 주소 · 계정 ID)도 이 OS 백업에 들어갈 수 있다(기기 안 저장소는 연결 해제 시 지워지지만, 이미 만들어진 OS 백업본은 바로 지워지지 않고 재설치 때 복원될 수 있다 — autobackup 문서 «Data is restored whenever the app is installed»). 도움말 10787469에서 OS 자동 백업을 콕 집어 다루는 문장은 찾지 못했고(2026-11-25 curl), «기기 밖으로 보내지 않는 기기 내 처리는 수집이 아니다»는 있지만, «Libraries and SDKs: … user data transmitted off device from your app by libraries and/or SDKs … irrespective of whether data is transmitted to you or a third-party server»도 있어 확정 근거는 아니다(«사용자가 자기 클라우드에 올리면 선언 불필요»는 앱이 접근하지 않는 경우라 이 경로의 주 근거로 쓰지 않는다) → 판정은 §1-2 이메일 행의 ⚠로 열어 두고 답은 바꾸지 않는다(앱 자체 Drive 백업은 이미 «수집 = 예»). 콘솔이 «Google 로그인으로 받은 이메일»을 묻는다면 §1-2 이메일 행의 ⚠대로 «예 · 선택 · 앱 기능».
 
 ## 3. 선언과 모순되면 안 되는 문구 (등록정보·처리방침 공통)
 | 쓰지 않는다 | 이유 | 대신 |
@@ -59,7 +59,7 @@
 ## 4. 병합 매니페스트 권한 실측표
 
 ### 4-1. 측정 방법과 한계
-- 이 클라우드 VM은 그래들 빌드를 하지 않는다(HO 규약 6). 의존성 AAR 매니페스트를 직접 열어 보려 했으나 `maven.google.com`·`dl.google.com`이 프록시에서 403/연결 거부(2026-11-02 `curl` 실측) → **라이브러리 기여분은 전부 «추정»**이다.
+- 이 클라우드 VM은 그래들 빌드를 하지 않는다(HO 규약 6). 의존성 AAR 매니페스트를 직접 열어 보려 했으나 `maven.google.com`·`dl.google.com`이 프록시에서 403/연결 거부(2026-11-02 `curl` 실측) → 클라우드 세션 때는 라이브러리 기여분이 «추정»이었다. **2026-11-25 로컬 릴리스 병합 매니페스트로 실측해 §4-2를 갱신했다.**
 - 실측 가능한 것: 앱 소스 매니페스트 선언 4개(11-02 `INTERNET` 추가 뒤), 의존성 선언 줄, 앱 코드의 네트워크 사용.
 
 ### 4-2. 표
@@ -71,13 +71,13 @@
 | `WAKE_LOCK` | `androidx.work:work-runtime`(Glance 전이 의존) | `app/build.gradle.kts` `glance.appwidget` · `gradle/libs.versions.toml` glance 1.2.0 | **실측**(릴리스 11-25) |
 | `ACCESS_NETWORK_STATE` | work-runtime(전이) | 같음 | **실측**(릴리스 11-25) |
 | `FOREGROUND_SERVICE` | work-runtime(전이) | 같음 | **실측**(릴리스 11-25) · 유형별 `FOREGROUND_SERVICE_*` 0건 |
-| `RECEIVE_BOOT_COMPLETED`(중복 병합) | work-runtime(전이) | 같음 | 추정 |
+| `RECEIVE_BOOT_COMPLETED`(중복 병합) | work-runtime 2.7.1(전이) | 병합 보고서 «MERGED from androidx.work:work-runtime:2.7.1» | **실측**(릴리스 11-25) |
 | `com.woodpeckerai.powerofhabit.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`(signature, 자체 정의) | `androidx.core` 1.9+ | `app/build.gradle.kts` `core.ktx` | **실측**(릴리스 11-25) |
 | **`INTERNET`** | 앱 선언(명시, 11-02) — `AndroidManifest.xml:7`. play-services-auth 20.7.0(`build.gradle.kts`) · google-api-client-android 2.2.0 · google-api-services-drive가 같은 권한을 더해도 병합 시 중복은 무해 | 앱 코드는 `NetHttpTransport`로 Drive REST 호출(`GoogleDriveBackupManager.kt`) → **필요** | **선언(명시, 11-02)** — 일반 권한(위험 권한 아님)이라 데이터 보안 답 불변 |
 | `GET_ACCOUNTS` | play-services-auth | `build.gradle.kts` | **실측 없음**(릴리스 11-25) — `GoogleSignIn` API는 계정 목록 권한이 필요 없고, `GoogleAccountCredential.setSelectedAccount(account.account)`로 계정을 직접 지정(`GoogleDriveBackupManager.kt`) |
 | `com.google.android.gms.permission.AD_ID` | (광고 식별자 라이브러리) | 의존성에 `play-services-ads*`·`-measurement` 없음 | **실측 없음**(릴리스 11-25) |
 
-✅ **`INTERNET` 해소(11-02)**: 소스 매니페스트에 명시 선언했다(`AndroidManifest.xml:7`, 클라우드 13건째 PR). 이전에는 저장소 이력 전체에서 `INTERNET` 0건이었고 Drive HTTP 경로는 한 번도 실행된 적이 없었다(WORKLOG 09-05·09-06 blockers). 병합 결과 실측은 그대로 §4-3을 블록 A 직후 1회 실행해 «추정» 칸을 바꾼다.
+✅ **`INTERNET` 해소(11-02)**: 소스 매니페스트에 명시 선언했다(`AndroidManifest.xml:7`, 클라우드 13건째 PR). 이전에는 저장소 이력 전체에서 `INTERNET` 0건이었고 Drive HTTP 경로는 한 번도 실행된 적이 없었다(WORKLOG 09-05·09-06 blockers). 병합 결과는 2026-11-25 릴리스로 실측했다(아래). 의존성이 바뀌면 §4-3을 다시 돌린다.
 
 **2026-11-25 실측(디버그 병합 매니페스트 · 로컬 빌드)**: 권한 8개 = 앱 선언 4개 + `WAKE_LOCK` · `ACCESS_NETWORK_STATE` · `FOREGROUND_SERVICE` · `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`(위 «추정»과 같음). `AD_ID` **0건** · `GET_ACCOUNTS` 없음 · `FOREGROUND_SERVICE_*` 없음 → 광고 ID «아니요»로 답한다.
 

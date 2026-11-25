@@ -28,4 +28,4 @@ curl -s -o /dev/null -w "%{http_code}\n" https://coldstoneheo-rgb.github.io/powe
 - 콘솔 앱 콘텐츠 «개인정보처리방침» 칸 · 자세한 설명 마지막 줄(`LISTING-2026-11.md` §3)
 
 ## 5. 이후 수정
-원본을 고쳐 머지 → `gh-pages` 사본도 같은 내용으로. 새 권한 · 새 전송은 `DATA-SAFETY-2026-11.md`와 같은 PR에서 고친다.
+원본을 고쳐 머지 → `gh-pages` 사본도 같은 내용으로. **두 번째부터는** §2 그대로 푸시하면 거부된다(매번 부모 없는 커밋이라 non-fast-forward — 임시 저장소로 확인) → §2의 2번째 줄에서 `git commit-tree "$T" -p origin/gh-pages -m …`으로 바꾼다(`git fetch origin` 먼저 · force-push 금지). 새 권한 · 새 전송은 `DATA-SAFETY-2026-11.md`와 같은 PR에서 고친다.
