@@ -434,7 +434,7 @@ fun AddEditHabitScreen(
                     FilterChip(
                         selected = habitType == "CHECK",
                         onClick = { habitType = "CHECK" },
-                        label = { Text("체크 (Yes/No)") }
+                        label = { Text("체크 (예/아니요)") }
                     )
                     FilterChip(
                         selected = habitType == "VALUE",
