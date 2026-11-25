@@ -79,6 +79,8 @@
 
 ✅ **`INTERNET` 해소(11-02)**: 소스 매니페스트에 명시 선언했다(`AndroidManifest.xml:7`, 클라우드 13건째 PR). 이전에는 저장소 이력 전체에서 `INTERNET` 0건이었고 Drive HTTP 경로는 한 번도 실행된 적이 없었다(WORKLOG 09-05·09-06 blockers). 병합 결과 실측은 그대로 §4-3을 블록 A 직후 1회 실행해 «추정» 칸을 바꾼다.
 
+**2026-11-25 실측(디버그 병합 매니페스트 · 로컬 빌드)**: 권한 8개 = 앱 선언 4개 + `WAKE_LOCK` · `ACCESS_NETWORK_STATE` · `FOREGROUND_SERVICE` · `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`(위 «추정»과 같음). `AD_ID` **0건** · `GET_ACCOUNTS` 없음 · `FOREGROUND_SERVICE_*` 없음 → 광고 ID «아니요»로 답한다. 릴리스 매니페스트는 R8 빌드 때 1회 더 본다.
+
 ### 4-3. 로컬 확인 명령 (블록 A 직후, Windows Git Bash)
 ```bash
 ./gradlew.bat :app:processReleaseMainManifest
