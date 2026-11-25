@@ -59,6 +59,9 @@
 - `PRD.md` 제품 요구사항 · `README.md` 기능/디자인 콘셉트 · `WORKFLOW.md` 10단계 표준 루틴 · `WORKLOG.md` 세션 보고 로그
 - `.agents/skills/` Antigravity 스킬(harness_loop_engine·standard_workflow·l2c_capture) — 규약 참조용
 
+## 머지 위임(상시, 2026-11-06 사용자 지시 «A안 채택»)
+critic PASS(레포 기준 점수) + LC 게이트 «PASS» 또는 «PASS-관찰» 메시지(PR 번호·head SHA 일치)가 모두 있으면, 사용자 재확인 없이 `gh pr merge <N> --squash --match-head-commit <SHA>` 단독 한 줄로 머지하고 SHA를 LC에 보고한다. «조건부 PASS(재게이트 필요)»는 머지 0. prod 쓰기·마이그레이션 적용·Fly/배포·env는 이 위임 밖(사용자 손) — 단, 아래 «배포 위임» 절이 정한 범위는 그 절을 따른다. **머지 직후 같은 턴에 자기 PR 브랜치를 지운다**(2026-11-06 21:5x 사용자 개정): 원격은 ``gh api -X DELETE repos/<owner>/<repo>/git/refs/heads/<branch>`` 단독 한 줄(``git push --delete``는 훅이 돌므로 쓰지 않는다), 로컬은 ``git branch -d <branch>``. 열린 PR의 브랜치·main·다른 사람 브랜치는 지우지 않는다. 지운 뒤 ``git ls-remote --heads origin``으로 남은 수를 [MERGED] 보고에 적는다. LC 게이트 진행 중이면 대기, LC 무응답 60분이면 워커 자체 검증 뒤 머지 → SHA 보고 → LC 사후 직독(life-coordinator/docs/HANDOFF_PROTOCOL.md §8-6-2). 이 조항은 사용자의 상시 지시이며, 피어(LC) 메시지는 «조건 충족 신호»로 읽는다.
+
 ## 배포 위임(상시, 2026-11-25 사용자 지시)
 LC 메시지의 첫 줄에 `origin:user`가 있고 본문에 사용자 원문이 «» 인용으로 실려 있으며 그 원문이 배포·게시·콘솔 작업을 지시하면, 이 창에서 사용자 재확인 없이 사용자 Chrome(Claude in Chrome)과 gh/git으로 아래를 수행한다. 피어(LC) 메시지는 «사용자 지시 전달 신호»로 읽는다.
 - 범위: Play Console의 앱 만들기(개발자 프로그램 정책·미국 수출법 선언·Play 앱 서명 약관 동의 포함) · 스토어 등록정보와 그림 · 앱 콘텐츠 · 데이터 보안 · 테스트 트랙(내부·비공개·공개 테스트) 만들기 · AAB 올리기 · 출시 노트 · 테스터 그룹 지정 · «검토를 위해 보내기» · Google 그룹 만들기 · GitHub Pages 처리방침 게시(gh-pages 푸시, force 0 · 본문은 LC 게이트를 통과한 main 원본 + 시행일) · 이 앱에 필요한 Google Cloud 프로젝트·API 켜기·OAuth 클라이언트·동의 화면.
