@@ -103,7 +103,7 @@ SQLite / Room DB 스키마 구조는 다음과 같이 긴밀하게 설계되었�
 
 ## 🎯 프로젝트 목적
 
-이 앱은 **무료 프로덕션 출시(수익 0)** 를 목표로 하며(2026-10-03 결정, 시한 2026-12-31 게시), 다음 네 가지를 위해 만든다.
+이 앱은 **무료 프로덕션 출시(수익 0)** 를 목표로 하며(2026-10-03 결정, 목표 새해 공개 — 늦어도 2027-01-01), 다음 네 가지를 위해 만든다.
 
 1. **포트폴리오** — Kotlin·Compose·Room·Hilt로 기획부터 스토어 게시까지 끝낸 Android 앱 1건.
 2. **L2C(블로그) 소재** — 에이전트 하네스로 개발·출시한 과정(결정 기록·실기기 피드백 루프·출시 체크리스트)을 콘텐츠로 남긴다.
@@ -118,10 +118,11 @@ SQLite / Room DB 스키마 구조는 다음과 같이 긴밀하게 설계되었�
 
 | 문서 | 내용 |
 |---|---|
-| [`docs/RELEASE-PLAN-2026-11.md`](docs/RELEASE-PLAN-2026-11.md) | DoD 9항 · 사용자 손 블록 A~G · 12-31 역산 일정 · 프로덕션 액세스 신청서 답안 틀 |
+| [`docs/RELEASE-PLAN-2026-11.md`](docs/RELEASE-PLAN-2026-11.md) | DoD 9항 · 사용자 손 블록 A~G · 새해 역산 일정 · 프로덕션 액세스 신청서 답안 틀 |
+| [`FIRST-UPLOAD`](docs/store-listing/FIRST-UPLOAD-2026-11.md) · [`CLOSED-TEST`](docs/store-listing/CLOSED-TEST-2026-11.md) | 첫 올리기 순서 · 비공개 테스트 사실/일정/완성도 |
 | [`docs/RELEASE.md`](docs/RELEASE.md) | 키스토어·Play Console·OAuth·빌드·배포 절차 정본 |
 | [`docs/store-listing/LISTING-2026-11.md`](docs/store-listing/LISTING-2026-11.md) | 스토어 등록정보 10항 초안 |
 | [`docs/store-listing/DATA-SAFETY-2026-11.md`](docs/store-listing/DATA-SAFETY-2026-11.md) | 데이터 보안 폼 답안 · 앱 콘텐츠 선언 · 권한 실측표 |
-| [`docs/privacy/privacy-policy.html`](docs/privacy/privacy-policy.html) · [`DEPLOY.md`](docs/privacy/DEPLOY.md) | 개인정보처리방침(정적) · Vercel 배포 절차 |
+| [`docs/privacy/privacy-policy.html`](docs/privacy/privacy-policy.html) · [`DEPLOY.md`](docs/privacy/DEPLOY.md) | 개인정보처리방침(정적) · 게시 절차 |
 | [`docs/DRIVE-OAUTH-CHECKLIST.md`](docs/DRIVE-OAUTH-CHECKLIST.md) | Google Drive 백업 OAuth 등록(블록 D) |
 | [`docs/DEVICE-QA-2026-11.md`](docs/DEVICE-QA-2026-11.md) | 릴리스 빌드 실기기 체크표 15행 |

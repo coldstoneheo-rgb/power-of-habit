@@ -2,8 +2,9 @@
 
 > 원문: [`docs/RELEASE.md`](RELEASE.md) §0-4. 이 문서는 그 절을 **블록 D(사용자 손, ≤25분)** 실행 순서로 옮긴 것이다. 어긋나면 RELEASE.md를 고치고 이 문서를 맞춘다.
 > 선행: 블록 C(첫 AAB 수동 업로드) — **Play 앱 서명 키 SHA-1은 첫 업로드 뒤에야 콘솔에 보인다.**
+> **순서 변경(2026-11-25)**: 첫 AAB를 비공개 트랙 **초안**에 올린 뒤, «검토로 보내기» 전에 이 등록을 한다. 사용자 순서 · 2026-11-25에 대조한 근거는 [`FIRST-UPLOAD-2026-11.md`](store-listing/FIRST-UPLOAD-2026-11.md) 11단계와 `CLOSED-TEST-2026-11.md` §1이 우선한다.
 > 결정: Drive 백업 **v1 포함**(LC 10-03, 회의 F4 기각). 이 블록 없이는 Drive 백업/복원이 코드 10(DEVELOPER_ERROR)으로 실패한다(RELEASE.md §0-4 «현재 상태»).
-> 증거 폴더: `D:\사진\power-of-habit\release\` (`D-1-oauth-clients.png` · `D-2-consent-production.png` · `D-3-drive-backup-ok.png`).
+> 증거 폴더: «사용자 PC 그림 폴더» (`D-1-oauth-clients.png` · `D-2-consent-production.png` · `D-3-drive-backup-ok.png`).
 
 ## 0. 앱이 요구하는 것 (코드 기준 — 바꾸지 않는다)
 | 항목 | 값 | 근거 |

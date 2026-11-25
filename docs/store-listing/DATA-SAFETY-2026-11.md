@@ -31,7 +31,7 @@
 
 | 선언 | 답 | 근거·메모 |
 |---|---|---|
-| 개인정보처리방침 | Vercel 실측 URL(`docs/privacy/DEPLOY.md` §4) | 꺾쇠 금지 · 배포 후 200 확인 |
+| 개인정보처리방침 | GitHub Pages 주소(`docs/privacy/DEPLOY.md` §3에서 200 확인) | 꺾쇠 금지 · 배포 후 200 확인 |
 | **광고** | **아니요, 광고 없음** | 광고 SDK 0(`app/build.gradle.kts` 의존성) |
 | 광고 ID(AD_ID) | **사용 안 함** | 광고·분석 SDK 0. 병합 매니페스트에 `com.google.android.gms.permission.AD_ID`가 없는지 §4-3 명령으로 확인(있으면 별도 코드 PR로 제거) |
 | **앱 액세스** | **모든 기능을 특별한 액세스 없이 이용 가능**(제한 없음) | 로그인 없이 전 기능 사용. Drive 백업은 **아무 Google 계정**으로나 검토 가능하므로 심사용 자격 증명 불필요 |
