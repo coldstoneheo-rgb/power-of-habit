@@ -9,7 +9,7 @@ import android.widget.Toast
 /** 앱 안 개인정보처리방침 링크. Play 정책은 등록정보와 앱 안 양쪽에 링크를 요구한다. */
 object PrivacyPolicy {
     /** 공개 주소. 게시 뒤 200을 확인한 값으로 채운다. 비어 있으면 열지 않고 안내만 한다. */
-    const val URL = ""
+    const val URL = "https://coldstoneheo-rgb.github.io/power-of-habit/privacy-policy.html"
 
     fun open(context: Context, url: String = URL) {
         if (url.isBlank()) {
