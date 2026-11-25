@@ -58,7 +58,7 @@ class AddEditHabitViewModelTest {
 
         assertEquals(1, events.size)
         assertTrue(events[0] is AddEditHabitUiEvent.Error)
-        assertEquals("Title cannot be blank", (events[0] as AddEditHabitUiEvent.Error).message)
+        assertEquals("습관 이름을 입력해주세요.", (events[0] as AddEditHabitUiEvent.Error).message)
 
         collectJob.cancel()
     }

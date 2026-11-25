@@ -91,17 +91,20 @@ class HabitDetailViewModel @Inject constructor(
                         repository.deleteRecord(existingRecord)
                     }
                 } else {
-                    if (existingRecord != null) {
-                        repository.deleteRecord(existingRecord)
-                    }
-                    repository.insertRecord(
-                        HabitRecordEntity(
-                            habitId = habitId,
-                            date = date,
-                            status = status,
-                            inputValue = inputValue
+                    // 화면을 닫아 취소돼도 지우기만 되고 끝나지 않게 한 트랜잭션으로
+                    repository.inTransaction {
+                        if (existingRecord != null) {
+                            repository.deleteRecord(existingRecord)
+                        }
+                        repository.insertRecord(
+                            HabitRecordEntity(
+                                habitId = habitId,
+                                date = date,
+                                status = status,
+                                inputValue = inputValue
+                            )
                         )
-                    )
+                    }
                 }
 
                 RecordSideEffects.afterRecordChange(context, repository, habitId)

@@ -9,6 +9,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.example.powerofhabit.MainActivity
+import com.example.powerofhabit.R
 import com.example.powerofhabit.data.DataRepository
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -25,8 +26,8 @@ class HabitReminderReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val habitId = intent.getIntExtra("HABIT_ID", -1)
-        val habitTitle = intent.getStringExtra("HABIT_TITLE") ?: "Habit Reminder"
-        val habitQuestion = intent.getStringExtra("HABIT_QUESTION") ?: "Did you complete your habit today?"
+        val habitTitle = intent.getStringExtra("HABIT_TITLE")?.takeIf { it.isNotBlank() } ?: "습관 알림"
+        val habitQuestion = intent.getStringExtra("HABIT_QUESTION")?.takeIf { it.isNotBlank() } ?: "오늘 기록을 남겨 보세요."
 
         if (habitId == -1) return
 
@@ -56,10 +57,10 @@ class HabitReminderReceiver : BroadcastReceiver() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 channelId,
-                "Habit Reminders",
+                "습관 알림",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Notifications for scheduled habits"
+                description = "정해 둔 시각에 습관을 알려 줍니다"
             }
             notificationManager.createNotificationChannel(channel)
         }
@@ -75,7 +76,7 @@ class HabitReminderReceiver : BroadcastReceiver() {
         )
 
         val notification = NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+            .setSmallIcon(R.drawable.ic_widget_check)
             .setContentTitle(title)
             .setContentText(message)
             .setPriority(NotificationCompat.PRIORITY_HIGH)

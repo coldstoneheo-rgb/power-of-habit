@@ -58,7 +58,8 @@ class HabitReminderManager(private val context: Context) {
                         pendingIntent
                     )
                 } else {
-                    alarmManager.set(
+                    // 정확한 알람 권한이 없어도(안드로이드 14+ 새 설치의 기본값) 절전 중에 울리게 한다.
+                    alarmManager.setAndAllowWhileIdle(
                         AlarmManager.RTC_WAKEUP,
                         triggerTimeMs,
                         pendingIntent
@@ -76,6 +77,22 @@ class HabitReminderManager(private val context: Context) {
             Log.e("HabitReminderManager", "Failed to schedule alarm for habit ${habit.habitId}", e)
         }
     }
+
+    /**
+     * 알람이 사라진 습관만 다시 예약한다(Drive·기기 백업 복원, 강제 종료 뒤 첫 실행).
+     * 이미 예약된 알람은 건드리지 않는다 — 조금 늦게 울릴 오늘 알람을 내일로 밀지 않기 위해서다.
+     */
+    fun scheduleMissing(habits: List<HabitEntity>) {
+        habits.filter { it.isReminderEnabled && !it.reminderTime.isNullOrBlank() && !isScheduled(it.habitId) }
+            .forEach { scheduleReminder(it) }
+    }
+
+    private fun isScheduled(habitId: Int): Boolean = PendingIntent.getBroadcast(
+        context,
+        habitId,
+        Intent(context, HabitReminderReceiver::class.java),
+        PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+    ) != null
 
     fun cancelReminder(habitId: Int) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return

@@ -133,7 +133,7 @@ fun CheckWidget(
             if (isCompleted) {
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription = "Completed",
+                    contentDescription = "완료",
                     tint = themeColor,
                     modifier = Modifier.size(16.dp)
                 )
@@ -147,7 +147,7 @@ fun CheckWidget(
             } else {
                 Icon(
                     imageVector = Icons.Default.Close,
-                    contentDescription = "Uncompleted",
+                    contentDescription = "미완료",
                     tint = HabitTheme.colors.textDisabled,
                     modifier = Modifier.size(13.dp)
                 )
@@ -167,7 +167,7 @@ fun CheckWidget(
         if (triggerAnim) {
             Icon(
                 imageVector = Icons.Default.Check,
-                contentDescription = "Grading Check",
+                contentDescription = null,
                 tint = themeColor,
                 modifier = Modifier
                     .size(24.dp)

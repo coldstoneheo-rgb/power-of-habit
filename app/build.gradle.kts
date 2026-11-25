@@ -125,6 +125,7 @@ android {
     testOptions {
         unitTests {
             isReturnDefaultValues = true
+            isIncludeAndroidResources = true // Robolectric
         }
     }
 }
@@ -148,6 +149,10 @@ gradle.taskGraph.whenReady {
     val requireSigning = wantsPublish || providers.gradleProperty("requireSigning").isPresent
     if (requireSigning && !hasReleaseSigning) {
         throw GradleException("릴리스 서명이 설정되지 않았습니다. keystore.properties 또는 POH_* 환경변수를 준비하세요 (docs/RELEASE.md §0-1).")
+    }
+    val buildsSignedBundle = hasReleaseSigning && allTasks.any { it.project == project && it.name == "bundleRelease" }
+    if ((requireSigning || buildsSignedBundle) && file("src/main/java/com/example/powerofhabit/ui/legal/PrivacyPolicy.kt").readText().contains("const val URL = \"\"")) {
+        throw GradleException("앱 안 개인정보처리방침 주소가 비어 있습니다. PrivacyPolicy.URL을 채운 뒤 업로드용 빌드를 만드세요 (docs/privacy/DEPLOY.md).")
     }
 }
 
@@ -195,6 +200,12 @@ dependencies {
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation("org.mockito:mockito-core:5.8.0")
+  // 실제 액티비티·화면을 JVM에서 돌리는 한 바퀴 시험과 스크린샷(에뮬레이터 없음)
+  testImplementation(libs.robolectric)
+  testImplementation(composeBom)
+  testImplementation(libs.androidx.compose.ui.test.junit4)
+  testImplementation(libs.androidx.test.core)
+  testImplementation(libs.androidx.test.ext.junit)
 
   // Instrumented tests: jUnit rules and runners
   androidTestImplementation(libs.androidx.test.core)

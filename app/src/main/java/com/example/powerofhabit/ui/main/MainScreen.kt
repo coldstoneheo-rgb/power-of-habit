@@ -7,10 +7,13 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.StrokeCap
@@ -27,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -36,9 +40,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.powerofhabit.backup.DriveAction
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.data.local.HabitRecordEntity
+import com.example.powerofhabit.data.local.SettingsManager
 import com.example.powerofhabit.domain.RecordOutcome
 import com.example.powerofhabit.domain.RecordOutcomes
 import com.example.powerofhabit.ui.components.ValueInputDialog
+import com.example.powerofhabit.ui.components.rememberCurrentDate
+import com.example.powerofhabit.ui.legal.PrivacyPolicy
 import com.example.powerofhabit.ui.components.widgets.CheckWidget
 import com.example.powerofhabit.ui.theme.habitAccent
 import com.example.powerofhabit.ui.theme.HabitTheme
@@ -57,7 +64,9 @@ fun MainScreen(
     viewModel: MainScreenViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val isDarkMode by viewModel.isDarkMode.collectAsStateWithLifecycle()
+    // 스위치는 저장값이 아니라 지금 화면에 보이는 테마를 나타낸다(고르기 전에는 시스템 테마를 따른다).
+    val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
+    val isDarkMode = SettingsManager.usesDarkTheme(themeMode, isSystemInDarkTheme())
     val isDateDescending by viewModel.isDateDescending.collectAsStateWithLifecycle()
     val transferBusy by viewModel.transferBusy.collectAsStateWithLifecycle()
     val driveBusy by viewModel.driveBusy.collectAsStateWithLifecycle()
@@ -146,7 +155,7 @@ fun MainScreen(
                     },
                     isDarkMode = isDarkMode,
                     isDateDescending = isDateDescending,
-                    onToggleDarkMode = { viewModel.toggleDarkMode() },
+                    onToggleDarkMode = { viewModel.setDarkMode(!isDarkMode) },
                     onToggleDateDescending = { viewModel.toggleDateDescending() },
                     isTransferring = transferBusy,
                     onExportTo = { uri -> viewModel.exportTo(uri) },
@@ -164,7 +173,7 @@ fun MainScreen(
             is MainScreenUiState.Error -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        text = "Error: ${(state as MainScreenUiState.Error).throwable.localizedMessage}",
+                        text = "습관을 불러오지 못했습니다. 앱을 다시 열어 주세요.\n${(state as MainScreenUiState.Error).throwable.localizedMessage ?: ""}",
                         color = Color.Red
                     )
                 }
@@ -209,7 +218,7 @@ internal fun MainScreenContent(
     onDisconnectDrive: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    val today = remember { LocalDate.now() }
+    val today = rememberCurrentDate()
     val dates = remember(today, isDateDescending) {
         val base = listOf(
             today.minusDays(3),
@@ -380,7 +389,7 @@ internal fun MainScreenContent(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Add Habit",
+                        contentDescription = "습관 추가",
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -404,7 +413,7 @@ internal fun MainScreenContent(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Settings,
-                        contentDescription = "Settings",
+                        contentDescription = "설정",
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
@@ -418,11 +427,27 @@ internal fun MainScreenContent(
                     .weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "No habits. Tap + to add one!",
-                    color = HabitTheme.colors.textSecondary,
-                    fontSize = 16.sp
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(Space.s3)
+                ) {
+                    Text(
+                        text = "아직 습관이 없습니다",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "매일 하고 싶은 일을 하나 등록하고\n하루 한 번 눌러 기록해 보세요.",
+                        color = HabitTheme.colors.textSecondary,
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp,
+                        textAlign = TextAlign.Center
+                    )
+                    Button(onClick = { showAddTypeModal = true }) {
+                        Text("첫 습관 만들기", fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         } else {
             Row(
@@ -548,7 +573,11 @@ internal fun MainScreenContent(
                 )
             },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                // 작은 화면·큰 글꼴에서도 아래 항목까지 닿도록 스크롤
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
                     // 테마 설정
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -692,6 +721,11 @@ internal fun MainScreenContent(
                         color = HabitTheme.colors.textSecondary,
                         style = MaterialTheme.typography.labelSmall
                     )
+
+                    HorizontalDivider(color = HabitTheme.colors.lineHair, thickness = 1.dp)
+                    TextButton(onClick = { PrivacyPolicy.open(context) }, modifier = Modifier.fillMaxWidth()) {
+                        Text("개인정보처리방침", style = MaterialTheme.typography.labelMedium, color = HabitTheme.colors.textSecondary)
+                    }
                 }
             },
             confirmButton = {

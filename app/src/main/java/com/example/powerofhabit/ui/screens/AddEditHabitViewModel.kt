@@ -6,12 +6,13 @@ import com.example.powerofhabit.data.DataRepository
 import com.example.powerofhabit.data.local.HabitEntity
 import com.example.powerofhabit.domain.RecordOutcomes
 import android.content.Context
+import android.util.Log
 import com.example.powerofhabit.reminder.HabitReminderManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +22,7 @@ import javax.inject.Inject
 
 sealed interface AddEditHabitUiEvent {
     object SaveSuccess : AddEditHabitUiEvent
+    object DeleteSuccess : AddEditHabitUiEvent
     data class Error(val message: String) : AddEditHabitUiEvent
 }
 
@@ -30,11 +32,15 @@ class AddEditHabitViewModel @Inject constructor(
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
-    private val _uiEvent = MutableSharedFlow<AddEditHabitUiEvent>()
-    val uiEvent: SharedFlow<AddEditHabitUiEvent> = _uiEvent.asSharedFlow()
+    // 저장이 끝나는 순간 화면이 회전 중이어도 결과를 잃지 않도록 Channel에 담아 둔다.
+    private val _uiEvent = Channel<AddEditHabitUiEvent>(Channel.BUFFERED)
+    val uiEvent: Flow<AddEditHabitUiEvent> = _uiEvent.receiveAsFlow()
 
     private val _habitState = MutableStateFlow<HabitEntity?>(null)
     val habitState: StateFlow<HabitEntity?> = _habitState.asStateFlow()
+    /** 저장·삭제를 시작하면 true, 실패했을 때만 풀린다. 빠르게 두 번 눌러도 습관이 두 개 생기지 않게 한다(화면마다 새 ViewModel). */
+    private var writing = false
+
     private var loadJob: kotlinx.coroutines.Job? = null
 
     fun loadHabit(habitId: Int) {
@@ -66,9 +72,12 @@ class AddEditHabitViewModel @Inject constructor(
         /** 수치형 목표 방향(RecordOutcomes.TARGET_AT_LEAST / TARGET_AT_MOST). */
         targetType: String = "AT_LEAST"
     ) {
+        if (writing) return
+        writing = true
         viewModelScope.launch {
             if (title.isBlank()) {
-                _uiEvent.emit(AddEditHabitUiEvent.Error("Title cannot be blank"))
+                writing = false
+                _uiEvent.send(AddEditHabitUiEvent.Error("습관 이름을 입력해주세요."))
                 return@launch
             }
 
@@ -133,27 +142,34 @@ class AddEditHabitViewModel @Inject constructor(
                             com.example.powerofhabit.data.RecordSideEffects.afterRecordChange(context, repository, habitId)
                         }
                     } else {
-                        _uiEvent.emit(AddEditHabitUiEvent.Error("Habit not found"))
+                        writing = false
+                        _uiEvent.send(AddEditHabitUiEvent.Error("습관을 찾을 수 없습니다."))
                         return@launch
                     }
                 }
                 com.example.powerofhabit.backup.GoogleDriveBackupManager(context).scheduleAutoBackup()
-                _uiEvent.emit(AddEditHabitUiEvent.SaveSuccess)
+                _uiEvent.send(AddEditHabitUiEvent.SaveSuccess)
             } catch (e: Exception) {
-                _uiEvent.emit(AddEditHabitUiEvent.Error(e.message ?: "Failed to save habit"))
+                Log.e("AddEditHabitViewModel", "Failed to save habit", e)
+                writing = false
+                _uiEvent.send(AddEditHabitUiEvent.Error("습관을 저장하지 못했습니다."))
             }
         }
     }
 
     fun deleteHabit(habit: HabitEntity) {
+        if (writing) return
+        writing = true
         viewModelScope.launch {
             try {
                 repository.deleteHabit(habit)
                 HabitReminderManager(context).cancelReminder(habit.habitId)
                 com.example.powerofhabit.backup.GoogleDriveBackupManager(context).scheduleAutoBackup()
-                _uiEvent.emit(AddEditHabitUiEvent.SaveSuccess)
+                _uiEvent.send(AddEditHabitUiEvent.DeleteSuccess)
             } catch (e: Exception) {
-                _uiEvent.emit(AddEditHabitUiEvent.Error(e.message ?: "Failed to delete habit"))
+                Log.e("AddEditHabitViewModel", "Failed to delete habit", e)
+                writing = false
+                _uiEvent.send(AddEditHabitUiEvent.Error("습관을 삭제하지 못했습니다."))
             }
         }
     }

@@ -20,11 +20,13 @@ import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.example.powerofhabit.data.local.AppDatabase
 import com.example.powerofhabit.data.local.SqliteFileHeader
+import com.example.powerofhabit.reminder.HabitReminderManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -278,10 +280,18 @@ class GoogleDriveBackupManager(private val context: Context) {
                 val dbFile = context.getDatabasePath(DB_NAME)
                 val dbDir = dbFile.parentFile ?: return@withLock DriveOutcome.FAILED
                 try {
-                    dagger.hilt.EntryPoints.get(
+                    val database = dagger.hilt.EntryPoints.get(
                         context.applicationContext,
                         com.example.powerofhabit.di.DatabaseEntryPoint::class.java
-                    ).appDatabase().close()
+                    ).appDatabase()
+                    // 옛 DB 기준 알람을 지운다 — 재시작한 앱이 복원된 습관으로 다시 예약한다(PowerOfHabitApp).
+                    try {
+                        val reminders = HabitReminderManager(context)
+                        database.habitDao().getAllHabits().first().forEach { reminders.cancelReminder(it.habitId) }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to cancel old reminders before restore", e) // 알람 정리 실패가 DB 닫기를 건너뛰면 안 된다
+                    }
+                    database.close()
                     Log.d(TAG, "Database connection closed cleanly before restore")
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to close database before restore", e)

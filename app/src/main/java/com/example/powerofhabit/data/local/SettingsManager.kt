@@ -18,11 +18,17 @@ class SettingsManager @Inject constructor(
     private val _themeMode = MutableStateFlow(prefs.getString("key_theme_mode", "SYSTEM") ?: "SYSTEM")
     val themeMode: StateFlow<String> = _themeMode.asStateFlow()
 
-    private val _isDarkMode = MutableStateFlow(prefs.getBoolean("key_dark_mode", true))
-    val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
-
     private val _isDateDescending = MutableStateFlow(prefs.getBoolean("key_date_descending", true))
     val isDateDescending: StateFlow<Boolean> = _isDateDescending.asStateFlow()
+
+    companion object {
+        /** 저장된 테마 설정을 실제 테마로. 고른 적이 없으면(SYSTEM) 시스템 테마를 따른다. */
+        fun usesDarkTheme(themeMode: String, systemInDark: Boolean): Boolean = when (themeMode) {
+            "LIGHT" -> false
+            "DARK" -> true
+            else -> systemInDark
+        }
+    }
 
     fun setThemeMode(mode: String) {
         prefs.edit().putString("key_theme_mode", mode).apply()
@@ -30,8 +36,6 @@ class SettingsManager @Inject constructor(
     }
 
     fun setDarkMode(enabled: Boolean) {
-        prefs.edit().putBoolean("key_dark_mode", enabled).apply()
-        _isDarkMode.value = enabled
         setThemeMode(if (enabled) "DARK" else "LIGHT")
     }
 
