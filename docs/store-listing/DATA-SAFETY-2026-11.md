@@ -67,7 +67,7 @@
 |---|---|---|---|
 | `RECEIVE_BOOT_COMPLETED` | 앱 선언 | `app/src/main/AndroidManifest.xml:4` · 사용처 `reminder/BootReceiver.kt` | **실측** |
 | `POST_NOTIFICATIONS` | 앱 선언 | `AndroidManifest.xml:5` · 런타임 요청 `ui/screens/AddEditHabitScreen.kt:550-554` | **실측** |
-| `SCHEDULE_EXACT_ALARM` | 앱 선언 | `AndroidManifest.xml:6` · `reminder/HabitReminderManager.kt:54-68`(`canScheduleExactAlarms` 확인 후 `setExactAndAllowWhileIdle`) | **실측** |
+| `SCHEDULE_EXACT_ALARM` | 앱 선언 | `AndroidManifest.xml:6` · `reminder/HabitReminderManager.kt`의 `scheduleReminder`(`canScheduleExactAlarms` 확인 후 `setExactAndAllowWhileIdle`, 없으면 `setAndAllowWhileIdle`) | **실측** |
 | `WAKE_LOCK` | `androidx.work:work-runtime`(Glance 전이 의존) | `app/build.gradle.kts:206` `glance.appwidget` · `gradle/libs.versions.toml:21` glance 1.2.0 | 추정 |
 | `ACCESS_NETWORK_STATE` | work-runtime(전이) | 같음 | 추정 |
 | `FOREGROUND_SERVICE` | work-runtime(전이) | 같음 | 추정 |

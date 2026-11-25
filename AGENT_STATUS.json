@@ -1,16 +1,15 @@
 {
   "project": "power-of-habit",
-  "as_of": "2026-11-25T17:57:00+09:00",
+  "as_of": "2026-11-25T18:52:00+09:00",
   "phase": "release-prep (무료 프로덕션 출시, 새해 공개 — 늦어도 2027-01-01) — 첫 비공개 빌드를 11-27에 검토로 보내는 것이 목표",
-  "current_task": "수리 PR(fix/newyear-prelaunch) + 문서 PR(chore/newyear-launch-docs)",
+  "current_task": "#41 · #42 머지 완료 — 사용자 답(처리방침 게시 승인 · 앱 이름) 대기",
   "waiting_on": [
     "[사용자] 처리방침 GitHub Pages 게시 승인 1줄 (이 레포)",
     "[사용자] 앱 이름 결정 (docs/store-listing/CLOSED-TEST-2026-11.md §6)",
-    "[사용자] 업로드 키 · 키 사본 · 콘솔 앱 · Cloud 프로젝트 (FIRST-UPLOAD 1~4)",
-    "[LC] 수리 PR · 문서 PR 게이트"
+    "[사용자] 업로드 키 · 키 사본 · 콘솔 앱 · Cloud 프로젝트 (FIRST-UPLOAD 1~4)"
   ],
   "next_actions": [
-    "수리 PR 머지 → 처리방침 게시 → 앱 안 주소 1줄 PR",
+    "처리방침 게시 승인 → 게시 → 앱 안 주소 1줄 PR(비면 서명 번들이 막힘)",
     "이름이 정해지면 문안 · 그림 확정",
     "사용자 FIRST-UPLOAD 7~12 (11-27)",
     "검토 통과 뒤 본인 휴대폰 확인 → 모집 글",
@@ -28,5 +27,5 @@
     "listing_short_desc_chars": 52,
     "listing_full_desc_chars": 1214
   },
-  "last_commit": "17e270b (main, PR #40 squash 머지 커밋)"
+  "last_commit": "5cf06cc (main, PR #42 squash 머지 커밋)"
 }

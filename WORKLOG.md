@@ -11,6 +11,26 @@
 ```yaml
 date: 2026-11-25
 project: power-of-habit
+agent: claude-code (LC HO-2026-1125-habit-newyear-launch · 마감)
+summary: 비공개 테스트 전 필수 수리 머지(날짜 넘김 · 삭제 확인 · 처리방침 링크 · 알림 · 화면별 ViewModel · 한국어)와 한 바퀴 시험
+status: at_risk
+progress: "#42 — 92007d6에서 testDebugUnitTest 125/0, 미서명 R8 exit 0, 옛 코드로 되돌린 5곳 모두 시험 실패 확인. 실기기 · Drive 로그인 · R8 설치는 미확인"
+changes: ["#41 c799f8f", "#42 5cf06cc"]
+next: 처리방침 게시 승인 → 앱 안 주소 1줄 PR → 사용자 서명 빌드 → 11-27 비공개 «검토로 보내기»
+blockers: 사용자 처리방침 게시 승인(비면 서명 번들이 막힘) · 앱 이름 결정 · 키/콘솔
+learning_need: 화면마다 ViewModel을 따로 두지 않는 Navigation3 기본값은 «만들기에 옛 값이 남는» 문제를 조용히 만든다 — 되돌림 시험이 코드 판독을 사실로 바꿨다
+synergy: 에뮬레이터 없이 실제 액티비티를 도는 Robolectric 한 바퀴 시험과 스크린샷 방식은 reading-diary에도 같은 꼴
+monetization: 해당 없음(무료 출시)
+idea: 새 시험은 머지 전에 옛 코드로 되돌려 실패하는지 1회 확인하는 것을 공통 절차로
+```
+## 의미
+처음 쓰는 사람이 첫날 겪을 문제를 첫 빌드 전에 막았고, 남은 것은 사용자 답 2개와 손 작업이다.
+
+---
+
+```yaml
+date: 2026-11-25
+project: power-of-habit
 agent: claude-code (LC HO-2026-1125-habit-newyear-launch)
 summary: 새해 공개(늦어도 2027-01-01)로 출시 계획을 다시 세움 — 첫 올리기 13단계, Play/Drive 요건 사실표, 역산 일정, 등록 준비물 · 완성도 목록, 모집 글, 처리방침을 GitHub Pages 기준으로
 status: at_risk
