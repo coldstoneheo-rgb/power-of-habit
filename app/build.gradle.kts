@@ -150,7 +150,8 @@ gradle.taskGraph.whenReady {
     if (requireSigning && !hasReleaseSigning) {
         throw GradleException("릴리스 서명이 설정되지 않았습니다. keystore.properties 또는 POH_* 환경변수를 준비하세요 (docs/RELEASE.md §0-1).")
     }
-    if (requireSigning && file("src/main/java/com/example/powerofhabit/ui/legal/PrivacyPolicy.kt").readText().contains("const val URL = \"\"")) {
+    val buildsSignedBundle = hasReleaseSigning && allTasks.any { it.project == project && it.name == "bundleRelease" }
+    if ((requireSigning || buildsSignedBundle) && file("src/main/java/com/example/powerofhabit/ui/legal/PrivacyPolicy.kt").readText().contains("const val URL = \"\"")) {
         throw GradleException("앱 안 개인정보처리방침 주소가 비어 있습니다. PrivacyPolicy.URL을 채운 뒤 업로드용 빌드를 만드세요 (docs/privacy/DEPLOY.md).")
     }
 }

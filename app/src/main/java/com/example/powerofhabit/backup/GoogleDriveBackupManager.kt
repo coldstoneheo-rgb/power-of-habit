@@ -285,8 +285,12 @@ class GoogleDriveBackupManager(private val context: Context) {
                         com.example.powerofhabit.di.DatabaseEntryPoint::class.java
                     ).appDatabase()
                     // 옛 DB 기준 알람을 지운다 — 재시작한 앱이 복원된 습관으로 다시 예약한다(PowerOfHabitApp).
-                    val reminders = HabitReminderManager(context)
-                    database.habitDao().getAllHabits().first().forEach { reminders.cancelReminder(it.habitId) }
+                    try {
+                        val reminders = HabitReminderManager(context)
+                        database.habitDao().getAllHabits().first().forEach { reminders.cancelReminder(it.habitId) }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to cancel old reminders before restore", e) // 알람 정리 실패가 DB 닫기를 건너뛰면 안 된다
+                    }
                     database.close()
                     Log.d(TAG, "Database connection closed cleanly before restore")
                 } catch (e: Exception) {
