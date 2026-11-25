@@ -11,6 +11,23 @@
 ```yaml
 date: 2026-11-25
 project: power-of-habit
+agent: claude-code (LC TASK-2026-1125-habit-prep-before-user-answers)
+summary: 사용자 답을 기다리는 동안 — 광고 ID «아니요» 확정, Google 로그인 정보가 앱 저장소에 남는 것을 바이트코드로 확인해 처리방침 4 · 5항 보강, 게시 명령 연습, 앱 안 주소 PR(#45 draft)
+status: on_track
+progress: "testDebugUnitTest 126/0(--rerun, main aaecc13) · 릴리스 병합 매니페스트 AD_ID 0건 · 게시/콘솔/키 작업은 하지 않음"
+changes: ["#45(draft) 앱 안 처리방침 주소"]
+next: 사용자 «게시해도 됨» → gh-pages 게시 → 200 확인 → #45 머지 → 사용자 서명 빌드
+blockers: 사용자 답 2개(앱 이름 · 처리방침 게시)
+learning_need: 외부 라이브러리의 저장 동작은 «추정»으로 두지 말고 AAR 바이트코드로 확인할 수 있다 — 실기기 없이도 처리방침 서술의 근거가 된다
+```
+## 의미
+콘솔 답안과 처리방침이 첫 업로드 전에 사실과 맞춰졌고, 답이 오면 8개 명령과 사용자 손 1곳으로 게시까지 간다.
+
+---
+
+```yaml
+date: 2026-11-25
+project: power-of-habit
 agent: claude-code (LC HO-2026-1125-habit-newyear-launch · 마감)
 summary: 비공개 테스트 전 필수 수리 머지(날짜 넘김 · 삭제 확인 · 처리방침 링크 · 알림 · 화면별 ViewModel · 한국어)와 한 바퀴 시험
 status: at_risk
