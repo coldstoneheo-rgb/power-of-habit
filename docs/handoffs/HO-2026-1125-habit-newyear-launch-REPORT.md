@@ -12,7 +12,7 @@
 | 5 | 완성도 한 바퀴 | ✅ | #42 머지 `5cf06cc` — 92007d6에서 `testDebugUnitTest` 125/0 · `bundleRelease`(미서명 R8) exit 0 · 되돌림 5곳 모두 시험이 실패. 남은 것 = CLOSED-TEST §4 «테스트 중» |
 | 6 | 등록 준비물 전수표 | ✅(그림 일부) | CLOSED-TEST §3 · 아이콘 512 · 이름 없는 1024×500 · 스크린샷 4장을 만듦(홈 1장은 지금 이름이 보임 — 이름 결정 뒤 다시) |
 | 7 | 테스터 안내문 | ✅ | `TESTER-POST-2026-11.md` |
-| 8 | PR · 게이트 · AGENT_STATUS | ✅ | #41 `c799f8f`(critic PASS 94는 1083b35 기준, 그 뒤 두 커밋은 LC 차분 검수 · LC PASS-관찰) · #42 `5cf06cc`(critic 93 · LC PASS-관찰) · 요일 표기 #43 · 이 마감 PR(게이트 대기) |
+| 8 | PR · 게이트 · AGENT_STATUS | ✅ | #41 `c799f8f`(critic PASS 94는 1083b35 기준, 그 뒤 두 커밋은 LC 차분 검수 · LC PASS-관찰) · #42 `5cf06cc`(critic 93 · LC PASS-관찰) · #43 `0bfa190`(critic PASS 95 · LC PASS) · 이 마감 PR #44(게이트 대기) |
 
 ## 상태 대조(main `17e270b`, 2026-11-25 17:42)
 | 항목 | 판정 | 근거 |

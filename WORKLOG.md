@@ -15,7 +15,7 @@ agent: claude-code (LC HO-2026-1125-habit-newyear-launch · 마감)
 summary: 비공개 테스트 전 필수 수리 머지(날짜 넘김 · 삭제 확인 · 처리방침 링크 · 알림 · 화면별 ViewModel · 한국어)와 한 바퀴 시험
 status: at_risk
 progress: "#42 — 92007d6에서 testDebugUnitTest 125/0, 미서명 R8 exit 0, 옛 코드로 되돌린 5곳 모두 시험 실패 확인. 실기기 · Drive 로그인 · R8 설치는 미확인"
-changes: ["#41 c799f8f", "#42 5cf06cc"]
+changes: ["#41 c799f8f", "#42 5cf06cc", "#43 0bfa190"]
 next: 처리방침 게시 승인 → 앱 안 주소 1줄 PR → 사용자 서명 빌드 → 11-27 비공개 «검토로 보내기»
 blockers: 사용자 처리방침 게시 승인(비면 서명 번들이 막힘) · 앱 이름 결정 · 키/콘솔
 learning_need: 화면마다 ViewModel을 따로 두지 않는 Navigation3 기본값은 «만들기에 옛 값이 남는» 문제를 조용히 만든다 — 되돌림 시험이 코드 판독을 사실로 바꿨다
