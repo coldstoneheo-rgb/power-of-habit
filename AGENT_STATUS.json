@@ -25,7 +25,7 @@
     "device_qa_total": 15,
     "schedule_slack_days_worst_case": 0,
     "listing_short_desc_chars": 52,
-    "listing_full_desc_chars": 1199
+    "listing_full_desc_chars": 1214
   },
   "last_commit": "17e270b (main, PR #40 squash 머지 커밋)"
 }

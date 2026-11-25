@@ -95,7 +95,7 @@ applicationId가 바뀌었으므로 `com.example.powerofhabit`로 설치된 기�
 - release 빌드라 `run-as`가 거부되면 루팅 없이 꺼낼 방법이 없다 — 이 경우는 옛 앱을 유지한 채 새 앱을 새로 시작하는 것이 유일한 선택이다.
 
 ## 5. 체크리스트 (첫 내부 테스트 전)
-- [ ] `release.jks` + `keystore.properties` 준비, 백업 완료
+- [ ] `release.jks` 준비, 사본 두 곳 완료
 - [ ] `./gradlew.bat bundleRelease` 성공, 서명 확인(`apksigner verify` 또는 Play 업로드 통과)
 - [ ] 릴리스 빌드 실기기 설치 후 스모크: 습관 추가·체크·상세·위젯 배치·CSV 내보내기·JSON 내보내기/가져오기(§4-1)·Drive 백업/복원(§0-4 OAuth 클라이언트 등록 후 — 로그인 요청 → 백업 → 복원 확인 다이얼로그 → 재시작)
 - [ ] Play Console 앱 생성·내부 테스터 등록

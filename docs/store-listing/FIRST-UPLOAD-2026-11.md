@@ -46,6 +46,7 @@ play.google.com/console › 앱 만들기 → 이름(정한 이름) · 패키지
 ## 4. Google Cloud 프로젝트 + Drive API — 10분
 console.cloud.google.com › 프로젝트 만들기(이름 `power-of-habit`) → API 및 서비스 › 라이브러리 › **Google Drive API › 사용 설정**. 예전에 이 앱용으로 만든 프로젝트가 있으면 그것을 쓴다(다른 프로젝트면 백업 공간이 갈린다).
 - **돈:** 무료다. «Standard Tier: Enabled by default at no cost» · «Usage on this tier never produces charges on a Google Cloud bill»(developers.google.com/workspace/drive/api/guides/limits, 2026-11-25). **결제 계정을 연결하라거나 Scaled Tier에 들라는 안내가 나오면 누르지 말고 멈춘다.**
+- 같은 김에 Google Auth Platform › 브랜딩의 «사용자 지원 이메일» 목록을 펼쳐 `report@woodpecker-ai.com`이 있는지 본다(저장하지 않아도 됨). 개인 메일만 보이면 LC에 미리 알린다 — 11단계 당일에 막히지 않게.
 - **됐는지:** 라이브러리의 Google Drive API에 «관리» 버튼이 보인다.
 
 ## 5. 구글 그룹 — 5분
@@ -67,7 +68,7 @@ reading-diary와 같은 그룹 1개를 쓴다(LC 가정). 없으면 groups.googl
 ## 9. 서명 빌드 — 15분
 먼저 LC에 «워커 창이 쉬는지»를 묻는다. **Git Bash 창에서 한 블록씩**(둘을 함께 붙이면 다음 줄이 비밀번호로 들어갈 수 있다):
 ```
-cd ~/AI/antigravity/power-of-habit && [ "$(git branch --show-current)" = main ] && [ -z "$(git status --porcelain -- app gradle build.gradle.kts settings.gradle.kts gradle.properties)" ] && git pull --ff-only && git log -1 --oneline || echo "멈춤: main이 아니거나 고친 파일이 있습니다"
+cd ~/AI/antigravity/power-of-habit && [ "$(git branch --show-current)" = main ] && [ -z "$(git status --porcelain -- app gradle build.gradle.kts settings.gradle.kts gradle.properties)" ] && git pull --ff-only && git log -1 --oneline || echo "멈춤: 폴더 · main 가지 · 고친 파일 · git pull 가운데 하나가 막혔습니다"
 ```
 ```
 IFS= read -rsp "키스토어 비밀번호: " POH_STORE_PASSWORD && echo && export POH_STORE_PASSWORD POH_KEY_PASSWORD="$POH_STORE_PASSWORD" POH_STORE_FILE=release.jks POH_KEY_ALIAS=powerofhabit JAVA_HOME="/c/Program Files/Android/Android Studio/jbr" && ./gradlew :app:bundleRelease -PrequireSigning --no-daemon --no-configuration-cache; unset POH_STORE_PASSWORD POH_KEY_PASSWORD POH_STORE_FILE POH_KEY_ALIAS
@@ -99,5 +100,5 @@ IFS= read -rsp "키스토어 비밀번호: " POH_STORE_PASSWORD && echo && expor
 1. 개발 중 앱(디버그)이 깔려 있으면 설정 «파일로 내보내기» → JSON이 0바이트가 아닌지 본 뒤 → 디버그 앱 삭제(서명이 달라 덮어 설치할 수 없다). **예전 앱(`com.example.powerofhabit`)은 지우지 않는다.**
 2. 그룹 가입 → 참여 링크 → Play로 설치 → «파일에서 가져오기».
 3. 습관 1개 만들기 · 오늘 칸 누르기 · 상세 열기 · 홈 화면 위젯 1개 · 알림 1개(2분 뒤) · 설정의 처리방침 링크.
-4. **Drive:** 설정 › 백업하기 → 로그인 → «백업이 완료되었습니다.» → **오늘 칸 하나를 바꾼 뒤** → 복원하기 → 바꾸기 전 기록으로 돌아옴. «코드 10»이면 지문 등록이 빠진 것이다.
+4. **Drive:** 설정 › 백업하기 → 로그인 → «백업이 완료되었습니다.» → **연결 해제** → 오늘 칸 하나를 바꿈 → 복원하기(다시 로그인) → 바꾸기 전 기록으로 돌아옴. 연결된 채로 바꾸면 5초 뒤 자동 백업이 덮어써 복원이 안 된 것처럼 보인다. «코드 10»이면 지문 등록이 빠진 것이다.
 - **됐는지:** 2 ~ 4가 모두 된다. 하나라도 안 되면 글을 올리지 말고 캡처를 보낸다. 되면 모집 글([TESTER-POST-2026-11.md](TESTER-POST-2026-11.md))을 한 번 올린다.
