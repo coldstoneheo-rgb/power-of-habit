@@ -297,7 +297,7 @@ private fun HabitDetailContent(
             val reminderText = remember(habit) {
                 if (habit.isReminderEnabled) {
                     habit.reminderTime ?: "09:00"
-                } else "OFF"
+                } else "꺼짐"
             }
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -321,7 +321,7 @@ private fun HabitDetailContent(
                         Text(freqText, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(if (reminderText == "OFF") "🔕 " else "🔔 ", fontSize = 13.sp)
+                        Text(if (reminderText == "꺼짐") "🔕 " else "🔔 ", fontSize = 13.sp)
                         Text(reminderText, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
                     }
                 }
@@ -476,7 +476,7 @@ private fun HabitDetailContent(
             }
             
             // 3. Streak
-            CardSection(accent = themeColor, title = "연속 기록 (Streak Tracker)") {
+            CardSection(accent = themeColor, title = "연속 기록") {
                 StreakWidget(
                     currentStreak = currentStreak,
                     maxStreak = maxStreak,
@@ -486,7 +486,7 @@ private fun HabitDetailContent(
             }
             
             // 4. Target Goal Progress
-            CardSection(accent = themeColor, title = "목표 달성률 (Monthly Progress)") {
+            CardSection(accent = themeColor, title = "목표 달성률") {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     TargetGoalWidget(
                         title = "이번 달 달성률 (${frequency.label})",
@@ -502,7 +502,7 @@ private fun HabitDetailContent(
             }
             
             // 5. History Calendar with Edit function
-            CardSection(accent = themeColor, title = "실행 이력 (History Calendar)") {
+            CardSection(accent = themeColor, title = "실행 이력") {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
                         text = "💡 날짜를 누르면 과거 실행 기록을 수정할 수 있습니다.",
