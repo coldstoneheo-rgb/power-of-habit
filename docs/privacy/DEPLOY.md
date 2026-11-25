@@ -18,7 +18,7 @@ curl -s -o /dev/null -w "%{http_code}\n" https://coldstoneheo-rgb.github.io/powe
 → `200`. 시크릿 창에서 시행일이 날짜로, 문의 메일이 주소로 보인다(`[ ]` 자리가 남지 않음).
 
 ## 4. 반영할 곳
-- 앱: `ui/legal/PrivacyPolicy.kt`의 `URL` 1줄 PR(**비어 있으면 첫 빌드를 만들지 않는다**)
+- 앱: 수리 PR(#42)이 만드는 `ui/legal/PrivacyPolicy.kt`의 `URL` 1줄 PR(**비어 있으면 첫 빌드를 만들지 않는다**)
 - 콘솔 앱 콘텐츠 «개인정보처리방침» 칸 · 자세한 설명 마지막 줄(`LISTING-2026-11.md` §3)
 
 ## 5. 이후 수정

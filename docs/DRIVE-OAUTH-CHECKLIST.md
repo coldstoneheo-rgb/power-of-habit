@@ -20,7 +20,7 @@
   keytool -list -v -keystore release.jks -alias powerofhabit
   ```
   → `SHA1:` 줄만 메모(비밀번호 화면은 캡처하지 않는다).
-- [ ] **Play 앱 서명 키 SHA-1**: Play 콘솔 → 습관의 힘 → 테스트 및 출시 → 설정 → **앱 무결성** → «앱 서명» 탭 → «앱 서명 키 인증서»의 SHA-1.
+- [ ] **Play 앱 서명 키 SHA-1**: Play 콘솔 → 습관의 힘 → Protected with Play > Play Store protection > Manage Play app signing(9842756) → «App signing key»의 SHA-1 **3개 전부**.
   - Play에서 설치한 앱(내부·비공개·프로덕션 전부)은 이 키로 서명된다 → **이게 빠지면 스토어 설치본만 코드 10**으로 실패한다.
 - [ ] (선택, 개발용) 디버그 키 SHA-1:
   ```

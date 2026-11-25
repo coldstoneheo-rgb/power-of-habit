@@ -23,9 +23,13 @@
 12단계까지 약 2시간 20분. **1 · 2 · 4 · 5는 지금 할 수 있다.** 3은 이름을 정한 뒤(지금 이름으로 만들고 나중에 바꿔도 된다).
 
 ## 1. 업로드 키 만들기 — 10분
-비밀번호를 먼저 정해 비밀번호 관리자에 저장한다(6자 이상 · 영문과 숫자 위주). 시작 메뉴 › PowerShell 새 창에 1줄:
+비밀번호를 먼저 정해 비밀번호 관리자에 저장한다(6자 이상 · 영문과 숫자 위주). 시작 메뉴 › PowerShell 새 창에서 **한 줄씩**:
 ```
-cd ~\AI\antigravity\power-of-habit; & "C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe" -genkeypair -v -keystore release.jks -alias powerofhabit -keyalg RSA -keysize 2048 -validity 10000
+cd ~\AI\antigravity\power-of-habit
+```
+줄 앞의 경로가 `…\power-of-habit>`으로 바뀌었는지 본다. **안 바뀌었으면 멈춘다**(다른 폴더에 키가 생긴다).
+```
+& "C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe" -genkeypair -v -keystore release.jks -alias powerofhabit -keyalg RSA -keysize 2048 -validity 10000
 ```
 비밀번호 2번(화면에 안 보임) → 이름 등은 Enter → 마지막 «맞습니까? [no]»에는 `y`. 키 비밀번호를 따로 물으면 Enter(같은 값). **«이미 있습니다»가 나오면 멈춘다**(덮어쓰지 않는다). reading-diary 키와 다른 파일이다.
 - **됐는지:** 아래 1줄에 `powerofhabit`과 `PrivateKeyEntry`가 보인다.
@@ -79,11 +83,12 @@ IFS= read -rsp "키스토어 비밀번호: " POH_STORE_PASSWORD && echo && expor
 
 ## 10. 비공개 트랙 초안에 올리기 — 10분
 테스트 및 출시 › 테스트 › 비공개 테스트 › 트랙 관리: 국가 «대한민국» → 테스터 «Google 그룹스»에 그룹 주소 · 의견 받을 곳 `report@woodpecker-ai.com` → 새 버전 만들기 → AAB 올리기(앱 서명 기본값) → 출시 노트(답안지 §5) → **저장까지만.** «검토를 위해 보내기»는 12단계에서 누른다.
+- **versionCode는 한 번 올리면 다시 못 쓴다** — 올린 뒤 고치려면 새 PR이 머지돼 번호가 커진 빌드를 올린다(같은 AAB를 다시 올리지 않는다).
 - 미리보기에 **오류**가 있으면 멈추고 캡처, 경고뿐이면 캡처를 보내고 계속.
 - **됐는지:** 트랙에 초안 버전이 저장됐다.
 
 ## 11. Drive 로그인 등록 — 25분
-1. **지문 모으기** — Play 콘솔 › 습관 앱 › Play로 보호됨(Protected with Play) › Play 스토어 보호 › Play 앱 서명 관리 › «앱 서명 키»의 SHA-1. 새 앱은 hybrid signing이 기본이라 **지문이 3개이고 셋 다 등록**한다(9842756) — 하나만 넣으면 일부 기기에서 «코드 10»이 난다. **초안 상태에서 아직 안 보이면** 멈추고 LC에 알린다(초안에서 보인다는 공식 문장은 못 찾았다 — 그때는 12를 먼저 하고 11을 바로 잇는다).
+1. **지문 모으기** — Play 콘솔 › 습관 앱 › Play로 보호됨(Protected with Play) › Play 스토어 보호 › Play 앱 서명 관리 › «앱 서명 키»의 SHA-1. 새 앱은 hybrid signing이 기본이라 **지문이 3개이고 셋 다 등록**한다(9842756) — 하나만 넣으면 일부 기기에서 «코드 10»이 난다. **초안 상태에서 아직 안 보이면** 멈추고 LC에 알린다(초안에서 보인다는 공식 문장은 못 찾았다 — 그때는 12를 먼저 하고 11을 바로 잇는다). **그 길로 가면 Drive 로그인이 «코드 10»인 채 검토에 들어간다** — 검토자가 «백업하기»를 누르면 «Google 로그인 설정 오류(코드 10)» 알림이 뜬다. 앱 밖 설정이라 새 빌드 없이 고쳐지므로 지문이 보이는 즉시(검토 통과를 기다리지 말고) 11을 끝낸다.
 2. **동의 화면** — Cloud 콘솔 › Google Auth Platform › 브랜딩: 앱 이름 = 정한 이름 · 지원 메일 · 개발자 연락처 = `report@woodpecker-ai.com`. **고를 수 없고 개인 메일만 보이면 멈추고 LC에 알린다**(동의 화면은 남이 본다) · **로고는 올리지 않는다.** 대상 = 외부. 데이터 액세스 = `…/auth/drive.appdata` 추가, 분류가 «민감하지 않은 범위»인지 본다.
 3. **클라이언트** — 클라이언트 만들기 › 유형 Android › 패키지 `com.woodpeckerai.powerofhabit` › 1의 SHA-1. 지문마다 1개씩.
 4. **게시** — 대상 › «앱 게시» → «프로덕션 단계». «테스트»로 두면 100명까지만 되고 로그인이 7일마다 풀린다(15549945).
@@ -92,7 +97,7 @@ IFS= read -rsp "키스토어 비밀번호: " POH_STORE_PASSWORD && echo && expor
 - **됐는지:** 클라이언트 목록에 지문 수만큼 보이고 게시 상태가 «프로덕션 단계»다.
 
 ## 12. «검토를 위해 보내기» — 5분
-게시 개요 › 검토를 위해 보내기.
+게시 개요 › 검토를 위해 보내기. **보낸 뒤에는 되돌리지 못한다고 보고** 누르기 전에 7 · 8 · 10 · 11의 «됐는지»를 다시 본다.
 - **됐는지:** 게시 개요에 «검토 중». 그 뒤로는 검토가 끝날 때까지 아무것도 더 보내지 않는다(9859654 «pushed to the back of the app review queue»).
 
 ## 13. 본인 휴대폰 확인 → 모집 글 — 30분
