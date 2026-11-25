@@ -231,7 +231,7 @@ private fun HabitDetailContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onBack) {
-                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = HabitTheme.colors.onAccent(themeColor))
+                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "뒤로", tint = HabitTheme.colors.onAccent(themeColor))
                 }
                 Text(
                     text = habit.title,
@@ -243,13 +243,13 @@ private fun HabitDetailContent(
                     overflow = TextOverflow.Ellipsis
                 )
                 IconButton(onClick = { onNavigateToEdit(habit.habitId) }) {
-                    Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit", tint = HabitTheme.colors.onAccent(themeColor))
+                    Icon(imageVector = Icons.Default.Edit, contentDescription = "수정", tint = HabitTheme.colors.onAccent(themeColor))
                 }
                 
                 var showMenu by remember { mutableStateOf(false) }
                 Box {
                     IconButton(onClick = { showMenu = true }) {
-                        Icon(imageVector = Icons.Default.MoreVert, contentDescription = "More", tint = HabitTheme.colors.onAccent(themeColor))
+                        Icon(imageVector = Icons.Default.MoreVert, contentDescription = "더보기", tint = HabitTheme.colors.onAccent(themeColor))
                     }
                     DropdownMenu(
                         expanded = showMenu,

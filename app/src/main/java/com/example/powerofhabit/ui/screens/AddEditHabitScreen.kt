@@ -45,6 +45,8 @@ fun AddEditHabitScreen(
     habitId: Int,
     defaultHabitType: String = "CHECK",
     onBack: () -> Unit,
+    /** 삭제 뒤. 지워진 습관의 상세 화면을 거치지 않고 목록으로 간다. */
+    onDeleted: () -> Unit = onBack,
     viewModel: AddEditHabitViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -78,6 +80,7 @@ fun AddEditHabitScreen(
     var targetType by remember { mutableStateOf(RecordOutcomes.TARGET_AT_LEAST) } // 이상(기본) / 이하
 
     var showColorPickerDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -127,6 +130,10 @@ fun AddEditHabitScreen(
                 is AddEditHabitUiEvent.SaveSuccess -> {
                     Toast.makeText(context, "저장되었습니다.", Toast.LENGTH_SHORT).show()
                     onBack()
+                }
+                is AddEditHabitUiEvent.DeleteSuccess -> {
+                    Toast.makeText(context, "삭제되었습니다.", Toast.LENGTH_SHORT).show()
+                    onDeleted()
                 }
                 is AddEditHabitUiEvent.Error -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
@@ -216,6 +223,27 @@ fun AddEditHabitScreen(
         }
     }
     
+    // 삭제 확인 — 상세 화면의 삭제와 같은 문구
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("습관 삭제", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 18.sp) },
+            text = { Text("이 습관과 그동안의 기록이 모두 삭제됩니다. 되돌릴 수 없습니다.", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDeleteDialog = false
+                    habitState?.let { viewModel.deleteHabit(it) }
+                }) { Text("삭제", color = Color.Red, fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("취소", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    }
+
     // 색상 팝업 다이얼로그
     if (showColorPickerDialog) {
         AlertDialog(
@@ -282,17 +310,15 @@ fun AddEditHabitScreen(
                 title = { Text(if (habitId == 0) "습관 만들기" else "습관 수정하기", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.onBackground)
+                        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "뒤로", tint = MaterialTheme.colorScheme.onBackground)
                     }
                 },
                 actions = {
                     if (habitId != 0 && habitState != null) {
                         IconButton(
-                            onClick = {
-                                viewModel.deleteHabit(habitState!!)
-                            }
+                            onClick = { showDeleteDialog = true }
                         ) {
-                            Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red)
+                            Icon(imageVector = Icons.Default.Delete, contentDescription = "습관 삭제", tint = Color.Red)
                         }
                     }
                     TextButton(onClick = { performSave() }) {
@@ -308,7 +334,9 @@ fun AddEditHabitScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .consumeWindowInsets(paddingValues)
                 .background(MaterialTheme.colorScheme.background)
+                .imePadding() // 키보드가 아래쪽 입력칸(메모·빈도 숫자)을 가리지 않게
                 .verticalScroll(scrollState)
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)

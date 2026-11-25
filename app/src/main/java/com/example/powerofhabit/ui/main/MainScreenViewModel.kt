@@ -24,6 +24,9 @@ import com.example.powerofhabit.backup.DriveAction
 import com.example.powerofhabit.backup.DriveOutcome
 import com.example.powerofhabit.backup.GoogleDriveBackupManager
 
+/** "YYYY-MM-DD" 문자열 비교에서 어떤 날짜보다 뒤인 값. */
+private const val OPEN_END_DATE = "9999-12-31"
+
 sealed interface MainScreenUiState {
   object Loading : MainScreenUiState
   data class Error(val throwable: Throwable) : MainScreenUiState
@@ -44,11 +47,11 @@ class MainScreenViewModel @Inject constructor(
   private val transferManager = TransferManager(dataRepository)
   private val backupManager = GoogleDriveBackupManager(context)
 
-  val isDarkMode: StateFlow<Boolean> = settingsManager.isDarkMode
+  val themeMode: StateFlow<String> = settingsManager.themeMode
   val isDateDescending: StateFlow<Boolean> = settingsManager.isDateDescending
 
-  fun toggleDarkMode() {
-    settingsManager.setDarkMode(!isDarkMode.value)
+  fun setDarkMode(enabled: Boolean) {
+    settingsManager.setDarkMode(enabled)
   }
 
   fun toggleDateDescending() {
@@ -61,7 +64,8 @@ class MainScreenViewModel @Inject constructor(
     val limitDate = today.minusDays(3)
     val monthStartDate = today.withDayOfMonth(1)
     val startDate = if (limitDate.isBefore(monthStartDate)) limitDate else monthStartDate
-    emit(startDate.toString() to today.toString())
+    // 끝을 열어 둔다: 화면을 켜 둔 채 자정이 지나도 새 날짜의 기록이 이 흐름에 들어온다.
+    emit(startDate.toString() to OPEN_END_DATE)
   }.flatMapLatest { (start, end) ->
     val habitsFlow = dataRepository.getAllHabits()
     val recordsFlow = dataRepository.getRecordsBetween(start, end)

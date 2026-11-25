@@ -45,11 +45,7 @@ class MainActivity : ComponentActivity() {
     setContent {
       val themeMode by settingsManager.themeMode.collectAsStateWithLifecycle()
       val systemInDark = androidx.compose.foundation.isSystemInDarkTheme()
-      val useDarkTheme = when (themeMode) {
-        "LIGHT" -> false
-        "DARK" -> true
-        else -> systemInDark
-      }
+      val useDarkTheme = SettingsManager.usesDarkTheme(themeMode, systemInDark)
 
       PowerOfHabitTheme(darkTheme = useDarkTheme) {
         Surface(

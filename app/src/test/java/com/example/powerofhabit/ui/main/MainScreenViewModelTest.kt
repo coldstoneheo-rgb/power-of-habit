@@ -29,7 +29,7 @@ class MainScreenViewModelTest {
         fakeRepository = FakeMyModelRepository()
         val mockContext = org.mockito.Mockito.mock(android.content.Context::class.java)
         val mockSettingsManager = org.mockito.Mockito.mock(SettingsManager::class.java)
-        org.mockito.Mockito.`when`(mockSettingsManager.isDarkMode).thenReturn(kotlinx.coroutines.flow.MutableStateFlow(true))
+        org.mockito.Mockito.`when`(mockSettingsManager.themeMode).thenReturn(kotlinx.coroutines.flow.MutableStateFlow("SYSTEM"))
         org.mockito.Mockito.`when`(mockSettingsManager.isDateDescending).thenReturn(kotlinx.coroutines.flow.MutableStateFlow(true))
         viewModel = MainScreenViewModel(fakeRepository, mockSettingsManager, mockContext)
     }

@@ -6,8 +6,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.example.powerofhabit.ui.main.MainScreen
 import com.example.powerofhabit.ui.screens.HabitDetailScreen
@@ -36,9 +39,19 @@ fun MainNavigation(
     }
   }
 
+  // 닫히는 중인 화면의 버튼을 다시 눌러도 다른 화면이 닫히거나 백스택이 비지 않게, 자기가 맨 위일 때만 닫는다.
+  fun popFrom(key: NavKey) {
+    if (backStack.size > 1 && backStack.lastOrNull() == key) backStack.removeLastOrNull()
+  }
+
   NavDisplay(
     backStack = backStack,
-    onBack = { backStack.removeLastOrNull() },
+    onBack = { if (backStack.size > 1) backStack.removeLastOrNull() },
+    // 화면마다 ViewModel을 따로 둔다. 없으면 액티비티에 하나만 생겨 «수정»에서 열었던 값이 «만들기»에 남는다.
+    entryDecorators = listOf(
+      rememberSaveableStateHolderNavEntryDecorator(),
+      rememberViewModelStoreNavEntryDecorator()
+    ),
     entryProvider =
       entryProvider {
         entry<Main> {
@@ -47,7 +60,7 @@ fun MainNavigation(
               backStack.add(HabitDetail(habitId = habitId))
             },
             onNavigateToAddHabit = { habitType ->
-              backStack.add(AddEditHabit(habitId = 0, defaultHabitType = habitType))
+              backStack.add(AddEditHabit(habitId = 0, defaultHabitType = habitType, openId = System.nanoTime()))
             },
             onNavigateToBadges = {
               backStack.add(Badges)
@@ -58,9 +71,9 @@ fun MainNavigation(
         entry<HabitDetail> { key ->
           HabitDetailScreen(
             habitId = key.habitId,
-            onBack = { backStack.removeLastOrNull() },
+            onBack = { popFrom(key) },
             onNavigateToEdit = { habitId ->
-              backStack.add(AddEditHabit(habitId = habitId))
+              backStack.add(AddEditHabit(habitId = habitId, openId = System.nanoTime()))
             }
           )
         }
@@ -68,12 +81,13 @@ fun MainNavigation(
           AddEditHabitScreen(
             habitId = key.habitId,
             defaultHabitType = key.defaultHabitType,
-            onBack = { backStack.removeLastOrNull() }
+            onBack = { popFrom(key) },
+            onDeleted = { while (backStack.size > 1) backStack.removeLastOrNull() }
           )
         }
         entry<Badges> {
           BadgesScreen(
-            onBack = { backStack.removeLastOrNull() }
+            onBack = { popFrom(Badges) }
           )
         }
       },
