@@ -9,15 +9,32 @@
 ---
 
 ```yaml
+date: 2026-11-26
+project: power-of-habit
+agent: claude-code (LC TASK-2026-1125-rd-habit-console-takeover)
+summary: 콘솔 등록 · Cloud 로그인 준비 · 서명 AAB 검증 → versionCode 89를 내부 테스트에 출시. 비공개 트랙은 검토용 계정(사용자 손)을 기다린다
+status: at_risk
+progress: "내부 테스트 «내부 테스터에게 제공됨 · 11월 26일 오전 9:50» · 앱 설정 8/11 · OAuth 동의 화면 «프로덕션 단계» · Android 클라이언트 2"
+changes: ["docs/handoffs/TASK-2026-1125-habit-console-takeover-REPORT.md", "#50 배포 위임 절(머지 대기)"]
+next: 검토용 계정 입력(사용자) → 로그인 세부정보 · 타겟층 · 데이터 보안 → 비공개 트랙 승급 → 검토 보내기
+blockers: 검토용 Google 계정(사용자)
+learning_need: 콘솔 섹션 사이에 순서 잠금이 있다(타겟층은 로그인 세부정보 뒤) — 답안지에 순서를 적어 둔다
+```
+## 의미
+첫 서명 빌드가 Play에 올라가 Play 앱 서명 키로 다시 서명된 빌드를 받을 수 있고, Drive 로그인을 실기기에서 처음 확인할 수 있게 됐다.
+
+---
+
+```yaml
 date: 2026-11-25
 project: power-of-habit
 agent: claude-code (LC TASK-2026-1125-habit-prep-before-user-answers)
 summary: 사용자 답을 기다리는 동안 — 광고 ID «아니요» 확정, Google 로그인 정보가 앱 저장소에 남는 것을 바이트코드로 확인해 처리방침 4 · 5항 보강, 게시 명령 연습, 앱 안 주소 PR(#45 draft)
 status: at_risk
 progress: "testDebugUnitTest 126/0(--rerun, main aaecc13) · 릴리스 병합 매니페스트 AD_ID 0건 · 게시/콘솔/키 작업은 하지 않음"
-changes: ["#45(draft) 앱 안 처리방침 주소", "#46 6e1fbc0", "#47 이름 결정 반영"]
-next: 사용자 «게시해도 됨» → gh-pages 게시 → 200 확인 → #45 머지 → 사용자 서명 빌드
-blockers: 처리방침 게시 확인 · 키/콘솔(사용자)
+changes: ["#45 8b902f2 앱 안 처리방침 주소", "#48 a4ce621", "gh-pages 58d7272", "#46 6e1fbc0", "#47 이름 결정 반영"]
+next: 사용자 서명 빌드(9단계, main 8b902f2 · versionCode 89) → 콘솔 업로드
+blockers: 키/콘솔/서명(사용자)
 learning_need: 외부 라이브러리의 저장 동작은 «추정»으로 두지 말고 AAR 바이트코드로 확인할 수 있다 — 실기기 없이도 처리방침 서술의 근거가 된다
 ```
 ## 의미
