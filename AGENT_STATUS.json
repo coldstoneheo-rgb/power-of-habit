@@ -1,32 +1,35 @@
 {
   "project": "power-of-habit",
-  "as_of": "2026-11-26T11:55:12+09:00",
-  "phase": "release-prep (무료 프로덕션 출시, 새해 공개 — 늦어도 2027-01-01) — 첫 비공개 빌드를 11-27에 검토로 보내는 것이 목표",
-  "current_task": "비공개 테스트 - Alpha 89 (1.0.89) + 앱 정보 14건 검토 제출(11-26 11:55 «검토 중인 변경사항» · 빠른 검사 진행) — 앱 설정 11/11 · 내부 테스트 89 출시 중",
+  "as_of": "2026-11-26T15:15:48+09:00",
+  "phase": "release-prep (무료 프로덕션 출시, 새해 공개 — 늦어도 2027-01-01) — 비공개 테스트 게시 끝(11-26 12:09) · 테스터 모집 중",
+  "current_task": "비공개 테스트 - Alpha 89 (1.0.89) 게시됨(11-26 11:55 제출 → 빠른 검사 문제 0 → 12:09 «선택한 테스터에게 제공됩니다») · 품앗이 오픈채팅방 경유 테스터 모집 중 — 다음 관문 = 12명 이상 옵트인 → 14일 연속",
   "waiting_on": [
-    "[Google] 비공개 트랙 검토(보통 7일 이내 · 관리형 게시 꺼짐 = 승인 즉시 게시)",
-    "[사용자] 내부 테스트로 설치 → 설정 «백업하기»로 Drive 로그인 실기기 확인",
+    "[사용자] 테스터 12명 이상 옵트인(자체 목표 12-03 · 늦어도 12-04) — 이후 14일 연속 유지",
+    "[사용자] 14일 사용 기록 = 본인 기기 · 지인(연장 사유 «insufficient tester engagement» 대비)",
+    "[사용자] 본인 확인: 테스터 그룹 가입 → 참여 → 설치 → 설정 «백업하기»로 Drive 로그인 실기기 확인",
     "[사용자] 업로드 키 사본 두 곳"
   ],
   "next_actions": [
-    "빠른 검사 결과 확인(문제 글자가 나오면 고치지 말고 LC에 [ASK])",
-    "검토 통과 뒤 본인 확인: 테스터 그룹 가입 → 비공개 참여 → 설치",
-    "테스터 모집 글(TESTER-POST) → 자체 목표 12-03에 12명 옵트인 · 14일 시작",
-    "12-18 프로덕션 접근 신청 · 12-25 프로덕션 제출",
+    "실기기 확인 결과가 오면 DEVICE-QA · console-takeover REPORT 15행 반영",
+    "서명 스크립트를 레포 안으로 + 업로드 키 ↔ AAB 서명 대조(REPORT «다음 창 인계» 1)",
+    "12-18 프로덕션 접근 신청(RELEASE-PLAN §5 답안 틀) · 12-25 프로덕션 제출",
     "부제 «- 하루 한 번 기록»은 LC 가정 — 사용자가 «부제 없이»라고 하면 되돌림",
-    "첫 빌드 뒤 정리 후보: console-takeover REPORT 끝 목록"
+    "그 밖의 일감 후보: console-takeover REPORT «다음 창 인계»"
   ],
   "metrics": {
     "dod_done": 0,
     "dod_total": 9,
-    "user_blocks_done": 0,
+    "user_blocks_done": 1,
     "user_blocks_total": 7,
     "device_qa_pass": 0,
     "device_qa_total": 15,
     "schedule_slack_days_7day_reviews_0_recruit": 0,
     "schedule_slack_days_7day_reviews_3_recruit": -3,
     "listing_short_desc_chars": 52,
-    "listing_full_desc_chars": 1213
+    "listing_full_desc_chars": 1213,
+    "user_blocks_note": "RELEASE-PLAN §2 기준 B 완료 · A(키 사본) · C(설치 · QA) · D(D-3 Drive 백업) · E(12명 옵트인) 일부 · F · G 미착수",
+    "closed_track_version_code": 89,
+    "testers_opted_in_target": 12
   },
-  "last_commit": "0178c6b (main, PR #49 squash) · 서명 빌드 커밋 8b902f2 = versionCode 89"
+  "last_commit": "167ac71 (main, PR #51 squash) · 서명 빌드 커밋 8b902f2 = versionCode 89"
 }

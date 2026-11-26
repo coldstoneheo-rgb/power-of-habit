@@ -11,6 +11,23 @@
 ```yaml
 date: 2026-11-26
 project: power-of-habit
+agent: claude-code (LC [CLOSE] 11-26 · TASK-2026-1125-rd-habit-console-takeover 마감)
+summary: 비공개 테스트 - Alpha 89 (1.0.89) 검토 제출 11:55 → 빠른 검사 문제 0 → 12:09 게시. 사용자가 품앗이 오픈채팅방 경유로 테스터 모집 시작
+status: on_track
+progress: "Alpha 화면 «선택한 테스터에게 제공됩니다 · 게시일: 11월 26일 오후 12:09» · 게시 개요 «앱 업데이트가 게시되었습니다»(12:11 화면 글자)"
+changes: ["#51 167ac71", "이 마감 PR — TESTER-POST 부탁 문장 · CLOSED-TEST §2 실제 진행 · 위험 · AGENT_STATUS · REPORT 다음 창 인계"]
+next: 12명 이상 옵트인(목표 12-03 · 늦어도 12-04) → 14일 연속 → 12-18 프로덕션 접근 신청
+blockers: 없음(사용자 손 — 옵트인 모집 · 실기기 Drive 확인 · 키 사본)
+learning_need: 요건은 «12명 14일 연속 옵트인»뿐이지만 연장 사유에 참여도가 있다 — 품앗이 테스터에게 사용 횟수를 부탁하지 말고 사용 기록은 본인 · 지인이 채운다
+```
+## 의미
+예정(12-04 통과)보다 약 7일 일찍 비공개 테스트가 열려, 01-01 공개 일정에 처음으로 모집 여유가 생겼다.
+
+---
+
+```yaml
+date: 2026-11-26
+project: power-of-habit
 agent: claude-code (LC TASK-2026-1125-rd-habit-console-takeover)
 summary: 콘솔 등록 · Cloud 로그인 준비 · 서명 AAB 검증 → versionCode 89를 내부 테스트에 출시. 비공개 트랙은 검토용 계정(사용자 손)을 기다린다
 status: at_risk
