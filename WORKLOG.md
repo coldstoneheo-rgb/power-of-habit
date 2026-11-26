@@ -15,7 +15,7 @@ agent: claude-code (LC TASK-2026-1125-rd-habit-console-takeover)
 summary: 콘솔 등록 · Cloud 로그인 준비 · 서명 AAB 검증 → versionCode 89를 내부 테스트에 출시. 비공개 트랙은 검토용 계정(사용자 손)을 기다린다
 status: at_risk
 progress: "내부 테스트 «내부 테스터에게 제공됨 · 11월 26일 오전 9:50» · 앱 설정 8/11 · OAuth 동의 화면 «프로덕션 단계» · Android 클라이언트 2"
-changes: ["docs/handoffs/TASK-2026-1125-habit-console-takeover-REPORT.md", "#50 배포 위임 절(머지 대기)"]
+changes: ["docs/handoffs/TASK-2026-1125-habit-console-takeover-REPORT.md", "#50 951f17d 배포 위임 절"]
 next: 검토용 계정 입력(사용자) → 로그인 세부정보 · 타겟층 · 데이터 보안 → 비공개 트랙 승급 → 검토 보내기
 blockers: 검토용 Google 계정(사용자)
 learning_need: 콘솔 섹션 사이에 순서 잠금이 있다(타겟층은 로그인 세부정보 뒤) — 답안지에 순서를 적어 둔다
