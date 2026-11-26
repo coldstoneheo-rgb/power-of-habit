@@ -128,14 +128,15 @@
    - 앱 이름이 바뀌지 않으므로 `strings.xml` · `MainScreen.kt` · 처리방침 · `TESTER-POST` · `DRIVE-OAUTH-CHECKLIST`의 «습관의 힘»은 그대로다. 나중에 이름을 바꾸면 git grep «습관의 힘»으로 다시 찾는다(`docs/RELEASE.md` · `RELEASE-PLAN` · `DEVICE-QA` 포함).
 2. ~~allowBackup~~ — **그대로(켜짐)** 로 정함(LC 가정 2026-11-25, 사용자 통보). 새 폰을 구글 계정으로 복원하면 기록이 따라온다.
 
-## 7. 로그인 세부정보(앱 콘텐츠 · 2026-11-26 워커 작성)
+## 7. 로그인 세부정보(앱 콘텐츠 · 2026-11-26 저장본 — 사용자가 LC 다듬은 문안으로 직접 저장)
 - 선언: «예 — 앱의 일부 기능에 로그인 필요»(선택 기능인 Drive 백업 때문). 검토용 Google 계정 아이디 · 비밀번호는 **사용자가 콘솔 칸에 직접** 넣는다 — 이 문서 · 채팅 · 커밋에 적지 않는다.
 - 이름(40/60):
 ```
 Google account for optional Drive backup
 ```
-- 기타 정보(420/500):
+- 기타 정보(486/500):
 ```
-Sign-in is optional. The app is fully usable without an account. Google sign-in is used only for the optional Google Drive backup and restore. To test it: tap the gear icon (Settings) at the top right of the home screen, find the backup buttons, tap "백업하기" (Back up), choose the Google account provided above and allow access. "복원하기" (Restore) restores that backup and restarts the app. No other screen requires sign-in.
+Sign-in is optional. The app is fully usable without an account. Google sign-in is used only for the optional Google Drive backup and restore. To test it: tap the gear icon (Settings, the rightmost icon) at the top right of the home screen, find the backup buttons, tap "백업하기" (Back up), sign in with the Google account provided above and allow access. "복원하기" (Restore) restores that backup and restarts the app. No other screen requires sign-in. The account has no 2-step verification.
 ```
+- 계정: 검토 전용 Google 계정(2단계 인증 없음) · «전체 액세스 권한» 체크 — 값은 콘솔에만 있다.
 - 순서 잠금: 타겟층 설문은 이 섹션을 저장한 뒤에 열린다(화면 «로그인 세부정보 섹션 완료»).
