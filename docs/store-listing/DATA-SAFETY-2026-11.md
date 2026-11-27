@@ -46,6 +46,8 @@
 | 포그라운드 서비스 권한 | **해당 없음** | 앱 코드에 포그라운드 서비스 0. 릴리스 병합 매니페스트(11-25)에 WorkManager의 `FOREGROUND_SERVICE`만 있고 유형별 권한(`FOREGROUND_SERVICE_*`)은 0건 |
 | 정확한 알람 | 선언 대상 아님(추정) | `SCHEDULE_EXACT_ALARM`(사용자 허용형)만 사용. 제한 권한 `USE_EXACT_ALARM`은 쓰지 않음(`AndroidManifest.xml:6`) |
 
+**갱신 2026-11-27(#55)**: 규칙 파일을 매니페스트에 연결하고 로그인 라이브러리 저장소(`com.google.android.gms.signin.xml`)만 OS 백업 · 기기 이전에서 뺐다 — #55가 들어간 빌드부터 새 OS 백업본에는 로그인 정보가 없다(그 전 빌드로 만들어진 백업본에는 남을 수 있다). 습관 DB · 앱 설정은 그대로 백업된다. 아래 문단은 #55 이전 상태 기록이다. 처리방침 §5 «Google 로그인을 했다면 4항의 로그인 정보 포함» 문장 개정은 LC가 사용자에게 보인 뒤 별도 게시.
+
 ⚠ **Android 시스템 자동 백업**: `AndroidManifest.xml:11`(11-02 `INTERNET` 추가로 :10→:11) `android:allowBackup="true"`이고 `res/xml/backup_rules.xml`·`data_extraction_rules.xml`은 매니페스트에 연결돼 있지 않다(둘 다 샘플 그대로). 따라서 사용자가 기기 Google 백업을 켜 두면 OS가 앱 DB를 사용자 계정으로 백업한다. 이 경로는 OS·Google이 처리하며 처리방침 §5에 고지했다. Google 로그인 라이브러리의 저장소(SharedPreferences `com.google.android.gms.signin` — 이메일 · 이름 · 사진 주소 · 계정 ID)도 이 OS 백업에 들어갈 수 있다(기기 안 저장소는 연결 해제 시 지워지지만, 이미 만들어진 OS 백업본은 바로 지워지지 않고 재설치 때 복원될 수 있다 — autobackup 문서 «Data is restored whenever the app is installed»). 도움말 10787469에서 OS 자동 백업을 콕 집어 다루는 문장은 찾지 못했고(2026-11-25 curl), «기기 밖으로 보내지 않는 기기 내 처리는 수집이 아니다»는 있지만, «Libraries and SDKs: … user data transmitted off device from your app by libraries and/or SDKs … irrespective of whether data is transmitted to you or a third-party server»도 있어 확정 근거는 아니다(«사용자가 자기 클라우드에 올리면 선언 불필요»는 앱이 접근하지 않는 경우라 이 경로의 주 근거로 쓰지 않는다) → 판정은 §1-2 이메일 행의 ⚠로 열어 두고 답은 바꾸지 않는다(앱 자체 Drive 백업은 이미 «수집 = 예»). 콘솔이 «Google 로그인으로 받은 이메일»을 묻는다면 §1-2 이메일 행의 ⚠대로 «예 · 선택 · 앱 기능».
 
 ## 3. 선언과 모순되면 안 되는 문구 (등록정보·처리방침 공통)
