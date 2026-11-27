@@ -9,6 +9,23 @@
 ---
 
 ```yaml
+date: 2026-11-27
+project: power-of-habit
+agent: claude-code (LC TASK-2026-1127-habit-pre-recruit-check-and-prep · 창 power-of-habit-bf)
+summary: 모집 전 참여 경로 실측 «올려도 됨» · 12명 도달일별 일정(마지막 도달일 12-03) · 옵트인 장부 · 접근 신청 문항 대조 · 서명 스크립트 · 백업 규칙 · DEVICE-QA 미리보기 3/15
+status: on_track
+progress: "콘솔(읽기만) 옵트인 웹 · 상세 주소 열림 · 트랙 활성 89 · 국가 1 · 그룹 2개 누구나 가입 · 게시 개요 남은 변경 0 · testDebugUnitTest 129/0 · sign-release --self-test exit 0"
+changes: ["#53 f717fa2", "#54 서명 스크립트(게이트)", "#55 백업 규칙(게이트)", "이 PR — REPORT · DEVICE-QA · AGENT_STATUS"]
+next: 11-27 저녁 모집 글(사용자) → 옵트인 장부 하루 1줄 → 12명 도달일 + 15일에 접근 신청
+blockers: 없음(사용자 결정 — effort 설정 · 국가 범위 · 처리방침 §5 문장)
+learning_need: 콘솔 «질문 미리보기»는 도움말 문서로 연결된다 — 실제 칸 · 글자 수는 신청 버튼이 열려야 보이므로 신청 날 다시 대조
+```
+## 의미
+모집 글이 막힘 없이 열리는 경로로 나가고, 12명이 차는 날만 정해지면 신청 · 공개 날짜와 다음 빌드 절차가 바로 나온다.
+
+---
+
+```yaml
 date: 2026-11-26
 project: power-of-habit
 agent: claude-code (LC [CLOSE] 11-26 · TASK-2026-1125-rd-habit-console-takeover 마감)
