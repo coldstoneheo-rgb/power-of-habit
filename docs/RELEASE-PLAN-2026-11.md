@@ -78,6 +78,30 @@
 - 하루 늦게 보낼 때마다 날짜가 하루 밀린다. 검토마다 7일로 잡으면 모집에 쓸 날이 0일이다.
 - 01-01은 보장선이 아니다 — 조건은 CLOSED-TEST §2 첫 문단.
 
+### 3-4. 12명 도달일별 일정(2026-11-27 · 비공개 게시 11-26 12:09 뒤)
+
+모집 글 = 11-27 저녁(사용자). 옵트인 수 장부 = [`store-listing/OPTIN-LEDGER-2026.md`](store-listing/OPTIN-LEDGER-2026.md)(11-27 = 0명, 의도된 값 — 문장서랍과 하루 차이).
+
+근거(Play 도움말 원문 · 14151465는 2026-11-27 콘솔 «질문 미리보기»가 여는 페이지에서 다시 읽음):
+- 14151465 «At least 12 testers must be opted in to your closed test when you apply for production access, and they must have been opted in continuously for the preceding 14 days.» → **신청 가능일 = 12번째 사람이 옵트인한 날 + 14일**.
+- 14151465 «If a tester opts out and opts back in later, the 14 days must be consecutive» → 중간에 나간 사람은 다시 들어온 날부터 센다.
+- 14151465 «Review usually takes seven days or less, but can occasionally take longer.» → 접근 검토 7일.
+- 9859654 «Processing can take a few hours or up to seven days (or longer in exceptional cases)» → 프로덕션 검토 7일.
+- 14151465 «Reasons for required continued testing include having fewer than 12 opted-in testers or insufficient tester engagement during the testing period.» → 연장 위험(숫자 없음).
+
+| 12명 도달일 | 접근 신청 가능일(+14) | 접근 승인(+7, 최악) | 프로덕션 공개(+7, 최악) | 01-01까지 여유 |
+|---|---|---|---|---|
+| 11-28 | 12-12 | 12-19 | 12-26 | **+6일** |
+| 12-01 | 12-15 | 12-22 | 12-29 | **+3일** |
+| 12-03 | 12-17 | 12-24 | 12-31 | **+1일** |
+| 12-05 | 12-19 | 12-26 | 01-02 | **−1일**(01-01 못 닿음) |
+
+- 계산: 공개 = 도달일 + 14 + 7 + 7 = 도달일 + 28. 여유 = 01-01 − 공개일. 검토가 7일보다 빠르면 그만큼 앞당겨지고, 7일보다 길면(«occasionally»·«exceptional») 밀린다. 연말 검토 지연 수치는 문서에 없다.
+- **01-01에 닿는 마지막 도달일 = 12-04**(12-04 + 28 = 01-01, 여유 0).
+- 하루 여유 권장: 시간대 · 옵트인 시각 경계를 문서가 정하지 않으므로 신청은 «+14일» 다음 날로 잡는다(위 표는 여유를 그 하루만큼 줄여 읽는다).
+- 접근 승인 당일에 프로덕션 제출(비공개 89 그대로 승급 · 새 빌드가 필요하면 §5-C Q1과 함께 서명 스크립트 `scripts/` 사용).
+- 신청 전 확인: 콘솔 대시보드 «현재 참여를 선택한 테스터 N명» ≥ 12 + 12명 이상이 14일 연속(장부 날짜로 확인).
+
 ## 4. 리스크
 
 | 리스크 | 영향 | 대응 |
@@ -91,6 +115,29 @@
 ## 5. 프로덕션 액세스 신청서 3부 답안 틀 (블록 F용)
 
 > 문항은 같은 개발자 계정의 다른 앱 선례 기준. 폼이 바뀌었을 수 있으니 제출 날 문항을 대조한다.
+
+### 5-0. 콘솔 «질문 미리보기» 대조(2026-11-27 12:3x)
+대시보드 «프로덕션 액세스 신청» 카드의 «질문 미리보기»는 별도 창이 아니라 도움말 14151465 «Apply for production access» 절로 연결된다. 그 절의 문항(원문)과 아래 틀을 맞춘 결과:
+
+| 부 | 도움말 문항(원문) | 틀 | 판정 |
+|---|---|---|---|
+| 1 | «Select an option indicating how easy it was to recruit testers for your app.» | 5-A Q2 | 있음 |
+| 1 | «Whether testers used all available app features» | 5-A Q3 일부 | **따로 답 필요** → 5-A Q3a |
+| 1 | «Whether tester usage matched expected production user behavior, including details on any observed differences» | 없음 | **새 문항** → 5-A Q3b |
+| 1 | «Summarize the feedback received from testers and describe how feedback was collected.» | 5-A Q4 | 있음(«수집 방법» 문장 보강 → Q4 앞줄) |
+| 1 | (도움말에 없음) 모집 방법 서술 | 5-A Q1 | 틀에만 있음 — 폼에 칸이 없으면 Q3b · Q4에 녹인다 |
+| 2 | «Specify the target audience for your app or game. Be as specific as possible.» | 5-B Q1 | 있음 |
+| 2 | «For apps: Describe how your app provides value to users.» | 5-B Q2 | 있음 |
+| 2 | «Select an estimated install range for your app or game during its first year.» | 5-B Q3 | 있음 |
+| 3 | «Describe any changes made to your app or game based on what you learned from your closed test.» | 5-C Q1 | 있음(빈칸 — 기간 끝에) |
+| 3 | «Describe how you determined that your app or game was ready for production.» | 5-C Q2 | 있음 |
+
+실제 입력 칸의 글자 수 제한 · 라디오 보기 글자는 «프로덕션 신청»을 눌러야 보인다(12명 · 14일 전에는 버튼이 막힘) — 신청 날 이 표를 다시 대조한다.
+
+**틀에 없던 문항 답 초안**(≤300자 · 숫자는 콘솔 실측만):
+- **5-A Q3a 모든 기능 사용 여부**: «아니요, 모든 테스터가 모든 기능을 쓰지는 않았습니다. 테스터에게는 14일 동안 참여를 유지하고 습관을 하나 만들어 보도록 부탁했습니다. 위젯 · 알림 · 파일 내보내기 · Google Drive 백업처럼 일부만 쓰는 기능은 개발자와 지인이 실기기에서 매일 사용하며 확인했습니다. 앱에는 분석 도구가 없어 기능별 사용량은 측정하지 않았습니다.»
+- **5-A Q3b 프로덕션 예상 사용과 일치 여부 · 차이**: «대체로 일치했습니다. 출시 후 예상 사용은 하루 한 번 앱이나 위젯에서 습관을 기록하는 짧은 사용입니다. 차이는 테스터 다수가 습관 1 ~ 2개만 등록해 기록 기간이 짧았다는 점이고, 여러 습관을 몇 주 이어서 쓰는 사용은 개발자 · 지인 기기에서 확인했습니다. 테스트 참여 경로는 [모집 경로]였고 [T0]에 [N]명이 참여했습니다.»(차이 문장은 테스트가 끝난 뒤 실제 관찰로 고친다 — 관찰이 없으면 «차이는 측정하지 않았습니다»로)
+- **5-A Q4 앞줄(수집 방법)**: «의견은 Play 테스트 의견(콘솔 «테스트 의견»), 스토어 테스트 화면에 적은 메일(report@…), 모집한 커뮤니티 대화방으로 받았습니다.» + 기존 A/B 택1.
 > 원칙: 실재하는 기능만 · 최상급/보장성 표현 0 · 숫자는 콘솔 실측만(`[콘솔 실측]` 칸은 추정으로 채우지 않는다) · 각 300자 이내(한글 1자=1).
 
 ### 5-A. 1부 «비공개 테스트 정보»
