@@ -1,19 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Android 12+ 백업 · 기기 이전 규칙(android:dataExtractionRules).
+   exclude만 두면 나머지(습관 DB · 앱 설정)는 지금처럼 옮겨진다.
+   빼는 것: Google 로그인 라이브러리 저장소 — backup_rules.xml 주석 참고.
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <exclude domain="sharedpref" path="com.google.android.gms.signin.xml" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <exclude domain="sharedpref" path="com.google.android.gms.signin.xml" />
     </device-transfer>
-    -->
 </data-extraction-rules>
