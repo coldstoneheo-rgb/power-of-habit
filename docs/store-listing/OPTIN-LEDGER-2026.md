@@ -1,7 +1,7 @@
 # 비공개 테스트 옵트인 장부 (습관의 힘 · 비공개 테스트 - Alpha)
 
 하루 1줄. 값은 Play Console → 습관의 힘 → 대시보드 «프로덕션 액세스 신청» 카드의 «현재 참여를 선택한 테스터 N명» 화면 글자만 적는다(추정 · 그룹 회원 수로 대신하지 않는다).
-12명에 처음 닿은 날 = T0. 접근 신청 가능일 = T0 + 14일(14151465 «opted in continuously for the preceding 14 days») — 일정은 [`RELEASE-PLAN-2026-11.md`](../RELEASE-PLAN-2026-11.md) §3-4.
+12명에 처음 닿은 날 = T0. T0을 0일째로 세어 14일을 채운 날 = T0 + 14, 권장 신청일 = T0 + 15(14151465 «opted in continuously for the preceding 14 days» · 경계 하루 여유) — 일정은 [`RELEASE-PLAN-2026-11.md`](../RELEASE-PLAN-2026-11.md) §3-4.
 테스터 이름 · 메일 · 그룹 가입 링크는 적지 않는다(공개 레포).
 
 | 날짜 | 시각(KST) | 옵트인 수 | 본 사람 | 메모 |
