@@ -1,35 +1,43 @@
 {
   "project": "power-of-habit",
-  "as_of": "2026-11-26T15:15:48+09:00",
-  "phase": "release-prep (무료 프로덕션 출시, 새해 공개 — 늦어도 2027-01-01) — 비공개 테스트 게시 끝(11-26 12:09) · 테스터 모집 중",
-  "current_task": "비공개 테스트 - Alpha 89 (1.0.89) 게시됨(11-26 11:55 제출 → 빠른 검사 문제 0 → 12:09 «선택한 테스터에게 제공됩니다») · 품앗이 오픈채팅방 경유 테스터 모집 중 — 다음 관문 = 12명 이상 옵트인 → 14일 연속",
+  "as_of": "2026-11-27T13:00:00+09:00",
+  "phase": "release-prep (무료 프로덕션 출시, 새해 공개 — 2027-01-01 목표) — 비공개 테스트 게시(11-26 12:09) · 모집 글 11-27 저녁(사용자)",
+  "current_task": "TASK-2026-1127 모집 전 참여 경로 확인(«올려도 됨») · 도달일별 일정 · 옵트인 장부 · 서명 스크립트 · 백업 규칙 · DEVICE-QA 미리보기",
   "waiting_on": [
-    "[사용자] 테스터 12명 이상 옵트인(자체 목표 12-03 · 늦어도 12-04) — 이후 14일 연속 유지",
-    "[사용자] 14일 사용 기록 = 본인 기기 · 지인(연장 사유 «insufficient tester engagement» 대비)",
-    "[사용자] 본인 확인: 테스터 그룹 가입 → 참여 → 설치 → 설정 «백업하기»로 Drive 로그인 실기기 확인",
+    "[사용자] 11-27 저녁 품앗이 모집 글 + 맞테스트 신청 — 12명 도달(01-01에 닿는 마지막 도달일 12-03 · 권장 신청일 = 도달일 + 15)",
+    "[사용자] 본인 폰 설치 → DEVICE-QA «사용자 폰 확인 순서» 1 ~ 7(13 Drive 포함)",
+    "[사용자] effort 설정(.claude/settings.json modelSettings · .claude/agents/) 및 미커밋 settings.json 12줄 결정",
     "[사용자] 업로드 키 사본 두 곳"
   ],
   "next_actions": [
-    "실기기 확인 결과가 오면 DEVICE-QA · console-takeover REPORT 15행 반영",
-    "서명 스크립트를 레포 안으로 + 업로드 키 ↔ AAB 서명 대조(REPORT «다음 창 인계» 1)",
-    "12-18 프로덕션 접근 신청(RELEASE-PLAN §5 답안 틀) · 12-25 프로덕션 제출",
-    "부제 «- 하루 한 번 기록»은 LC 가정 — 사용자가 «부제 없이»라고 하면 되돌림",
-    "그 밖의 일감 후보: console-takeover REPORT «다음 창 인계»"
+    "옵트인 장부(docs/store-listing/OPTIN-LEDGER-2026.md) 하루 1줄 — 콘솔 카드 글자",
+    "12명 도달일 + 15일(권장 신청일)에 프로덕션 접근 신청(RELEASE-PLAN §3-4 · §5-0 문항 대조)",
+    "새 빌드가 필요하면 scripts/sign-release.sh --expect <SHA>(백업 규칙 PR 포함 빌드)",
+    "실기기 결과가 오면 DEVICE-QA 결과 칸 반영"
   ],
   "metrics": {
     "dod_done": 0,
     "dod_total": 9,
     "user_blocks_done": 1,
     "user_blocks_total": 7,
-    "device_qa_pass": 0,
+    "device_qa_pass": 3,
     "device_qa_total": 15,
-    "schedule_slack_days_7day_reviews_0_recruit": 0,
-    "schedule_slack_days_7day_reviews_3_recruit": -3,
     "listing_short_desc_chars": 52,
     "listing_full_desc_chars": 1213,
     "user_blocks_note": "RELEASE-PLAN §2 기준 B 완료 · A(키 사본) · C(설치 · QA) · D(D-3 Drive 백업) · E(12명 옵트인) 일부 · F · G 미착수",
     "closed_track_version_code": 89,
-    "testers_opted_in_target": 12
+    "testers_opted_in_target": 12,
+    "device_qa_note": "3/15 = JVM 시험으로 핵심 기대값 확인(01 · 09 · 11) · 부분 8 · 실기기 전용 4 — 기기 결과 아님(DEVICE-QA «미리 본 것» 절)",
+    "testers_opted_in": 0,
+    "testers_opted_in_as_of": "2026-11-27 12:28 (의도된 0 — 모집 글 11-27 저녁)",
+    "last_reach_date_for_0101": "2026-12-03",
+    "schedule_slack_days_by_reach_date": {
+      "11-28": 5,
+      "12-01": 2,
+      "12-03": 0,
+      "12-05": -2
+    }
   },
-  "last_commit": "167ac71 (main, PR #51 squash) · 서명 빌드 커밋 8b902f2 = versionCode 89"
+  "last_commit": "f717fa2 (main, PR #53 squash) · #54 · #55 게이트 대기",
+  "effort": "세션 medium(기본 · 올리지 않음) · 레포 정본 적용은 미적용 — 사용자 답 대기"
 }

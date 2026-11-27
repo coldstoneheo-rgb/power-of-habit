@@ -27,6 +27,41 @@
 | 14 | 마이그레이션 | ① 내부 테스트 vN 설치·기록 → vN+1 업데이트 ② (옛 앱 DB가 있으면) 설정 → 옛 앱 DB 파일 가져오기(.db+-wal+-shm 함께) | ① 업데이트 뒤 습관·기록·뱃지 유지(DB v5) ② 요약 토스트 · 기존 데이터 유지(덮어쓰기 없음). 옛 DB 없으면 ② `N/A` |  | `14.png` |
 | 15 | 테마 전환 | 설정 → «다크 모드 적용» 끄기/켜기 → 홈·상세·등록·위젯 확인 → 앱 재시작 | 두 테마 모두 글자 대비 정상(라이트 테마 오렌지 글자는 WORKLOG 09-06 «2.1:1» 후보 — 관찰만 기록) · 재시작 뒤 설정 유지 |  | `15.png` |
 
+## JVM · 스크린샷 시험 · 병합 매니페스트로 미리 본 것(2026-11-27 · 에뮬레이터 없음)
+
+이 PC에는 에뮬레이터 시스템 이미지 · AVD가 0개다(LC 11-27: 내려받지 않음 — 사용자가 11-27 저녁 본인 폰에 설치). 그래서 아래는 **기기 결과가 아니다** — 위 표의 «결과» 칸은 비워 두고, 기기에서 볼 때 무엇이 이미 시험으로 덮였는지만 적는다. 시험 실행: `./gradlew.bat testDebugUnitTest` exit 0 · 129 tests / 0 failures(2026-11-27, worktree `backup-rules` = main 260f4e9 + #55).
+
+| # | 미리 본 근거(시험 · 파일) | 덮은 것 | 기기에서만 남는 것 | 판정 |
+|---|---|---|---|---|
+| 01 | `FirstRunJourneyTest.install_create_record_reopen_edit_delete` | 첫 습관 만들기 → 저장 → 목록 표시 → 다시 열기 | 습관 색 · 실제 화면 크기 | **JVM 확인** |
+| 03 | 같은 시험(오늘 칸 탭 → `COMPLETED` 저장 · «완료» 아이콘) | 탭 1동작 | 다시 탭(미완료) · 롱탭(건너뛰기) · 링 게이지 | 부분 |
+| 02 | `RecordOutcomesAtMostTest.targetLabel_formatsNumberUnitAndDirection` · `ValueInputTest` | «2 잔 이하» 표기 · 값 해석 | 이하 목표 0 이하 저장 거부(화면) | 부분 |
+| 04 | `RecordOutcomesTest` · `RecordOutcomesAtMostTest` · `PartialAccentContrastTest` | 성공/partial/없음 판정 · partial 색 대비 AA | 칸의 실제 색 · Bold · «0»/«–» 표시 | 부분 |
+| 05 | `StoreShotsTest.storeScreens`(상세 2장 캡처) · `BadgeRulesTest` | 상세 화면이 열리고 스크롤됨 · 뱃지 규칙 | 6위젯 전부 · 보관함 10종 · 깨진 레이아웃 | 부분 |
+| 09 | `HabitTransferTest`(왕복 · 같은 습관 · 같은 날짜 중복 제거 · 20건) | 내보내기 → 가져오기 병합 규칙 · 중복 0 | 파일 선택 창 · 요약 토스트 | **JVM 확인** |
+| 10 | `FirstRunJourneyTest.reminder_*` | 알람 예약 | 권한 다이얼로그 · 실제 알림 표시 | 부분 |
+| 11 | `FirstRunJourneyTest.reminder_withoutExactAlarmPermission_isAllowedWhileIdle` | 정확한 알람 거부 분기에서 죽지 않고 `allowWhileIdle`로 예약 | 허용 시 ±1분 · 실제 울림 | **JVM 확인** |
+| 12 | `FirstRunJourneyTest.scheduleMissing_restoresLostAlarm_butKeepsExistingOne` | 사라진 알람만 다시 예약 | 실제 재부팅 · `BootReceiver` | 부분 |
+| 14 | `LegacyDbRowsTest` | 옛 DB 행 → 새 필드 기본값(②) | ① 앱 업데이트 뒤 데이터 유지 | 부분 |
+| 15 | `FirstRunJourneyTest.settings_showsActualTheme_andPrivacyLink` · `PartialAccentContrastTest` | 스위치가 실제 테마와 같음 · partial 대비 | 두 테마 전 화면 · 재시작 뒤 유지 | 부분 |
+| 06 · 07 | `WidgetCalendarModelTest`(달력 모델만) | — | 위젯 배치 · 탭 · 입력 창 | 실기기 전용 |
+| 08 | 없음 | — | 공유 시트 · CSV 파일 | 실기기 전용 |
+| 13 | 없음(Drive 로그인은 Play 서명 지문이 필요) | — | 전부 | 실기기 전용 |
+
+**채운 수 = 3 / 15**(01 · 09 · 11 — 기대값의 핵심을 시험이 그대로 본 행). 부분 8행 · 실기기 전용 4행(06 · 07 · 08 · 13).
+
+### 사용자 폰 확인 순서(짧은 것부터 · 11-27 저녁 설치 뒤)
+| 순서 | 행 | 예상 시간 | 왜 이 순서 |
+|---|---|---|---|
+| 1 | 01 → 03 → 02 → 04 | 5분 | 설치 직후 습관 2 ~ 3개를 만들며 한 번에 |
+| 2 | 05 · 15 | 3분 | 방금 만든 습관으로 상세 · 테마 |
+| 3 | 06 · 07 | 5분 | 위젯 2개 배치 |
+| 4 | 08 · 09 | 5분 | 내보내기 · 가져오기 |
+| 5 | 13 | 5분 | Drive 백업 · 복원(모집 글 전 필수 — 참가자도 누를 수 있음) |
+| 6 | 10 · 11 | 2분 + 대기 | 2분 뒤 알림 |
+| 7 | 12 | 재부팅 1번 | 마지막에 |
+| 8 | 14 | 다음 빌드 때 | 2번째 빌드가 있어야 함 |
+
 ## 판정
 - 15행 모두 `PASS` 또는 근거 있는 `N/A`면 DoD ③ 완료 → `docs/RELEASE-PLAN-2026-11.md` §1 ③ 갱신.
 - `FAIL`은 행 번호·캡처·토스트 원문으로 이슈/PR을 연다(이 체크표에서 고치지 않는다).
