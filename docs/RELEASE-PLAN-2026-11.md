@@ -78,6 +78,33 @@
 - 하루 늦게 보낼 때마다 날짜가 하루 밀린다. 검토마다 7일로 잡으면 모집에 쓸 날이 0일이다.
 - 01-01은 보장선이 아니다 — 조건은 CLOSED-TEST §2 첫 문단.
 
+### 3-4. 12명 도달일별 일정(2026-11-27 · 비공개 게시 11-26 12:09 뒤)
+
+모집 글 = 11-27 저녁(사용자). 옵트인 수 장부 = [`store-listing/OPTIN-LEDGER-2026.md`](store-listing/OPTIN-LEDGER-2026.md)(11-27 = 0명, 의도된 값 — 문장서랍과 하루 차이).
+
+근거(Play 도움말 원문 · 14151465는 2026-11-27 콘솔 «질문 미리보기»가 여는 페이지에서 다시 읽음):
+- 14151465 «At least 12 testers must be opted in to your closed test when you apply for production access, and they must have been opted in continuously for the preceding 14 days.» → **신청 가능일 = 12번째 사람이 옵트인한 날 + 14일**.
+- 14151465 «If a tester opts out and opts back in later, the 14 days must be consecutive» → 중간에 나간 사람은 다시 들어온 날부터 센다.
+- 14151465 «Review usually takes seven days or less, but can occasionally take longer.» → 접근 검토 7일.
+- 9859654 «Processing can take a few hours or up to seven days (or longer in exceptional cases)» → 프로덕션 검토 7일.
+- 14151465 «Reasons for required continued testing include having fewer than 12 opted-in testers or insufficient tester engagement during the testing period.» → 연장 위험(숫자 없음).
+
+날짜 세는 법: **12번째 사람이 옵트인한 날(도달일)을 0일째**로 센다. 그날부터 14일을 채우는 날이 «+14일», 시간대 · 옵트인 시각 경계를 문서가 정하지 않으므로 **신청은 하루 더 지난 «+15일»(권장 신청일)** 에 한다. 아래 표의 공개일 · 여유는 모두 권장 신청일 기준 한 가지로만 읽는다.
+
+검토 기간 7일은 문서의 **통상 상한**이지 최악이 아니다(«usually … seven days or less, but can occasionally take longer»). 7일보다 길어지면 그만큼 공개가 밀린다 — 이 표는 보장선이 아니다.
+
+| 12명 도달일(0일째) | 14일 채움(+14) | 권장 신청일(+15) | 접근 승인(+7, 통상 상한) | 프로덕션 공개(+7, 통상 상한) | 01-01까지 여유 |
+|---|---|---|---|---|---|
+| 11-28 | 12-12 | 12-13 | 12-20 | 12-27 | **+5일** |
+| 12-01 | 12-15 | 12-16 | 12-23 | 12-30 | **+2일** |
+| 12-03 | 12-17 | 12-18 | 12-25 | 01-01 | **0일** |
+| 12-05 | 12-19 | 12-20 | 12-27 | 01-03 | **−2일**(01-01 못 닿음) |
+
+- 계산: 공개 = 도달일 + 15 + 7 + 7 = 도달일 + 29. 여유 = 01-01 − 공개일. 검토가 7일보다 빠르면 그만큼 앞당겨진다. 연말 검토 지연 수치는 문서에 없다.
+- **01-01에 닿는 마지막 도달일 = 12-03**(권장 신청일 기준 · 여유 0). +14일 당일에 신청이 받아진다면 12-04까지 하루 늘지만, 문서가 경계를 정하지 않으므로 계획은 12-03으로 잡는다.
+- 접근 승인 당일에 프로덕션 제출(비공개 89 그대로 승급 · 새 빌드가 필요하면 §5-C Q1과 함께 서명 스크립트 사용 — 경로는 조건 3 PR 머지 뒤 확정).
+- 신청 전 확인: 콘솔 대시보드 «현재 참여를 선택한 테스터 N명» ≥ 12 + 12명 이상이 14일 연속(장부 날짜로 확인).
+
 ## 4. 리스크
 
 | 리스크 | 영향 | 대응 |
@@ -92,6 +119,29 @@
 
 > 문항은 같은 개발자 계정의 다른 앱 선례 기준. 폼이 바뀌었을 수 있으니 제출 날 문항을 대조한다.
 > 원칙: 실재하는 기능만 · 최상급/보장성 표현 0 · 숫자는 콘솔 실측만(`[콘솔 실측]` 칸은 추정으로 채우지 않는다) · 각 300자 이내(한글 1자=1).
+
+### 5-0. 콘솔 «질문 미리보기» 대조(2026-11-27 12:3x)
+대시보드 «프로덕션 액세스 신청» 카드의 «질문 미리보기»는 별도 창이 아니라 도움말 14151465 «Apply for production access» 절로 연결된다. 그 절의 문항(원문)과 아래 틀을 맞춘 결과:
+
+| 부 | 도움말 문항(원문) | 틀 | 판정 |
+|---|---|---|---|
+| 1 | «Select an option indicating how easy it was to recruit testers for your app.» | 5-A Q2 | 있음 |
+| 1 | «Whether testers used all available app features» | 5-A Q3 일부 | **따로 답 필요** → 5-A Q3a |
+| 1 | «Whether tester usage matched expected production user behavior, including details on any observed differences» | 없음 | **새 문항** → 5-A Q3b |
+| 1 | «Summarize the feedback received from testers and describe how feedback was collected.» | 5-A Q4 | 있음(«수집 방법» 문장 보강 → Q4 앞줄) |
+| 1 | (도움말에 없음) 모집 방법 서술 | 5-A Q1 | 틀에만 있음 — 폼에 칸이 없으면 Q3b · Q4에 녹인다 |
+| 2 | «Specify the target audience for your app or game. Be as specific as possible.» | 5-B Q1 | 있음 |
+| 2 | «For apps: Describe how your app provides value to users.» | 5-B Q2 | 있음 |
+| 2 | «Select an estimated install range for your app or game during its first year.» | 5-B Q3 | 있음 |
+| 3 | «Describe any changes made to your app or game based on what you learned from your closed test.» | 5-C Q1 | 있음(빈칸 — 기간 끝에) |
+| 3 | «Describe how you determined that your app or game was ready for production.» | 5-C Q2 | 있음 |
+
+실제 입력 칸의 글자 수 제한 · 라디오 보기 글자는 «프로덕션 신청»을 눌러야 보인다(12명 · 14일 전에는 버튼이 막힘) — 신청 날 이 표를 다시 대조한다.
+
+**틀에 없던 문항 답 초안**(≤300자 · 숫자는 콘솔 실측만):
+- **5-A Q3a 모든 기능 사용 여부**: «테스터에게는 14일 동안 참여를 유지하고 습관을 하나 만들어 보도록 부탁했습니다. 앱에는 분석 도구가 없어 테스터별 · 기능별 사용은 측정하지 않았습니다. [14일 뒤 채움 — 개발자 · 지인 기기에서 실제로 쓴 기능만 적는다(DEVICE-QA 결과 칸 근거). 근거가 없으면 이 문장을 뺀다]»
+- **5-A Q3b 프로덕션 예상 사용과 일치 여부 · 차이**: «출시 후 예상 사용은 하루 한 번 앱이나 위젯에서 습관을 기록하는 짧은 사용입니다. 앱에 분석 도구가 없어 테스터의 사용이 이와 같았는지는 측정하지 않았습니다. 테스트 참여 경로는 [모집 경로]였고 [T0]에 [N]명이 참여했습니다. [14일 뒤 채움 — 받은 의견 · 개발자 관찰로 본 차이가 있을 때만 1문장]»
+- **5-A Q4 앞줄(수집 방법)**: «의견은 Play 테스트 의견(콘솔 «테스트 의견»), 스토어 테스트 화면에 적은 메일(report@…), 모집한 커뮤니티 대화방으로 받았습니다.» + 기존 A/B 택1.
 
 ### 5-A. 1부 «비공개 테스트 정보»
 - **Q1 모집 방법(≤300)**: «유료 테스트 제공업체는 이용하지 않았습니다. [모집 경로 — 예: 앱 테스터 품앗이 커뮤니티]로 모집했고, Play Console에는 Google 그룹을 테스터로 등록해 그룹 가입만으로 참여 자격이 생기게 했습니다. 발송 전에 별도 계정으로 가입→참여→설치 경로를 직접 확인했습니다. [T0 날짜]에 [N]명이 참여를 선택했습니다.»
